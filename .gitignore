@@ -1,0 +1,56 @@
+# RecurGO v0.1.2: keep machine state and downloaded runtimes local.
+/data/
+/runtime/
+
+# Python environments, generated metadata, build output and tool caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+/build/
+/dist/
+*.egg
+
+# Unapproved icon concepts are local review material.
+/assets/recurgo-mascot-concept-*.png
+
+# Local settings, credentials and editor/agent state.
+.env
+.env.*
+!.env.example
+*.local.json
+*.local.toml
+*.local.yaml
+*.local.yml
+/.agents/
+/.codex/
+/.idea/
+/.vscode/
+/docs/PROJECT_PLAN.md
+/docs/OPEN_SOURCE_PLAN.md
+/docs/OPEN_SOURCE_PLAN.en.md
+
+# Game exports and databases can contain personal information.
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*.sgf
+!tests/fixtures/**/*.sgf
+*.log
+*.tmp
+*.bak
+*.swp
+Thumbs.db
+.DS_Store
+
+# Do not ignore all archives: licenses/sources contains attribution evidence.

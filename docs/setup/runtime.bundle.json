@@ -1,0 +1,8 @@
+{
+  "engine": "runtime/engine/katago.exe",
+  "model": "runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz",
+  "humanModel": "runtime/models/b18c384nbt-humanv0.bin.gz",
+  "analysisConfig": "runtime/configs/analysis.cfg",
+  "engineVersion": "1.16.5",
+  "modelSha256": "c5bca453d7b08ea8df6546439325d4dd681e77d975e1da3f7593d771147b73bc"
+}

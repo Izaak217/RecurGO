@@ -1,0 +1,1000 @@
+{
+  "description": "Original Qt 6.11.1 attribution and license materials for modules in the RecurGO Windows candidate; source metadata does not prove each item was compiled into the wheel.",
+  "archives": [
+    {
+      "module": "qtbase",
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "sha256": "d9594a31228aa23ad6b531719a29b45f0f3989fe6c136d45767ea179f233c1ac",
+      "officialUrl": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtbase-everywhere-src-6.11.1.tar.xz"
+    },
+    {
+      "module": "qtdeclarative",
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "sha256": "52e670f670b0304f534b24f98c47ceb8a41bb710464414ebc9527ec71cc86aa4",
+      "officialUrl": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtdeclarative-everywhere-src-6.11.1.tar.xz"
+    },
+    {
+      "module": "qtmultimedia",
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "sha256": "390f8e52ddee3aca5c4de7eead900c84c4fa61ff6d1f0ebea9c7543365c09b0a",
+      "officialUrl": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtmultimedia-everywhere-src-6.11.1.tar.xz"
+    },
+    {
+      "module": "qtsvg",
+      "archive": "qtsvg-everywhere-src-6.11.1.tar.xz",
+      "sha256": "7f3cf02f4824bf03c2c5859ea6db173bf1482a1daf24e6cdf7bc78cfa26a8a94",
+      "officialUrl": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtsvg-everywhere-src-6.11.1.tar.xz"
+    },
+    {
+      "module": "qtimageformats",
+      "archive": "qtimageformats-everywhere-src-6.11.1.tar.xz",
+      "sha256": "b2bf6c6845ac175ed7f819145483ba4676f617aaa6a5012c8efee63c8bbac413",
+      "officialUrl": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtimageformats-everywhere-src-6.11.1.tar.xz"
+    }
+  ],
+  "components": [
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "extra-cmake-modules",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "cmake/3rdparty/extra-cmake-modules/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/001-extra-cmake-modules/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "cmake/3rdparty/extra-cmake-modules/COPYING-CMAKE-SCRIPTS",
+          "localPath": "qtbase/components/001-extra-cmake-modules/license-1-COPYING-CMAKE-SCRIPTS",
+          "sha256": "46cde7dc11e64c78d650b4851b88f6704b4665ff60f22a1caf68ceb15e217e5b"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "KWin",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "cmake/3rdparty/kwin/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/002-kwin/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "cmake/3rdparty/kwin/COPYING-CMAKE-SCRIPTS",
+          "localPath": "qtbase/components/002-kwin/license-1-COPYING-CMAKE-SCRIPTS",
+          "sha256": "46cde7dc11e64c78d650b4851b88f6704b4665ff60f22a1caf68ceb15e217e5b"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "D3D12 Memory Allocator",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/D3D12MemoryAllocator/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/003-d3d12memoryallocator/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/D3D12MemoryAllocator/LICENSE.txt",
+          "localPath": "qtbase/components/003-d3d12memoryallocator/license-1-LICENSE.txt",
+          "sha256": "1b3941c52b26d42c510afbdf205a8b96a6d64f5a7b8ebff0287979fd91dfd52f"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Vulkan Memory Allocator",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/VulkanMemoryAllocator/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/004-vulkanmemoryallocator/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/VulkanMemoryAllocator/LICENSE.txt",
+          "localPath": "qtbase/components/004-vulkanmemoryallocator/license-1-LICENSE.txt",
+          "sha256": "846d97c8b74ccaa92b9ad031140a04363b3b3985f318094552f297b8bda1c68e"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Native Style for Android",
+      "licenseId": "Apache-2.0",
+      "upstreamAttributionPath": "src/3rdparty/android/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/005-android-native-style/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/android/LICENSE",
+          "localPath": "qtbase/components/005-android-native-style/license-1-LICENSE",
+          "sha256": "4a51cf7f724f51bedb5fa4f9583a2762f1db8d05e43a577e2487c7aab2fdce18"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "BLAKE2 (reference implementation)",
+      "licenseId": "CC0-1.0 OR Apache-2.0",
+      "upstreamAttributionPath": "src/3rdparty/blake2/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/006-blake2/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/blake2/COPYING",
+          "localPath": "qtbase/components/006-blake2/license-1-COPYING",
+          "sha256": "4103f471877ed0bae500752c5fcd7ecca409d4a4a8dc2ad40437daba60f1a2bc"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Efficient Binary-Decimal and Decimal-Binary Conversion Routines for IEEE Doubles",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/double-conversion/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/007-doubleconversion/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/double-conversion/LICENSE",
+          "localPath": "qtbase/components/007-doubleconversion/license-1-LICENSE",
+          "sha256": "4af93c12062c58058378de2397dc1c92bbff9ddfb1d583a01c84127557ce97ca"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Easing Equations by Robert Penner",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/easing/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/008-easing/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/easing/LICENSE",
+          "localPath": "qtbase/components/008-easing/license-1-LICENSE",
+          "sha256": "92fac99458f1754b73edf50f9c9983e0efaa06ad96e2afd5e538c79f45b4b191"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Emoji Segmenter",
+      "licenseId": "Apache-2.0",
+      "upstreamAttributionPath": "src/3rdparty/emoji-segmenter/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/009-emoji-segmenter/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "forkfd",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/forkfd/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/010-forkfd/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/forkfd/LICENSE",
+          "localPath": "qtbase/components/010-forkfd/license-1-LICENSE",
+          "sha256": "d0d683ae18e78fbef90eb41168fb781920da2d12bf80704490f0882915c18ae0"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Freetype 2",
+      "licenseId": "FTL OR GPL-2.0-only",
+      "upstreamAttributionPath": "src/3rdparty/freetype/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/011-freetype/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/freetype/LICENSE.txt",
+          "localPath": "qtbase/components/011-freetype/license-1-LICENSE.txt",
+          "sha256": "bf543cdda11864477b8d2ca2aa9afc2aaa8f9133461b4d962ed6ec73646256a1"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Freetype 2 - Bitmap Distribution Format (BDF) support",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/freetype/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/012-freetype-bdf/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/freetype/BDF-LICENSE.txt",
+          "localPath": "qtbase/components/012-freetype-bdf/license-1-BDF-LICENSE.txt",
+          "sha256": "e4e792f29e66750f2e410fd7b50a567652c180f6ee15e1a4dfa0bb5cde524537"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Freetype 2 - Portable Compiled Format (PCF) support",
+      "licenseId": "MIT AND MIT-open-group",
+      "upstreamAttributionPath": "src/3rdparty/freetype/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/013-freetype-pcf/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/freetype/PCF-LICENSE.txt",
+          "localPath": "qtbase/components/013-freetype-pcf/license-1-PCF-LICENSE.txt",
+          "sha256": "6938597bfdeca0db191a8f9ede52eaf2482c2c71a0094c084747a1235f9958fe"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Freetype 2 - zlib",
+      "licenseId": "Zlib",
+      "upstreamAttributionPath": "src/3rdparty/freetype/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/014-freetype-zlib/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/freetype/ZLIB-LICENSE.txt",
+          "localPath": "qtbase/components/014-freetype-zlib/license-1-ZLIB-LICENSE.txt",
+          "sha256": "2b1f5d615382a151af3eb71462ad17d89e2efee8fa7664058d35d3d9237ebb19"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Gradle wrapper",
+      "licenseId": "Apache-2.0",
+      "upstreamAttributionPath": "src/3rdparty/gradle/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/015-android-gradle-wrapper/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/gradle/LICENSE",
+          "localPath": "qtbase/components/015-android-gradle-wrapper/license-1-LICENSE",
+          "sha256": "cf234c4188d773406f640bf89be680d9288f40ff96901c70d643fcea96ad46df"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "HarfBuzz-NG",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/harfbuzz-ng/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/016-harfbuzz-ng/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/harfbuzz-ng/COPYING",
+          "localPath": "qtbase/components/016-harfbuzz-ng/license-1-COPYING",
+          "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "sRGB color profile icc file",
+      "licenseId": "LicenseRef-ICC-License",
+      "upstreamAttributionPath": "src/3rdparty/icc/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/017-icc-srgb-color-profile/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/icc/LICENSE.txt",
+          "localPath": "qtbase/components/017-icc-srgb-color-profile/license-1-LICENSE.txt",
+          "sha256": "9e34ff47b3a44814e183342e7e198d127a6740e29d20e8381fba7688dafc79dd"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "LibJPEG-turbo",
+      "licenseId": "IJG AND BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/libjpeg/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/018-libjpeg/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "LibPNG",
+      "licenseId": "Libpng AND libpng-2.0",
+      "upstreamAttributionPath": "src/3rdparty/libpng/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/019-libpng/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/libpng/LICENSE",
+          "localPath": "qtbase/components/019-libpng/license-1-LICENSE",
+          "sha256": "bdb0a645ea18c60507d0368379b1ac5474b92255fcc2d115e07486a7672ba526"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtnetwork",
+      "name": "libpsl - C library to handle the Public Suffix List",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/libpsl/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/020-libpsl/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/libpsl/src/LICENSE.chromium",
+          "localPath": "qtbase/components/020-libpsl/license-1-LICENSE.chromium",
+          "sha256": "1d7f52747a9169751cdf2641a8299c0098e9ecdf9429296ffd55bdb14c9ed5b3"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtnetwork",
+      "name": "The Public Suffix List",
+      "licenseId": "MPL-2.0",
+      "upstreamAttributionPath": "src/3rdparty/libpsl/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/021-psl-data/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/libpsl/PSL-LICENSE.txt",
+          "localPath": "qtbase/components/021-psl-data/license-1-PSL-LICENSE.txt",
+          "sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "MD4",
+      "licenseId": "CC0-1.0",
+      "upstreamAttributionPath": "src/3rdparty/md4/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/022-md4/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "MD4C",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/md4c/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/023-md4c/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/md4c/LICENSE.md",
+          "localPath": "qtbase/components/023-md4c/license-1-LICENSE.md",
+          "sha256": "d30937367d5413e7eaa218b1640b8946ff76fd34d97152f6979fd96169d5d0fc"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "MD5",
+      "licenseId": "CC0-1.0",
+      "upstreamAttributionPath": "src/3rdparty/md5/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/024-md5/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "PCRE2",
+      "licenseId": "LicenseRef-BSD-3-Clause-with-PCRE2-Binary-Like-Packages-Exception",
+      "upstreamAttributionPath": "src/3rdparty/pcre2/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/025-pcre2/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/pcre2/LICENCE.md",
+          "localPath": "qtbase/components/025-pcre2/license-1-LICENCE.md",
+          "sha256": "197d8a73ffee0d6b09adba2f9c677b5f5aede24edf89258a68e48248d010d811"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "PCRE2 - Stack-less Just-In-Time Compiler",
+      "licenseId": "BSD-2-Clause",
+      "upstreamAttributionPath": "src/3rdparty/pcre2/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/026-pcre2-sljit/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/pcre2/LICENSE-SLJIT",
+          "localPath": "qtbase/components/026-pcre2-sljit/license-1-LICENSE-SLJIT",
+          "sha256": "5f216505c0f6ea3273caec89e766eef93cdeb7bbb0c429f9360116d7c938feeb"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Pixman",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/pixman/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/027-pixman/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/pixman/LICENSE",
+          "localPath": "qtbase/components/027-pixman/license-1-LICENSE",
+          "sha256": "942c4f2a80394d3f53599b8382e9f27349b95c45d92b69b84f26d404f4dd74a5"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Secure Hash Algorithms SHA-384 and SHA-512",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/rfc6234/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/028-rfc6234/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/rfc6234/LICENSE",
+          "localPath": "qtbase/components/028-rfc6234/license-1-LICENSE",
+          "sha256": "7ccebd514aaabc86192f957d773cebf06577c12fe9f25ecd419c6cac5da7a14c"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Secure Hash Algorithm SHA-1",
+      "licenseId": "LicenseRef-SHA1-Public-Domain",
+      "upstreamAttributionPath": "src/3rdparty/sha1/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/029-sha1/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Secure Hash Algorithm SHA-3 - brg_endian",
+      "licenseId": "BSD-2-Clause",
+      "upstreamAttributionPath": "src/3rdparty/sha3/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/030-sha3-endian/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/sha3/BRG_ENDIAN_LICENSE",
+          "localPath": "qtbase/components/030-sha3-endian/license-1-BRG_ENDIAN_LICENSE",
+          "sha256": "2fed6f252ca4a7e813811de3cd3cd08183edd4138bdee909410ef6eee394e82c"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Secure Hash Algorithm SHA-3 - Keccak",
+      "licenseId": "CC0-1.0",
+      "upstreamAttributionPath": "src/3rdparty/sha3/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/031-sha3-keccak/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/sha3/CC0_LICENSE",
+          "localPath": "qtbase/components/031-sha3-keccak/license-1-CC0_LICENSE",
+          "sha256": "1f2786e2c5befeb4dcba6638db6528bf96ef5d2cf24bc85ab5a81ef00abef59d"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "SipHash Algorithm",
+      "licenseId": "CC0-1.0",
+      "upstreamAttributionPath": "src/3rdparty/siphash/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/032-siphash/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "TinyCBOR",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/tinycbor/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/033-tinycbor/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/tinycbor/LICENSE",
+          "localPath": "qtbase/components/033-tinycbor/license-1-LICENSE",
+          "sha256": "3c6ba0b5bfa7830505301ffb336a17b0748e0d61c4d34216e9dc98f10e40395e"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "DejaVu Fonts",
+      "licenseId": "Bitstream-Vera",
+      "upstreamAttributionPath": "src/3rdparty/wasm/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/034-dejayvu/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/wasm/DEJAVU-LICENSE",
+          "localPath": "qtbase/components/034-dejayvu/license-1-DEJAVU-LICENSE",
+          "sha256": "7a083b136e64d064794c3419751e5c7dd10d2f64c108fe5ba161eae5e5958a93"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Wintab API",
+      "licenseId": "LicenseRef-Lcs-Telegraphics",
+      "upstreamAttributionPath": "src/3rdparty/wintab/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/035-wintab/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "XCB-XInput",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/xcb/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/036-xcb-xinput/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/xcb/LICENSE",
+          "localPath": "qtbase/components/036-xcb-xinput/license-1-LICENSE",
+          "sha256": "82775191bc05f85b40404d77bb69b1edeaeb4033f48387e9e5eab4dd67f5d6f1"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Data Compression Library (zlib)",
+      "licenseId": "Zlib",
+      "upstreamAttributionPath": "src/3rdparty/zlib/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/037-zlib/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/zlib/LICENSE",
+          "localPath": "qtbase/components/037-zlib/license-1-LICENSE",
+          "sha256": "d7e3139972874dc8abdbbfce27ec1e6f942b28279dd7d27453630a8b4610e080"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "tl::expected",
+      "licenseId": "CC0-1.0",
+      "upstreamAttributionPath": "src/corelib/global/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/038-tlexpected/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "QEventDispatcher on macOS",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/corelib/kernel/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/039-qeventdispatcher-cf/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/corelib/kernel/LICENSE.QEVENTDISPATCHER_CF.txt",
+          "localPath": "qtbase/components/039-qeventdispatcher-cf/license-1-LICENSE.QEVENTDISPATCHER_CF.txt",
+          "sha256": "e9e5b9f66d21c0e88a4179525ab39cd8d7eac9af78a8404f322c32b0874783d5"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Apache Tika MimeType Definitions",
+      "licenseId": "Apache-2.0",
+      "upstreamAttributionPath": "src/corelib/mimetypes/3rdparty/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/040-tika-mimetypes/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Unicode Character Database (UCD)",
+      "licenseId": "Unicode-3.0",
+      "upstreamAttributionPath": "src/corelib/text/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/041-unicode-character-database/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtcore",
+      "name": "Unicode Common Locale Data Repository (CLDR)",
+      "licenseId": "Unicode-3.0",
+      "upstreamAttributionPath": "src/corelib/text/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/042-unicode-cldr/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "OpenGL ES 2 Headers",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/gui/opengl/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/043-opengl-es2-headers/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/opengl/LICENSE.KHRONOS.txt",
+          "localPath": "qtbase/components/043-opengl-es2-headers/license-1-LICENSE.KHRONOS.txt",
+          "sha256": "2e484f3c26ff5008c704a3ca9dd809d43f24a004a1abb6c202660fbff0d19715"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "OpenGL Headers",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/gui/opengl/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/044-opengl-headers/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/opengl/LICENSE.KHRONOS.txt",
+          "localPath": "qtbase/components/044-opengl-headers/license-1-LICENSE.KHRONOS.txt",
+          "sha256": "2e484f3c26ff5008c704a3ca9dd809d43f24a004a1abb6c202660fbff0d19715"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Anti-aliasing rasterizer from FreeType 2",
+      "licenseId": "FTL OR GPL-2.0-only",
+      "upstreamAttributionPath": "src/gui/painting/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/045-grayraster/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/freetype/LICENSE.txt",
+          "localPath": "qtbase/components/045-grayraster/license-1-LICENSE.txt",
+          "sha256": "bf543cdda11864477b8d2ca2aa9afc2aaa8f9133461b4d962ed6ec73646256a1"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Smooth Scaling Algorithm",
+      "licenseId": "BSD-2-Clause AND Imlib2",
+      "upstreamAttributionPath": "src/gui/painting/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/046-smooth-scaling-algorithm/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/painting/LICENSE.QIMAGETRANSFORM.txt",
+          "localPath": "qtbase/components/046-smooth-scaling-algorithm/license-1-LICENSE.QIMAGETRANSFORM.txt",
+          "sha256": "46b3cbfa2f2946b93291506351e9be1dd0a28d2a53260f5aa488abd36fbeca9d"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "X Server helper",
+      "licenseId": "X11 AND HPND",
+      "upstreamAttributionPath": "src/gui/painting/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/047-xserverhelper/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/painting/LICENSE.XCONSORTIUM.txt",
+          "localPath": "qtbase/components/047-xserverhelper/license-1-LICENSE.XCONSORTIUM.txt",
+          "sha256": "a216b01291eb38fc1af93cfccf1fc67b48d9923612e517c2a695e95b3f03c22c"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Mipmap generator for D3D12",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/gui/rhi/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/048-rhi-miniengine-d3d12-mipmap/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/rhi/LICENSE.MiniEngine.txt",
+          "localPath": "qtbase/components/048-rhi-miniengine-d3d12-mipmap/license-1-LICENSE.MiniEngine.txt",
+          "sha256": "cf248820bf1178370bb4f1670a59f8748d46bc96d0f64080cd631511c6046409"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Adobe Glyph List For New Fonts",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/gui/text/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/049-aglfn/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/text/LICENSE.AGLFN.txt",
+          "localPath": "qtbase/components/049-aglfn/license-1-LICENSE.AGLFN.txt",
+          "sha256": "40818155548ff41c67d3a40edf355e9658992b292c227f4c1147425cedc746c6"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Vulkan API Registry",
+      "licenseId": "Apache-2.0 OR MIT",
+      "upstreamAttributionPath": "src/gui/vulkan/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/050-vulkan-xml-spec/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/gui/vulkan/LICENSE.txt",
+          "localPath": "qtbase/components/050-vulkan-xml-spec/license-1-LICENSE.txt",
+          "sha256": "5f618873b0cdd1e84c611c5529212c2524bfc887bdfd7d1f3b568bad3c649612"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "Cocoa Platform Plugin",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/plugins/platforms/cocoa/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/051-cocoa-platform-plugin/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/plugins/platforms/cocoa/LICENSE.COCOA.txt",
+          "localPath": "qtbase/components/051-cocoa-platform-plugin/license-1-LICENSE.COCOA.txt",
+          "sha256": "e9e5b9f66d21c0e88a4179525ab39cd8d7eac9af78a8404f322c32b0874783d5"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qttestlib",
+      "name": "Catch2",
+      "licenseId": "BSL-1.0",
+      "upstreamAttributionPath": "src/testlib/3rdparty/catch2/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/052-catch2/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/testlib/3rdparty/catch2/LICENSE.txt",
+          "localPath": "qtbase/components/052-catch2/license-1-LICENSE.txt",
+          "sha256": "c9bff75738922193e67fa726fa225535870d2aa1059f91452c411736284ad566"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qttestlib",
+      "name": "Cycle",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/testlib/3rdparty/cycle/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/053-cycle/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/testlib/3rdparty/cycle/LICENSE.txt",
+          "localPath": "qtbase/components/053-cycle/license-1-LICENSE.txt",
+          "sha256": "cb5aedb296c5246d1f22e9099f925a65146f9f0d6b4eebba97fd27a6cdbbab2d"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qttestlib",
+      "name": "Linux Performance Events",
+      "licenseId": "GPL-2.0-only WITH Linux-syscall-note",
+      "upstreamAttributionPath": "src/testlib/3rdparty/linux/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/054-linuxperf/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/testlib/3rdparty/linux/LICENSE.txt",
+          "localPath": "qtbase/components/054-linuxperf/license-1-LICENSE.txt",
+          "sha256": "ed71cfca021790f74094e9810f42e31288e7f43cf00c8d9ac8d6f904124bd815"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qttestlib",
+      "name": "Valgrind",
+      "licenseId": "BSD-4-Clause",
+      "upstreamAttributionPath": "src/testlib/3rdparty/valgrind/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/055-valgrind/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/testlib/3rdparty/valgrind/LICENSE.txt",
+          "localPath": "qtbase/components/055-valgrind/license-1-LICENSE.txt",
+          "sha256": "ec72eebd6326165156787da828caaa18386489387aefaa073c9bd40b8b2a400e"
+        }
+      ]
+    },
+    {
+      "archive": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "module": "qtgui",
+      "name": "WebGradients",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "util/gradientgen/qt_attribution.json",
+      "localAttributionPath": "qtbase/components/056-webgradients/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "util/gradientgen/LICENSE.WEBGRADIENTS.txt",
+          "localPath": "qtbase/components/056-webgradients/license-1-LICENSE.WEBGRADIENTS.txt",
+          "sha256": "9be732e45b638c74f9c0e5248541dd54dc7e8e9a5545df96b5c4b7c9ac0c68ba"
+        }
+      ]
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Georama",
+      "licenseId": "OFL-1.1",
+      "upstreamAttributionPath": "examples/quick/advancedtext/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/001-georama-font/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Gear Icon",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "examples/quick/quickshapes/weatherforecast/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/002-gear-icon/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Map of Europe from Wikipedia",
+      "licenseId": "CC-BY-3.0",
+      "upstreamAttributionPath": "examples/quick/quickshapes/weatherforecast/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/003-map-of-europe/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Weather icons from the Noto Emoji collection",
+      "licenseId": "Apache-2.0",
+      "upstreamAttributionPath": "examples/quick/quickshapes/weatherforecast/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/004-weather-icons/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Work Sans font by Wei Huang",
+      "licenseId": "OFL-1.1",
+      "upstreamAttributionPath": "examples/quick/quickshapes/weatherforecast/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/005-work-sans-font/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtqml",
+      "name": "JavaScriptCore Macro Assembler",
+      "licenseId": "BSD-2-Clause",
+      "upstreamAttributionPath": "src/3rdparty/masm/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/006-masm/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/masm/LICENSE",
+          "localPath": "qtdeclarative/components/006-masm/license-1-LICENSE",
+          "sha256": "9ba0c20a2972274f27e975d79ed3582e322d6891338266a52e2d3a9417fc0a72"
+        }
+      ]
+    },
+    {
+      "archive": "qtdeclarative-everywhere-src-6.11.1.tar.xz",
+      "module": "qtquick",
+      "name": "Yoga",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/yoga/qt_attribution.json",
+      "localAttributionPath": "qtdeclarative/components/007-yoga/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/yoga/LICENSE",
+          "localPath": "qtdeclarative/components/007-yoga/license-1-LICENSE",
+          "sha256": "52412d7bc7ce4157ea628bbaacb8829e0a9cb3c58f57f99176126bc8cf2bfc85"
+        }
+      ]
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "DR Libs",
+      "licenseId": "Unlicense OR MIT-0",
+      "upstreamAttributionPath": "src/3rdparty/dr_libs/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/001-dr-libs/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "FFmpeg",
+      "licenseId": "LGPL-2.1-or-later AND BSD-3-Clause AND BSD-2-Clause AND BSD-Source-Code AND ISC AND MIT AND MPL-2.0",
+      "upstreamAttributionPath": "src/3rdparty/ffmpeg/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/002-ffmpeg/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "boost",
+      "licenseId": "BSL-1.0",
+      "upstreamAttributionPath": "src/3rdparty/ffmpeg/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/003-ffmpeg-boost/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "libjpeg",
+      "licenseId": "IJG",
+      "upstreamAttributionPath": "src/3rdparty/ffmpeg/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/004-ffmpeg-libjpeg/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "zlib",
+      "licenseId": "Zlib",
+      "upstreamAttributionPath": "src/3rdparty/ffmpeg/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/005-ffmpeg-zlib/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "Signalsmith Stretch",
+      "licenseId": "MIT",
+      "upstreamAttributionPath": "src/3rdparty/signalsmith-stretch/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/006-signalsmith-stretch/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/signalsmith-stretch/LICENSE.txt",
+          "localPath": "qtmultimedia/components/006-signalsmith-stretch/license-1-LICENSE.txt",
+          "sha256": "ee2ef82481ffb445ecdd4b3a4c1f82c0cddb2da8fe39d8e8dc384fffb3e7f06f"
+        }
+      ]
+    },
+    {
+      "archive": "qtmultimedia-everywhere-src-6.11.1.tar.xz",
+      "module": "qtmultimedia",
+      "name": "Two-Level Segregated Fit",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/tlsf/qt_attribution.json",
+      "localAttributionPath": "qtmultimedia/components/007-tlfs/qt_attribution.json",
+      "licenses": []
+    },
+    {
+      "archive": "qtsvg-everywhere-src-6.11.1.tar.xz",
+      "module": "qtsvg",
+      "name": "XSVG",
+      "licenseId": "HPND-sell-variant",
+      "upstreamAttributionPath": "src/svg/qt_attribution.json",
+      "localAttributionPath": "qtsvg/components/001-xsvg/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/svg/LICENSE.XSVG.txt",
+          "localPath": "qtsvg/components/001-xsvg/license-1-LICENSE.XSVG.txt",
+          "sha256": "3a946598a9f674d44df764279ca0b85b5d6faba08f3bc75d8e0fcf6cd729a9bd"
+        }
+      ]
+    },
+    {
+      "archive": "qtimageformats-everywhere-src-6.11.1.tar.xz",
+      "module": "qtimageformats",
+      "name": "TIFF Software Distribution (libtiff)",
+      "licenseId": "libtiff",
+      "upstreamAttributionPath": "src/3rdparty/libtiff/qt_attribution.json",
+      "localAttributionPath": "qtimageformats/components/001-libtiff/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/libtiff/COPYRIGHT",
+          "localPath": "qtimageformats/components/001-libtiff/license-1-COPYRIGHT",
+          "sha256": "fbd6fed7938541d2c809c0826225fc85e551fdbfa8732b10f0c87e0847acafd7"
+        }
+      ]
+    },
+    {
+      "archive": "qtimageformats-everywhere-src-6.11.1.tar.xz",
+      "module": "qtimageformats",
+      "name": "WebP (libwebp)",
+      "licenseId": "BSD-3-Clause",
+      "upstreamAttributionPath": "src/3rdparty/libwebp/qt_attribution.json",
+      "localAttributionPath": "qtimageformats/components/002-libwebp/qt_attribution.json",
+      "licenses": [
+        {
+          "upstreamPath": "src/3rdparty/libwebp/COPYING",
+          "localPath": "qtimageformats/components/002-libwebp/license-1-COPYING",
+          "sha256": "5aec868f669e384a22372a4e8a1a6cd7d44c64cd451f960ca69cc170d1e13acf"
+        }
+      ]
+    }
+  ]
+}

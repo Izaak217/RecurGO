@@ -1,0 +1,515 @@
+{
+  "documentation_change_version": "0.1.1",
+  "recorded_on": "2026-09-23",
+  "scope": "Runtime dependency closure from pyproject.toml, evaluated in the current Windows Python environment without extras; Qt/PySide6/Shiboken handled separately. CPython interpreter and PyInstaller future build-only notices are listed separately in additional_components.",
+  "python_version": "3.13.3",
+  "platform": "win32",
+  "path_base": "project root; source paths are relative and contain no user-home path",
+  "copy_policy": "Original license and notice files copied byte-for-byte; SHA-256 verified. Installed-wheel provenance is recorded in relative paths. sgfmill is sourced from the exact member of its official version-matched source archive with the archive hash recorded. Additional interpreter and future build-only records are separate from the runtime dependency closure.",
+  "excluded_handled_separately": [
+    {
+      "name": "PySide6",
+      "version": "6.11.1"
+    },
+    {
+      "name": "PySide6_Addons",
+      "version": "6.11.1"
+    },
+    {
+      "name": "PySide6_Essentials",
+      "version": "6.11.1"
+    },
+    {
+      "name": "shiboken6",
+      "version": "6.11.1"
+    }
+  ],
+  "packages": [
+    {
+      "name": "annotated-types",
+      "normalized_name": "annotated-types",
+      "version": "0.8.0",
+      "dependency_type": "transitive",
+      "installed_metadata_path": ".venv/Lib/site-packages/annotated_types-0.8.0.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/annotated-types/annotated-types",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "MIT",
+      "license_metadata": null,
+      "license_classifiers_metadata": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/annotated_types-0.8.0.dist-info/licenses/LICENSE",
+          "path": "licenses/python/annotated-types-0.8.0/annotated_types-0.8.0.dist-info/licenses/LICENSE",
+          "sha256": "fe1049884b1a0d9342901e88e07f32925d24b3121d9972b6a6805fb9824b095d"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "colorama",
+      "normalized_name": "colorama",
+      "version": "0.4.6",
+      "dependency_type": "transitive",
+      "installed_metadata_path": ".venv/Lib/site-packages/colorama-0.4.6.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/tartley/colorama",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": null,
+      "license_metadata": null,
+      "license_classifiers_metadata": [
+        "License :: OSI Approved :: BSD License"
+      ],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [
+        "LICENSE.txt"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/colorama-0.4.6.dist-info/licenses/LICENSE.txt",
+          "path": "licenses/python/colorama-0.4.6/colorama-0.4.6.dist-info/licenses/LICENSE.txt",
+          "sha256": "cac35c02686e5d04a5a7140bfb3b36e73aed496656e891102e428886d7930318"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "numpy",
+      "normalized_name": "numpy",
+      "version": "2.5.1",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/numpy/numpy",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0",
+      "license_metadata": null,
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [
+        "LICENSE.txt",
+        "numpy/_core/include/numpy/libdivide/LICENSE.txt",
+        "numpy/_core/src/common/pythoncapi-compat/COPYING",
+        "numpy/_core/src/highway/LICENSE",
+        "numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+        "numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+        "numpy/_core/src/umath/svml/LICENSE",
+        "numpy/fft/pocketfft/LICENSE.md",
+        "numpy/linalg/lapack_lite/LICENSE.txt",
+        "numpy/ma/LICENSE",
+        "numpy/random/LICENSE.md",
+        "numpy/random/src/distributions/LICENSE.md",
+        "numpy/random/src/mt19937/LICENSE.md",
+        "numpy/random/src/pcg64/LICENSE.md",
+        "numpy/random/src/philox/LICENSE.md",
+        "numpy/random/src/sfc64/LICENSE.md",
+        "numpy/random/src/splitmix64/LICENSE.md"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/LICENSE.txt",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/LICENSE.txt",
+          "sha256": "a804dff0ead9fadc5293456410bcbfc32bf024be9c4513459663fb7b442d2341"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/include/numpy/libdivide/LICENSE.txt",
+          "sha256": "d544761558b510866c21f7e8a2d5716fca76e0b98117e3b6b86314db7244d150"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/src/common/pythoncapi-compat/COPYING",
+          "sha256": "aea41976c720f91bd19725c16916a1ace40eb1ea42620d340e587a5de4bbcea0"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/src/highway/LICENSE",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/src/highway/LICENSE",
+          "sha256": "d208152e2777ffd0126eacc1bd21c0320d69e4e6b622d21a2a12a47e8ef73763"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/src/multiarray/dragon4_LICENSE.txt",
+          "sha256": "b0fd592d4ead563148e3977e7b589169d46a5ef2ff133c755a81af880a3fc919"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/src/npysort/x86-simd-sort/LICENSE.md",
+          "sha256": "a732977853530066790c42817087f4829b518dd98d340c916acbfd227e39d3cb"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/_core/src/umath/svml/LICENSE",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/_core/src/umath/svml/LICENSE",
+          "sha256": "585483905b13d4b42f800c55ba99e89d6e2e33ccd5f503e201c07531d148ff41"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/fft/pocketfft/LICENSE.md",
+          "sha256": "8db000e158c162e7249787852d8c69764706502ccee725c06641b31c1e95c8af"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/linalg/lapack_lite/LICENSE.txt",
+          "sha256": "19060ef465e1797d682ee0fc3081bd25ab1395e995e43d25c9d13c95d9a3cd6b"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/ma/LICENSE",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/ma/LICENSE",
+          "sha256": "d78dbb208b80d92b4d333e41a4baae50d12444f46e53199fa7726a91de6e2da7"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/LICENSE.md",
+          "sha256": "b4bc2f4fa1c95778f1ed3dd8f14706bece399475b978f9f34b5d3cd72521b48a"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/distributions/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/distributions/LICENSE.md",
+          "sha256": "cf5619f25b112d5ce7c896efffc8e610bcb345dfadcc19f2c1460aa48fff2c9e"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/mt19937/LICENSE.md",
+          "sha256": "92c10699884321f1c2947fe2a70ab23b0fbf1507f756d89dd08f38c61fc3d4fa"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/pcg64/LICENSE.md",
+          "sha256": "41190663b77bee5302386495a07b7eabfbfa571aa0ae2f11da6764162062fc4f"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/philox/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/philox/LICENSE.md",
+          "sha256": "322ac46d870c8aeead6c53adcccc839296fb3c8e456eae155081297daf7f8013"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/sfc64/LICENSE.md",
+          "sha256": "28cad82ce1379dc529df30da78ec012d7d0d1d576b03ddcb93388aee53659f59"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy-2.5.1.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy-2.5.1.dist-info/licenses/numpy/random/src/splitmix64/LICENSE.md",
+          "sha256": "454ec7350e478e037061850b67395753b425b1cb0a34bbc26290b020bf89d763"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy/_core/include/numpy/random/LICENSE.txt",
+          "path": "licenses/python/numpy-2.5.1/numpy/_core/include/numpy/random/LICENSE.txt",
+          "sha256": "d544761558b510866c21f7e8a2d5716fca76e0b98117e3b6b86314db7244d150"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy/ma/LICENSE",
+          "path": "licenses/python/numpy-2.5.1/numpy/ma/LICENSE",
+          "sha256": "d78dbb208b80d92b4d333e41a4baae50d12444f46e53199fa7726a91de6e2da7"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/numpy/random/LICENSE.md",
+          "path": "licenses/python/numpy-2.5.1/numpy/random/LICENSE.md",
+          "sha256": "b4bc2f4fa1c95778f1ed3dd8f14706bece399475b978f9f34b5d3cd72521b48a"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "opencv-python-headless",
+      "normalized_name": "opencv-python-headless",
+      "version": "5.0.0.93",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/opencv_python_headless-5.0.0.93.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/opencv/opencv-python",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": null,
+      "license_metadata": "Apache 2.0",
+      "license_classifiers_metadata": [
+        "License :: OSI Approved :: Apache Software License"
+      ],
+      "active_runtime_requires_dist": [
+        "numpy>=2; python_version >= \"3.9\""
+      ],
+      "license_files_declared_in_metadata": [
+        "LICENSE-3RD-PARTY.txt",
+        "LICENSE.txt"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/cv2/LICENSE-3RD-PARTY.txt",
+          "path": "licenses/python/opencv-python-headless-5.0.0.93/cv2/LICENSE-3RD-PARTY.txt",
+          "sha256": "c1d60169b55cee56452b227c2fd2a7b9ddda3dd3741065f1c6201072be73fadb"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/cv2/LICENSE.txt",
+          "path": "licenses/python/opencv-python-headless-5.0.0.93/cv2/LICENSE.txt",
+          "sha256": "edef0fac1eb08d29d34563f724742e078da2513e196133a12c6ad9ff01e26107"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/opencv_python_headless-5.0.0.93.dist-info/LICENSE-3RD-PARTY.txt",
+          "path": "licenses/python/opencv-python-headless-5.0.0.93/opencv_python_headless-5.0.0.93.dist-info/LICENSE-3RD-PARTY.txt",
+          "sha256": "c1d60169b55cee56452b227c2fd2a7b9ddda3dd3741065f1c6201072be73fadb"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/opencv_python_headless-5.0.0.93.dist-info/LICENSE.txt",
+          "path": "licenses/python/opencv-python-headless-5.0.0.93/opencv_python_headless-5.0.0.93.dist-info/LICENSE.txt",
+          "sha256": "edef0fac1eb08d29d34563f724742e078da2513e196133a12c6ad9ff01e26107"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "platformdirs",
+      "normalized_name": "platformdirs",
+      "version": "4.10.1",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/platformdirs-4.10.1.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/tox-dev/platformdirs",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "MIT",
+      "license_metadata": null,
+      "license_classifiers_metadata": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/platformdirs-4.10.1.dist-info/licenses/LICENSE",
+          "path": "licenses/python/platformdirs-4.10.1/platformdirs-4.10.1.dist-info/licenses/LICENSE",
+          "sha256": "29e0fd62e929850e86eb28c3fdccf0cefdf4fa94879011cffb3d0d4bed6d4db6"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "pydantic",
+      "normalized_name": "pydantic",
+      "version": "2.13.4",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/pydantic-2.13.4.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/pydantic/pydantic",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "MIT",
+      "license_metadata": null,
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [
+        "annotated-types>=0.6.0",
+        "pydantic-core==2.46.4",
+        "typing-extensions>=4.14.1",
+        "typing-inspection>=0.4.2"
+      ],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/pydantic-2.13.4.dist-info/licenses/LICENSE",
+          "path": "licenses/python/pydantic-2.13.4/pydantic-2.13.4.dist-info/licenses/LICENSE",
+          "sha256": "a9e186f3ca16b5eef84318e7a701721351a00cb7b8ae3a4394b67b49e3529ef3"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "pydantic_core",
+      "normalized_name": "pydantic-core",
+      "version": "2.46.4",
+      "dependency_type": "transitive",
+      "installed_metadata_path": ".venv/Lib/site-packages/pydantic_core-2.46.4.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/pydantic/pydantic/tree/main/pydantic-core",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "MIT",
+      "license_metadata": null,
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [
+        "typing-extensions>=4.14.1"
+      ],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/pydantic_core-2.46.4.dist-info/licenses/LICENSE",
+          "path": "licenses/python/pydantic-core-2.46.4/pydantic_core-2.46.4.dist-info/licenses/LICENSE",
+          "sha256": "fbe7f615f18d135c07000e5a86325db27f42c7729699ef166ac1f7a3f4586bf4"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "pyqtgraph",
+      "normalized_name": "pyqtgraph",
+      "version": "0.14.0",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/pyqtgraph-0.14.0.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/pyqtgraph/pyqtgraph",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": null,
+      "license_metadata": "MIT",
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [
+        "numpy>=1.25.0",
+        "colorama"
+      ],
+      "license_files_declared_in_metadata": [
+        "LICENSE.txt"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/pyqtgraph-0.14.0.dist-info/licenses/LICENSE.txt",
+          "path": "licenses/python/pyqtgraph-0.14.0/pyqtgraph-0.14.0.dist-info/licenses/LICENSE.txt",
+          "sha256": "b4ed24d468da61df9028a52abe9283a592e63f315943a1c86cd96a9ea5b62079"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/pyqtgraph/colors/maps/CC-BY license - applies to CET color map data.txt",
+          "path": "licenses/python/pyqtgraph-0.14.0/pyqtgraph/colors/maps/CC-BY license - applies to CET color map data.txt",
+          "sha256": "c97deeeca4ae375a0334bc7f7af5f707aabfcec959c53c783b9f8771d28fd5b3"
+        },
+        {
+          "source_path": ".venv/Lib/site-packages/pyqtgraph/colors/maps/CC0 legal code - applies to virids, magma, plasma, inferno and cividis.txt",
+          "path": "licenses/python/pyqtgraph-0.14.0/pyqtgraph/colors/maps/CC0 legal code - applies to virids, magma, plasma, inferno and cividis.txt",
+          "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "sgfmill",
+      "normalized_name": "sgfmill",
+      "version": "1.1.1",
+      "dependency_type": "direct",
+      "installed_metadata_path": ".venv/Lib/site-packages/sgfmill-1.1.1.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/mattheww/sgfmill",
+      "upstream_source_basis": "installed METADATA description, Github field",
+      "license_expression_metadata": null,
+      "license_metadata": "MIT",
+      "license_classifiers_metadata": [
+        "License :: OSI Approved :: MIT License"
+      ],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [],
+      "license_files": [
+        {
+          "path": "licenses/python/sgfmill-1.1.1/doc/licence.rst",
+          "sha256": "545c118a8bf037d093daa232bda2de5012310ca37143fb6410ccdc63dc846161",
+          "source_archive_path": "licenses/sources/sgfmill-1.1.1.tar.gz",
+          "source_archive_sha256": "1f44fa6b613acfae23cf7f69985a4a911fc06f772f6c63c0bbfc89044d88f41d",
+          "source_archive_member": "sgfmill-1.1.1/doc/licence.rst",
+          "source_url": "https://mjw.woodcraft.me.uk/sgfmill/download/sgfmill-1.1.1.tar.gz"
+        }
+      ],
+      "status": "copied_from_version_matched_official_source_archive",
+      "notes": [
+        "The installed distribution contains no original license file. The version-matched official source archive supplies doc/licence.rst; its full text, including copyright 2009-2018 Matthew Woodcraft and the sgfmill contributors and the Contributors section, is preserved byte-for-byte."
+      ]
+    },
+    {
+      "name": "typing_extensions",
+      "normalized_name": "typing-extensions",
+      "version": "4.16.0",
+      "dependency_type": "transitive",
+      "installed_metadata_path": ".venv/Lib/site-packages/typing_extensions-4.16.0.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/python/typing_extensions",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "PSF-2.0",
+      "license_metadata": null,
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+          "path": "licenses/python/typing-extensions-4.16.0/typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+          "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    },
+    {
+      "name": "typing-inspection",
+      "normalized_name": "typing-inspection",
+      "version": "0.4.4",
+      "dependency_type": "transitive",
+      "installed_metadata_path": ".venv/Lib/site-packages/typing_inspection-0.4.4.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/pydantic/typing-inspection",
+      "upstream_source_basis": "installed METADATA Project-URL or Home-page",
+      "license_expression_metadata": "MIT",
+      "license_metadata": null,
+      "license_classifiers_metadata": [],
+      "active_runtime_requires_dist": [
+        "typing-extensions>=4.15.0"
+      ],
+      "license_files_declared_in_metadata": [
+        "LICENSE"
+      ],
+      "license_files": [
+        {
+          "source_path": ".venv/Lib/site-packages/typing_inspection-0.4.4.dist-info/licenses/LICENSE",
+          "path": "licenses/python/typing-inspection-0.4.4/typing_inspection-0.4.4.dist-info/licenses/LICENSE",
+          "sha256": "804b59b25f2c31bd278f9202a19ae49a3945aa2664387e2d0a128c7cacc61ec3"
+        }
+      ],
+      "status": "copied_from_installed_distribution",
+      "notes": []
+    }
+  ],
+  "limitations": [
+    "This inventory preserves the local installed wheel notices; it does not certify that every upstream wheel itself supplies all legally required third-party notices.",
+    "Dependency markers are evaluated for the local Windows/Python environment. Recompute the closure and license inventory when dependencies, platform, or bundled wheel builds change.",
+    "Metadata license labels are recorded as declared, not substituted for the full copied license and third-party exception text."
+  ],
+  "additional_components": [
+    {
+      "name": "CPython",
+      "version": "3.13.3",
+      "component_type": "interpreter; not a pip dependency",
+      "upstream_source_url": "https://github.com/python/cpython/tree/v3.13.3",
+      "upstream_source_basis": "Versioned official CPython source repository link; local interpreter reports Python 3.13.3.",
+      "license_summary": "PSF license agreement and historical / bundled third-party notices; full original LICENSE.txt preserved.",
+      "license_files": [
+        {
+          "path": "licenses/python/cpython-3.13.3/LICENSE.txt",
+          "sha256": "62bec384df47b0328307db41455ff6ea2559e5546b394ac69148561b21703120",
+          "source_path": "../python/LICENSE.txt",
+          "source_path_note": "Relative to project root; original interpreter installation outside the project was read only."
+        }
+      ],
+      "status": "copied_from_local_interpreter_installation",
+      "notes": [
+        "Records the current development interpreter license. No Python interpreter or executable is bundled by this documentation change. A future binary distribution must verify the license material for its actual interpreter build."
+      ]
+    },
+    {
+      "name": "PyInstaller",
+      "version": "6.21.0",
+      "component_type": "future build-only / bootloader; not in runtime dependency closure",
+      "installed_metadata_path": ".venv/Lib/site-packages/pyinstaller-6.21.0.dist-info/METADATA",
+      "upstream_source_url": "https://github.com/pyinstaller/pyinstaller",
+      "upstream_source_basis": "Installed METADATA Source Code Project-URL",
+      "license_metadata": "GPLv2-or-later with a special exception which allows to use PyInstaller to build and distribute non-free programs (including commercial ones)",
+      "license_files": [
+        {
+          "path": "licenses/python/pyinstaller-6.21.0/COPYING.txt",
+          "sha256": "dcf75fdb959db1e3b41c0f8505069d2ece781b5ec6b3d0a4d30975cfc6580245",
+          "source_path": ".venv/Lib/site-packages/pyinstaller-6.21.0.dist-info/licenses/COPYING.txt"
+        }
+      ],
+      "status": "copied_from_installed_build_tool",
+      "notes": [
+        "Full COPYING.txt includes original copyrights, GPL terms, bootloader exception, run-time hook terms and other stated provisions. The future executable build is not produced or licensed as complete by this archive."
+      ]
+    }
+  ]
+}

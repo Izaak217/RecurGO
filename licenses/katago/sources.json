@@ -1,0 +1,484 @@
+{
+  "schema_version": 1,
+  "document_version": "0.1.2",
+  "checked_on": "2026-09-23",
+  "scope": "License/source notices for source publication; not a Windows binary distribution manifest",
+  "katago": {
+    "version": "1.16.5",
+    "git_revision": "ba938676d7f42d70950b3a535af2466fb642008c"
+  },
+  "license_files": [
+    {
+      "path": "LICENSE",
+      "component": "KataGo",
+      "version": "1.16.5",
+      "license": "MIT with upstream third-party exclusions",
+      "size_kb": 2.500977,
+      "sha256": "fa4896ffcf9504f102b2c1da84570f4cc0d65edd2a361b0887e53f9c10256f9f",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/LICENSE",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "LICENSE",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "b056fed8be44d8d5239802704e2cd58b83fb5fde",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "CONTRIBUTORS",
+      "component": "KataGo contributors",
+      "version": "1.16.5",
+      "license": "Upstream attribution list",
+      "size_kb": 3.991211,
+      "sha256": "40c6e2ed03482f0dfeb172c9704066958d13a1c89e5408ccf0ed33b23c569e36",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/CONTRIBUTORS",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "CONTRIBUTORS",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "a6fa13b3749d6f7e234d42a0ee40a16210236032",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "openssl-3.0.12/LICENSE.txt",
+      "component": "OpenSSL",
+      "version": "3.0.12",
+      "license": "Apache-2.0",
+      "size_kb": 9.936523,
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+      "source_url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.0.12/LICENSE.txt",
+      "source_repository": "https://github.com/openssl/openssl",
+      "source_ref": "openssl-3.0.12",
+      "source_path": "LICENSE.txt",
+      "source_tree_url": "https://github.com/openssl/openssl/tree/openssl-3.0.12",
+      "upstream_git_blob_sha1": "49cc83d2ee29d13453188217f0e4edd70c7f842f",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "zlib-1.2.13/README",
+      "component": "zlib",
+      "version": "1.2.13",
+      "license": "Zlib",
+      "size_kb": 5.242188,
+      "sha256": "4bb4d5664fb9d06ef0d47e8ef73104bd545a5a57eb7241be4f2e0be904966322",
+      "source_url": "https://raw.githubusercontent.com/madler/zlib/v1.2.13/README",
+      "source_repository": "https://github.com/madler/zlib",
+      "source_ref": "v1.2.13",
+      "source_path": "README",
+      "source_tree_url": "https://github.com/madler/zlib/tree/v1.2.13",
+      "upstream_git_blob_sha1": "ba34d1894a9b4af856db1e26c966b0415658de83",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "libzip-1.10.0/LICENSE",
+      "component": "libzip",
+      "version": "1.10.0",
+      "license": "BSD-3-Clause",
+      "size_kb": 1.419922,
+      "sha256": "01c022eca6d566e2e8792fd0f091a28653b2a608319922bcd4de91c49d1438e1",
+      "source_url": "https://raw.githubusercontent.com/nih-at/libzip/v1.10.0/LICENSE",
+      "source_repository": "https://github.com/nih-at/libzip",
+      "source_ref": "v1.10.0",
+      "source_path": "LICENSE",
+      "source_tree_url": "https://github.com/nih-at/libzip/tree/v1.10.0",
+      "upstream_git_blob_sha1": "fa706096111ba4e76b04bf4c7f268cd346e2d01f",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "filesystem-1.5.8/LICENSE",
+      "component": "ghc filesystem",
+      "version": "1.5.8",
+      "license": "MIT",
+      "size_kb": 1.060547,
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/filesystem-1.5.8/LICENSE",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/filesystem-1.5.8/LICENSE",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "8b24faa71df84f50f20be447162cad09ac3feefd",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "half-2.2.0/LICENSE.txt",
+      "component": "half",
+      "version": "2.2.0",
+      "license": "MIT",
+      "size_kb": 1.074219,
+      "sha256": "b74a5c2b685e8fc30073606d69a0c3bad38924eea9b5e07984da03716a7d773d",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/half-2.2.0/LICENSE.txt",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/half-2.2.0/LICENSE.txt",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "45f55db559a47d9fc247b1cb81b835f70ee50612",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "httplib/LICENSE",
+      "component": "cpp-httplib",
+      "version": "KataGo vendored revision ba938676d7f42d70950b3a535af2466fb642008c",
+      "license": "MIT",
+      "size_kb": 1.049805,
+      "sha256": "4b45cbe16d7b71b89ae6127e26e0d90a029198ca5e958ad8e3d0b8bbed364d8b",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/httplib/LICENSE",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/httplib/LICENSE",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "3e5ed359a2bb16f52c383745c25f14bb7a81c9e4",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "tclap-1.2.5/COPYING",
+      "component": "TCLAP",
+      "version": "1.2.5",
+      "license": "MIT",
+      "size_kb": 1.115234,
+      "sha256": "cd81a61d47aeb1ed63036ca260baee37719923bbd7ebd988ec4edae128f3b6eb",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/tclap-1.2.5/COPYING",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/tclap-1.2.5/COPYING",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "d57323663c1e3e0cf2d0795a1155d12838294232",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "sha2/sha2.cpp",
+      "component": "Aaron D. Gifford SHA-2, modified by KataGo",
+      "version": "KataGo revision ba938676d7f42d70950b3a535af2466fb642008c",
+      "license": "BSD-3-Clause; embedded original notices retained",
+      "size_kb": 45.623047,
+      "sha256": "c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/core/sha2.cpp",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/core/sha2.cpp",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "38c8070f542fc272e40f6f73eb594bef8d399e4d",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "nlohmann_json-3.8.0/json.hpp",
+      "component": "nlohmann JSON",
+      "version": "3.8.0",
+      "license": "MIT; embedded Hedley CC0-1.0, Grisu2 MIT and UTF-8 decoder attributions retained",
+      "size_kb": 855.724609,
+      "sha256": "be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/nlohmann_json/json.hpp",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/nlohmann_json/json.hpp",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "cc822a543be87cc493c223011b303297af5d34ad",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "mozilla-cacerts/LICENSE",
+      "component": "Mozilla CA bundle provenance",
+      "version": "2020-07-22",
+      "license": "MPL-2.0",
+      "size_kb": 0.21875,
+      "sha256": "8767f414caf80dce7775d9a2d54334d83afb32d73ae24ea2e85e311d4a79b7d3",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/mozilla-cacerts/LICENSE",
+      "source_repository": "https://github.com/lightvector/KataGo",
+      "source_ref": "ba938676d7f42d70950b3a535af2466fb642008c",
+      "source_path": "cpp/external/mozilla-cacerts/LICENSE",
+      "source_tree_url": "https://github.com/lightvector/KataGo/tree/ba938676d7f42d70950b3a535af2466fb642008c",
+      "upstream_git_blob_sha1": "36725d7426d4d4a9bbb9897a1705599ce9255b01",
+      "verification": {
+        "method": "local Git blob SHA1 equals official GitHub git-tree/contents metadata",
+        "result": "exact_byte_match",
+        "checked_on": "2026-09-23"
+      }
+    },
+    {
+      "path": "mozilla-cacerts/MPL-2.0.txt",
+      "component": "Mozilla Public License complete standard text",
+      "version": "2.0",
+      "license": "MPL-2.0",
+      "size_kb": 16.333984,
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+      "source_url": "https://www.mozilla.org/en-US/MPL/2.0/",
+      "local_copy_source": ".venv/Lib/site-packages/pathspec-1.1.1.dist-info/licenses/LICENSE",
+      "verification": {
+        "method": "byte-identical local copy; sections 1-10 and Exhibits A/B inspected",
+        "result": "exact_local_copy_match",
+        "checked_on": "2026-09-23"
+      },
+      "note": "Reuse of the standard license text only; does not identify pathspec as a KataGo dependency."
+    }
+  ],
+  "observed_runtime_dlls": [
+    {
+      "project_path": "runtime/engine/libcrypto-3-x64.dll",
+      "product_version": "3.0.12",
+      "file_version": "3.0.12",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "1f6560dc57d177417932d04295fcb5f5b9b3414bd3baa75897d8e8bb49e904b7",
+      "size_kb": 5028.0,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/libssl-3-x64.dll",
+      "product_version": "3.0.12",
+      "file_version": "3.0.12",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "45434db8a17a9ddf3953d85de7e2e4d0c22866593c490e18128ee5c7931db6d1",
+      "size_kb": 758.5,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/libz.dll",
+      "product_version": "1.2.13",
+      "file_version": "1.2.13",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "f41b06ae70e84ce4215e657a9fed61b71b590423d0b19687dced8f95d759b319",
+      "size_kb": 93.0,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/libzip.dll",
+      "product_version": "1.10.0",
+      "file_version": "1.10.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "1c3151e9eab8bddffffd0cd180a5258b0de6cb8e780e47f7bd61b48875c1522f",
+      "size_kb": 180.5,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/msvcp140.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "003da4807acdc912e67edba49be574daa5238bb7acff871d8666d16f8072ff89",
+      "size_kb": 566.328125,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/msvcp140_1.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "a61901a4d719a3e1cc4fa8f629218571330331e8dde2ef1f05c34845b180928e",
+      "size_kb": 34.828125,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/msvcp140_2.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "3d15cfe238ac1863bbe65501f05d561162f28032b80f2c8d9a1fc7b22f8445a2",
+      "size_kb": 192.859375,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/msvcp140_atomic_wait.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "0fcf613254644c2ea451a693d7737741b8041f11decb8feffd3b34e00220620a",
+      "size_kb": 48.859375,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/msvcp140_codecvt_ids.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "a714b498ab7b4b0508e69f66ca15196df605844d4d6d5e43969a5f1fd7d7e9e4",
+      "size_kb": 30.859375,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/vcruntime140.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "a8f950b4357ec12cfccddc9094cca56a3d5244b95e09ea6e9a746489f2d58736",
+      "size_kb": 106.828125,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    },
+    {
+      "project_path": "runtime/engine/vcruntime140_1.dll",
+      "product_version": "14.34.31938.0",
+      "file_version": "14.34.31938.0",
+      "version_evidence": "Windows PE VersionInfo read on 2026-09-23",
+      "sha256": "e4b533a94e02c574780e4b333fcf0889f65ed00d39e32c0fbbda2116f185873f",
+      "size_kb": 48.359375,
+      "included_in_this_license_directory": false,
+      "included_in_source_release": false
+    }
+  ],
+  "observed_ca_bundle": {
+    "project_path": "runtime/engine/cacert.pem",
+    "data_date_utc": "2020-07-22T03:12:14Z",
+    "sha256": "2782f0f8e89c786f40240fc1916677be660fb8d8e25dede50c9f6f7b0c2c2178",
+    "size_kb": 216.964844,
+    "upstream_git_blob_sha1": "f9bd706b40dbad2ee2309b28279de3b24c81037a",
+    "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/mozilla-cacerts/cacert.pem",
+    "verification": "exact_byte_match_with_official_Git_tree",
+    "included_in_source_release": false
+  },
+  "microsoft_references": {
+    "runtime_terms": "https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/",
+    "build_tools_terms": "https://visualstudio.microsoft.com/license-terms/vs2022-ga-diagnosticbuildtools/",
+    "license_directory": "https://visualstudio.microsoft.com/license-terms/",
+    "redistribution_guide": "https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170",
+    "redistributable_file_list": "https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution"
+  },
+  "source_url_checks": [
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/CONTRIBUTORS",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/CONTRIBUTORS",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/LICENSE",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/LICENSE",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/core/sha2.cpp",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/core/sha2.cpp",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/filesystem-1.5.8/LICENSE",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/filesystem-1.5.8/LICENSE",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/half-2.2.0/LICENSE.txt",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/half-2.2.0/LICENSE.txt",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/httplib/LICENSE",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/httplib/LICENSE",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/mozilla-cacerts/LICENSE",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/mozilla-cacerts/LICENSE",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/nlohmann_json/json.hpp",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/nlohmann_json/json.hpp",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/tclap-1.2.5/COPYING",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/lightvector/KataGo/ba938676d7f42d70950b3a535af2466fb642008c/cpp/external/tclap-1.2.5/COPYING",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/madler/zlib/v1.2.13/README",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/madler/zlib/v1.2.13/README",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/nih-at/libzip/v1.10.0/LICENSE",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/nih-at/libzip/v1.10.0/LICENSE",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.0.12/LICENSE.txt",
+      "http_status": 200,
+      "final_url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.0.12/LICENSE.txt",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    },
+    {
+      "url": "https://www.mozilla.org/en-US/MPL/2.0/",
+      "http_status": 200,
+      "final_url": "https://www.mozilla.org/en-US/MPL/2.0/",
+      "checked_on": "2026-09-23",
+      "mode": "direct HEAD"
+    }
+  ],
+  "notes": [
+    "KataGo top-level LICENSE names half-2.1.0; the pinned source tree contains half-2.2.0 with the MIT license. The original LICENSE was not altered.",
+    "Vendored-source notices are not proof that every backend or feature links every component.",
+    "CLBlast/OpenCL and macOS/CoreML are not asserted as part of the current Windows CUDA binary inventory.",
+    "No existing license/source file was overwritten; the complete MPL text was copied locally, without downloading a replacement."
+  ]
+}

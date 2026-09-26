@@ -1,0 +1,42 @@
+{
+  "version": "0.1.1",
+  "checked_at": "2026-09-23",
+  "files": [
+    {
+      "file": "katago/LICENSE",
+      "source": "https://raw.githubusercontent.com/lightvector/KataGo/v1.16.5/LICENSE",
+      "sha256": "fa4896ffcf9504f102b2c1da84570f4cc0d65edd2a361b0887e53f9c10256f9f"
+    },
+    {
+      "file": "katago/CONTRIBUTORS",
+      "source": "https://raw.githubusercontent.com/lightvector/KataGo/v1.16.5/CONTRIBUTORS",
+      "sha256": "40c6e2ed03482f0dfeb172c9704066958d13a1c89e5408ccf0ed33b23c569e36"
+    },
+    {
+      "file": "models/network_license.html",
+      "source": "https://katagotraining.org/network_license/",
+      "sha256": "590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e"
+    },
+    {
+      "file": "nvidia/cudnn-9.8.0-eula.html",
+      "source": "https://docs.nvidia.com/deeplearning/cudnn/backend/v9.8.0/reference/eula.html",
+      "sha256": "fe7fff6b84a521a3362fcb07a04462defc046341d841f1f1d110938a57310529"
+    },
+    {
+      "file": "nvidia/cuda-12.8.0-eula.html",
+      "source": "https://docs.nvidia.com/cuda/archive/12.8.0/eula/index.html",
+      "sha256": "6722d4c310a2ec9ad869ede3371a648fe2cfc2baaf8e1ece2c35e1dccc05752c"
+    },
+    {
+      "file": "nvidia/cudnn-9.8.0.87-package-License.txt",
+      "source": "runtime/cuda_deps/nvidia_cudnn_cu12-9.8.0.87.dist-info/License.txt",
+      "sha256": "49cf79bdb35734b52fe6203013b3bd759f81e998cd32aa2c65c51db9a88c61d2"
+    },
+    {
+      "file": "models/KataGo-Neural-Network-License.txt",
+      "derived_from": "models/network_license.html",
+      "transformation": "Extracted the official KataGo Neural Network License block; removed HTML tags, decoded entities, preserved legal text. Scope and exceptions remain in original HTML.",
+      "sha256": "652018beb7635e42466bb8c745d98feb2354f00cee23f89d3b6cbfe3fef2d278"
+    }
+  ]
+}

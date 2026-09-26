@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "1.16.5",
+  "files": {
+    "runtime/engine/katago.exe": "60275844632567e8ccb2d1fc5080c3205cf0f78fe2b57d12bce07f3a5f167f8e",
+    "runtime/engine/libcrypto-3-x64.dll": "1f6560dc57d177417932d04295fcb5f5b9b3414bd3baa75897d8e8bb49e904b7",
+    "runtime/engine/libssl-3-x64.dll": "45434db8a17a9ddf3953d85de7e2e4d0c22866593c490e18128ee5c7931db6d1",
+    "runtime/engine/libz.dll": "f41b06ae70e84ce4215e657a9fed61b71b590423d0b19687dced8f95d759b319",
+    "runtime/engine/libzip.dll": "1c3151e9eab8bddffffd0cd180a5258b0de6cb8e780e47f7bd61b48875c1522f",
+    "runtime/engine/cacert.pem": "2782f0f8e89c786f40240fc1916677be660fb8d8e25dede50c9f6f7b0c2c2178",
+    "runtime/engine/README.txt": "df44df1dacaf63b878a4163962710390a310b131615d891055d900b453286cce",
+    "runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz": "c5bca453d7b08ea8df6546439325d4dd681e77d975e1da3f7593d771147b73bc",
+    "runtime/models/b18c384nbt-humanv0.bin.gz": "637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5"
+  }
+}

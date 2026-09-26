@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=83"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "recurgo"
+version = "1.0.0"
+description = "Local KataGo-powered Go practice, play, and review desktop application"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "licenses/**/*"]
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "numpy==2.5.1",
+  "opencv-python-headless==5.0.0.93",
+  "platformdirs==4.10.1",
+  "pydantic==2.13.4",
+  "pyqtgraph==0.14.0",
+  "PySide6==6.11.1",
+  "sgfmill==1.1.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "mypy==2.3.0",
+  "pyinstaller==6.21.0",
+  "pytest==9.1.1",
+  "pytest-cov==7.1.0",
+  "pytest-qt==4.5.0",
+  "ruff==0.15.22",
+]
+
+[project.scripts]
+recurgo = "recurgo.app:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 96
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+packages = ["recurgo"]
+
+[[tool.mypy.overrides]]
+module = ["pyqtgraph", "pyqtgraph.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["sgfmill", "sgfmill.*"]
+ignore_missing_imports = true

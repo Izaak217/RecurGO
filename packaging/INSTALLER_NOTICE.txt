@@ -1,0 +1,18 @@
+RecurGO Windows installer / Windows 安装程序
+
+The installation terms separately show the MIT License for RecurGO-owned code
+and Microsoft's Visual C++ runtime terms for the bundled runtime files.
+The installer also includes KataGo, two KataGo neural networks, Python, Qt,
+and other third-party components under their own licenses. Qt / PySide6 is
+used under the LGPL version 3 option for applicable modules. You may replace
+the separately installed Qt libraries with compatible modified versions.
+The LGPL and referenced GPL texts, Qt copyright and third-party notices,
+fixed-version source links, and replacement instructions are in licenses/qt/.
+See THIRD_PARTY_NOTICES.en.md for the complete component index.
+
+安装许可页分别显示 RecurGO 自有代码的 MIT 许可和随包 Visual C++ 运行库的微软条款。
+安装包另含 KataGo、两个
+KataGo 神经网络、Python、Qt 等第三方组件，它们各自适用原有许可。适用的 Qt /
+PySide6 模块采用 LGPL 第 3 版许可；用户可以替换独立安装的 Qt 共享库为兼容的修改版。
+LGPL 及所引用的 GPL 原文、Qt 版权与第三方声明、固定版本源码链接和替换说明，
+见安装目录的 licenses/qt/。全部组件索引见 THIRD_PARTY_NOTICES.md。

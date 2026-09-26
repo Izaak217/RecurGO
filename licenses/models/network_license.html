@@ -1,0 +1,227 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+katagotraining.org - Neural Network License
+</title>
+  
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/bulma/css/style.min.f5c756c01867.css">
+    <link rel="stylesheet" href="/static/css/custom.389b17b6d939.css">
+    <link rel="icon" type="image/png" href="/static/images/favicons/favicon.png" />
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // Get all "navbar-burger" elements
+        const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+
+        // Check if there are any navbar burgers
+        if ($navbarBurgers.length > 0) {
+
+          // Add a click event on each of them
+          $navbarBurgers.forEach( el => {
+            el.addEventListener('click', () => {
+              // Get the target from the "data-target" attribute
+              const target = el.dataset.target;
+              const $target = document.getElementById(target);
+              // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
+              el.classList.toggle('is-active');
+              $target.classList.toggle('is-active');
+
+            });
+          });
+        }
+
+      });
+    </script>
+
+    
+<link type="text/css" href="/static/css/tooltips.css" rel="stylesheet" />
+
+  
+</head>
+<body>
+
+
+  <div class="container">
+    <nav class="navbar">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+          <img src="/static/images/katago.png" width="110" height="50">
+        </a>
+
+        <div class="navbar-burger burger" data-target="navMenuExample">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+
+      <div id="navMenuExample" class="navbar-menu">
+        <div class="navbar-start">
+          <a class="navbar-item is-active" href="/networks/">
+            Networks
+          </a>
+          <a class="navbar-item is-active" href="/games/">
+            Games
+          </a>
+          <a class="navbar-item is-active" href="/contributions/">
+            Contributions
+          </a>
+          <a class="navbar-item is-active" href="/extra_networks/">
+            Extra Nets
+          </a>
+        </div>
+
+        <div class="navbar-end">
+          <a class="navbar-item is-active" href="https://katagoarchive.org/">
+            Archives
+          </a>
+          <a class="navbar-item is-active" href="https://github.com/lightvector/KataGo/releases">
+            Releases
+          </a>
+          <a class="navbar-item is-active" href="https://github.com/lightvector/KataGo">
+            GitHub (KataGo)
+          </a>
+          <a class="navbar-item is-active" href="https://github.com/katago/katago-server">
+            GitHub (Server)
+          </a>
+
+        
+          
+          
+            <a class="navbar-item is-active" href="/accounts/login/">
+              Log In
+            </a>
+          
+          
+          
+            <a class="navbar-item is-active" href="/accounts/signup/">
+              Sign Up
+           </a>
+          
+        
+        </div>
+      </div>
+    </nav>
+  </div>
+
+
+
+
+<section class="section">
+  <div class="container">
+    
+      
+    
+
+    
+      
+      
+
+<h1 class="title">katagotraining.org - Neural Network License</h1>
+<div class="content">
+<h3>License for KataGo's Neural Networks</h3>
+
+The following license applies to the official KataGo neural network files and checkpoints available on this site katagotraining.org, including all networks on the <a href="https://katagotraining.org/networks/">https://katagotraining.org/networks/</a> page in the "kata1" run, with a few exceptions, indicated further below. The same license also applies to the networks on the <a href="https://katagotraining.org/extra_networks/">https://katagotraining.org/extra_networks/</a> page that are labeled as "KataGo" networks, such as the "KataGo Human SL Network", rather than being attributed to an external contributor. (For non-"KataGo" networks attributed to another contributor, see section further below).
+<p>
+--------------------
+</p><p>
+KataGo Neural Network License
+</p><p>
+Copyright 2026 David J Wu ("lightvector").
+</p><p>
+Permission is hereby granted, free of charge, to any person obtaining a copy of the neural net files or training weight files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+</p><p>
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+</p><p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</p><p>
+--------------------
+</p><p>
+</p><h3>Exceptions</h3>
+<p>
+The oldest networks imported from prior runs before distributed training began, namely the ones marked on <a href="https://katagotraining.org/networks/">https://katagotraining.org/networks/</a> as belonging to the "g170" run, are not covered by the above license but rather are under <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a> and are effectively public domain.
+</p><p>
+The "zhizi" networks released by <a href="https://zhizigo.com/">ZhiziGo</a> for use in KataGo's main "kata1" training run and available on <a href="https://katagotraining.org/networks/">https://katagotraining.org/networks/</a>, e.g. "kata1-zhizi-b28c512nbt-muonfd2" and "kata1-zhizi-b40c768nbt-fdx6c" and so on, are released under the following license:
+</p><p>
+--------------------
+</p><p>
+Copyright (c) 2026  hzyhhzy &amp; zhizigo.com
+</p><p>
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+</p><p>
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+</p><p>
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</p><p>
+--------------------
+</p><p>
+</p><h3>Extra Neural Networks From Other Contributors</h3>
+<p>
+As mentioned above, the networks at the <a href="https://katagotraining.org/extra_networks/">https://katagotraining.org/extra_networks/</a> page labeled as "KataGo" networks are covered by the "KataGo Neural Network License", but the ones on that page from various named external contributors and not labeled as "KataGo" networks might not be so covered. All such externally-contributed networks were released to me with the expectation that they would be offered for free on this website for the public to download and use freely, but explicit terms (e.g. commercial use, further finetuning and modification, etc.) were not necessarily communicated.
+</p><p></p>
+</div>
+
+
+    
+  </div>
+</section>
+
+
+
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <p>
+          
+          <strong><a href="https://github.com/lightvector/KataGo">Katago engine <i class="fab fa-github"></i></a></strong> by <a href="https://github.com/lightvector">lightvector</a>
+          (<a href="https://github.com/lightvector/KataGo/blob/master/LICENSE">engine license</a>).
+          <strong><a href="https://github.com/katago/katago-server">Katago server <i class="fab fa-github"></i></a></strong> by <a href="https://github.com/lightvector">lightvector</a> and <a href="https://github.com/tychota">tychota</a>
+          (<a href="http://opensource.org/licenses/mit-license.php">server code license</a>).
+          
+          <strong><a href="/privacy/">Privacy and data use policy</a></strong>.
+          <strong><a href="/network_license/">Neural Net License</a></strong>.
+          
+          <br/>
+          
+          Additional thanks to <a href="https://www.janestreet.com/">Jane Street</a> for supporting KataGo's earlier runs, and to <a href="https://gogodonline.co.uk/">GoGoD</a> and <a href="http://go4go.net/go/">Go4Go</a> for pro games for improving training.
+          
+          
+        </p>
+      </div>
+    </div>
+  </footer>
+
+
+
+  
+
+</body>
+</html>
