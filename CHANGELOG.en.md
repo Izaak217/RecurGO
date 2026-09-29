@@ -2,6 +2,14 @@
 
 English | [简体中文](CHANGELOG.md)
 
+## v1.0.1 — 2026-09-30 (Chinese final scoring)
+
+- Fix final scoring that treated large, not-yet-enclosed areas as neutral. Preview this node's ownership, complete a fresh KataGo search, then review the assignments.
+- Add per-point Black, White, shared equally and unresolved brushes, plus whole-group death/restoration. Shared empty points count half each; half-stone totals and quarter-stone margins are exact. AI uncertainty and unresolved ko are not automatically shared.
+- Pending points or inconsistent group status prevent final confirmation. Refresh preserves manual corrections; cancellation and stale responses cannot overwrite another position or trigger an AI move.
+- Persist the final map, dead groups and scored node for reopening, while preserving earlier games and results. Models, search-budget baselines and Strongest play settings remain unchanged.
+- Update bilingual instructions, rule references and the upgrade/release workflow; include both changelogs in the installer.
+
 ## v1.0.0 — 2026-09-26
 
 - Aligned the application, build version, and bilingual user documentation with the first formal version number.

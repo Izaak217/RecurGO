@@ -86,7 +86,7 @@ AI 分析。当前 CUDA 配置步骤和限制见 [源码启动说明](docs/SOURC
 ## 许可与第三方组件
 
 RecurGO 自有代码与文档以 [MIT License](LICENSE) 发布，版权署名为
-[izaak (izaak217)](https://github.com/izaak217)。当前源码版本为 **v1.0.0**。
+[izaak (izaak217)](https://github.com/izaak217)。当前源码版本为 **v1.0.1**。
 
 KataGo 引擎、模型、Qt/PySide6 及其他依赖分别遵循各自的许可证；本项目的 MIT
 许可不替代第三方条款。组件清单与许可原文见

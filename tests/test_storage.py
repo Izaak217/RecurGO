@@ -9,6 +9,25 @@ from recurgo.domain import GameTree, Point
 from recurgo.storage import GameRepository
 
 
+def test_final_ownership_survives_reopen_and_rejects_wrong_node(tmp_path: Path) -> None:
+    path = tmp_path / "scoring.db"
+    repository = GameRepository(path)
+    tree = GameTree()
+    record = repository.create_game(tree)
+    owners = (1,) * 181 + (-1,) * 180
+    with pytest.raises(ValueError):
+        repository.finish_game(record.id, "W+3.25", scoring_node_id="other", ownership=owners)
+    assert repository.load_game(record.id)[0].status != "completed"
+    repository.finish_game(
+        record.id, "W+3.25", scoring_node_id=tree.current_id, ownership=owners,
+    )
+    repository.close()
+    reopened = GameRepository(path)
+    assert reopened.load_scoring(record.id) == (tree.current_id, owners, frozenset())
+    assert reopened.load_game(record.id)[0].result == "W+3.25"
+    reopened.close()
+
+
 def test_game_and_variations_survive_repository_reopen(tmp_path: Path) -> None:
     database_path = tmp_path / "coach.db"
     repository = GameRepository(database_path)

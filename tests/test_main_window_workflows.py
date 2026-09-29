@@ -23,6 +23,73 @@ class FakeAudio:
         del captured
 
 
+def test_scoring_saves_corrected_map_and_reopens_it_readonly(qtbot, tmp_path, monkeypatch):
+    window, repository = _window(tmp_path, qtbot)
+    node_id = window.tree.current_id
+    window._ownership_by_node[node_id] = [1.] * 184 + [-1.] * 177
+    calls = []
+
+    def score_and_close(dialog):
+        calls.append(dialog)
+        assert window._scoring_dialog is dialog
+        # An empty intersection may be explicitly shared by agreement.
+        dialog.brush_combo.setCurrentIndex(3)
+        dialog._edit_point(13, 9)  # index 184, originally White
+        dialog._confirm()
+        assert dialog.confirmed_score.sgf_result == "B+0.25"
+        dialog._stay()
+
+    monkeypatch.setattr(main_window_module.ScoringDialog, "exec", score_and_close)
+    window._open_scoring()
+    assert window.record.status == "completed"
+    saved = repository.load_scoring(window.record.id)
+    assert saved[0] == node_id
+    assert saved[1][184] == 0
+    assert window._scoring_dialog is None
+
+    def inspect_saved(dialog):
+        assert dialog.ownership == saved[1]
+        assert dialog.confirmed_score.sgf_result == "B+0.25"
+        assert not dialog.board.input_enabled
+        dialog.accept()
+
+    monkeypatch.setattr(main_window_module.ScoringDialog, "exec", inspect_saved)
+    window._show_completed_result()
+
+
+def test_cancel_scoring_discards_corrections_and_blocks_late_ai_move(
+    qtbot, tmp_path, monkeypatch,
+):
+    from recurgo.engine import AnalysisUpdate
+
+    window, repository = _window(tmp_path, qtbot)
+    original_node = window.tree.current_id
+    window._ownership_by_node[original_node] = [1.] * 181 + [-1.] * 180
+
+    def cancel(dialog):
+        dialog._edit_point(1, 1)
+        window._analysis_finished(AnalysisUpdate("late", original_node, "ai_move", {
+            "isDuringSearch": False, "moveInfos": [{"move": "D4", "order": 0}],
+        }))
+        window._open_scoring()  # Reentrant attempts do not create another dialog.
+        assert window.tree.current_id == original_node
+        dialog.reject()
+
+    monkeypatch.setattr(main_window_module.ScoringDialog, "exec", cancel)
+    window._open_scoring()
+    assert repository.load_scoring(window.record.id) is None
+    assert window.record.status != "completed"
+    assert window._scoring_dialog is None
+
+    def reopen(dialog):
+        assert dialog.ownership[20] == 1
+        assert not dialog._overrides
+        dialog.reject()
+
+    monkeypatch.setattr(main_window_module.ScoringDialog, "exec", reopen)
+    window._open_scoring()
+
+
 class FakeEngine:
     def __init__(self) -> None:
         self.queries: list[dict[str, object]] = []

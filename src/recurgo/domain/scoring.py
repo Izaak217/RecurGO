@@ -11,8 +11,8 @@ from .coordinates import Point
 
 @dataclass(frozen=True, slots=True)
 class ChineseScore:
-    black_area: int
-    white_area: int
+    black_area: float
+    white_area: float
     neutral_points: int
     dead_black: int
     dead_white: int

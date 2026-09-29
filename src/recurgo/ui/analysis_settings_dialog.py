@@ -55,8 +55,11 @@ class AnalysisSettingsDialog(QDialog):
             tr(
                 language,
                 "默认 800。提高访问量通常需要更久；降低访问量可能使搜索不充分。"
-                "此设置仅影响实时分析与全盘复盘，不影响对战中的“最强”AI。",
-                "The default is 800. More visits usually take longer; fewer visits can leave the search incomplete. This setting affects real-time analysis and full-game review, not Strongest play.",
+                "此设置影响实时分析、数子估算与全盘复盘，不影响对战中的“最强”AI。",
+                "The default is 800. More visits usually take longer; "
+                "fewer visits can leave the search incomplete. This setting affects "
+                "real-time analysis, scoring estimates and full-game review, "
+                "not Strongest play.",
             )
         )
         notice.setWordWrap(True)

@@ -1,4 +1,4 @@
-# Windows installer build guide (v1.0.0)
+# Windows installer build guide (v1.0.1)
 
 English | [简体中文](BUILD_WINDOWS.md)
 
@@ -30,6 +30,6 @@ User data and user-supplied libraries live under `%LOCALAPPDATA%\RecurGO`; the d
 
 ## Versioning and publication
 
-The first formal public version is **v1.0.0**. `pyproject.toml`, `src/recurgo/__init__.py`, and user-facing version references use `1.0.0`. Build each release installer from that version's final source. The builder reads its version from `pyproject.toml`; the installer filename, source version, Git tag, and GitHub Release title should match. The earlier `v0.2.0.dev30` installer remains an internal test artifact and is not the first public release asset.
+The current patch release is **v1.0.1**. `pyproject.toml`, `src/recurgo/__init__.py`, and user-facing version references use `1.0.1`. Build each release installer from that version's final source. The builder reads its version from `pyproject.toml`; the installer filename, source version, Git tag, and GitHub Release title should match. The earlier `v0.2.0.dev30` installer remains an internal test artifact and is not the first public release asset.
 
 Compiling an installer only establishes that an installation file was produced. For each later version, check installation, independent checks, real KataGo analysis, play, games, review, both languages, and optional Ollama, and review source and installer privacy, third-party licenses, LGPL corresponding source, and shared-library replacement. The [first-release design record](RELEASE_TARGET.en.md) describes the acceptance scope. Do not upload all of `build/`; attach the installer and checksum file to the GitHub Release for the same version.

@@ -302,6 +302,8 @@ def prepare_documents(stage: Path) -> None:
         "SECURITY.en.md",
         "THIRD_PARTY_NOTICES.md",
         "THIRD_PARTY_NOTICES.en.md",
+        "CHANGELOG.md",
+        "CHANGELOG.en.md",
     ):
         copy_file(ROOT / filename, stage / filename)
     copy_file(ROOT / "packaging" / "INSTALLER_NOTICE.txt", stage / "INSTALLER_NOTICE.txt")

@@ -1,4 +1,4 @@
-# RecurGO User Manual (v1.0.0)
+# RecurGO User Manual (v1.0.1)
 
 English | [简体中文](USER_GUIDE.md)
 
@@ -44,9 +44,29 @@ These controls are temporarily disabled during full-game analysis. **Undo** and 
 through the game; in play modes they also handle the corresponding AI move. **Pass** skips a
 turn. Two consecutive passes open scoring, or you can select **Finish / Score** yourself.
 
-In scoring, click a whole group to mark it dead and click again to restore it. Check the result
-before confirming. The result is saved in the library and in later SGF exports. **Resign** asks
-for confirmation. Creating a new game does not delete the previous one.
+Scoring previews this node's KataGo ownership, then completes a fresh analysis using the
+configured visits. Review the finished proposal before confirming the game.
+
+1. Click intersections to cycle through **Black, White, shared equally, unresolved**, or select
+   a fixed brush. Split squares mean shared empty points, half a stone for each side; orange
+   question marks need review. AI uncertainty is not evidence of seki.
+2. In seki, private eyes belong to their owner; only common empty points are split. Use
+   **Toggle dead group** to remove a whole group, then assign the vacated intersections.
+   Click again to restore the group. A whole group assigned to its opponent is also shown dead.
+   Living stones cannot be shared.
+3. Refreshing AI ownership preserves your corrections. Undo all corrections restores the
+   latest proposal. Without AI, assign every point manually. Unresolved points or inconsistent
+   group status prevent final confirmation.
+4. Resolve ko and disputed life/death by continuing play. An ordinary unresolved ko is not
+   automatically shared. Contestable points left after both players agree to end can be treated
+   as seki under Chinese rule 21; special cyclic-ko adjudications are not automated.
+
+Live stones and owned empty points are counted once; komi is applied once. Shared points can
+produce half-stone area totals, and 3¾-stone compensation can produce quarter-stone margins.
+Confirm the reviewed map, then close the result window to save it. Reopening shows the saved
+map and dead groups; later SGF exports retain the result. Earlier games are not rescored.
+See the [Chinese Weiqi Association rules](https://wqwh.weiqi.org.cn/rules/).
+**Resign** asks for confirmation. Creating a new game does not delete the previous one.
 
 ## Analyze the current position
 
@@ -55,7 +75,7 @@ right shows move, human preference, win rate, score lead, and visits. Select a c
 an explanation in the left panel. Values can change while the search runs. **Ownership / 领地**
 shows an area estimate on the board. Both switches are unavailable during fair play.
 
-**Analysis settings / 分析设置** changes visits per position for real-time analysis and
+**Analysis settings / 分析设置** changes visits per position for real-time analysis, scoring and
 full-game review. The initial value is 800. More visits usually take longer; fewer visits can
 leave the search incomplete. This setting does not change Strongest play's search settings,
 and old cached analysis is not presented as if it used the new value. No fixed visits number

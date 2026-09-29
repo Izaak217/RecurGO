@@ -1,4 +1,4 @@
-# RecurGO Windows Installation Guide (v1.0.0)
+# RecurGO Windows Installation Guide (v1.0.1)
 
 English | [简体中文](INSTALL_WINDOWS.md)
 
@@ -13,7 +13,7 @@ This guide explains installation, dependencies, and first launch. For games, ana
 
 ## Before downloading
 
-RecurGO v1.0.0 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
+RecurGO v1.0.1 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
 
 Real KataGo analysis has passed on an NVIDIA GeForce RTX 5070 Ti Laptop GPU and an NVIDIA
 GeForce RTX 2080 Ti. On the latter GPU, the main application also displayed candidate moves
