@@ -12,6 +12,7 @@ from uuid import uuid4
 from recurgo.domain.board import BoardState, Color
 from recurgo.domain.coordinates import Point
 from recurgo.domain.game_tree import GameNode, GameTree, Move
+from recurgo.domain.score_review import score_ownership, validate_assignments
 
 from .sgf_io import normalize_sgf_komi, normalize_sgf_rules
 
@@ -150,6 +151,7 @@ class GameRepository:
                 "TEXT NOT NULL DEFAULT ''",
             )
             self._normalize_legacy_game_metadata()
+            self._ensure_column("games", "scoring_json", "TEXT NOT NULL DEFAULT ''")
 
     def _normalize_legacy_game_metadata(self) -> None:
         """Repair metadata imported before Fox SGF normalization was added."""
@@ -386,16 +388,74 @@ class GameRepository:
         if cursor.rowcount == 0:
             raise KeyError(game_id)
 
-    def finish_game(self, game_id: str, result: str) -> None:
+    def finish_game(
+        self, game_id: str, result: str, *, scoring_node_id: str | None = None,
+        ownership: tuple[int, ...] | None = None,
+        dead_points: frozenset[Point] = frozenset(),
+    ) -> None:
+        scoring_json = ""
+        if ownership is not None:
+            row = self.connection.execute(
+                "SELECT g.board_size, g.komi, n.state_json FROM games g "
+                "JOIN game_nodes n ON n.game_id = g.id "
+                "WHERE g.id = ? AND n.id = ?", (game_id, scoring_node_id),
+            ).fetchone()
+            if (row is None
+                    or validate_assignments(ownership, int(row["board_size"])) != ownership):
+                raise ValueError("Scoring ownership must match a node in this game")
+            state = _decode_state(str(row["state_json"]))
+            expected = score_ownership(
+                state, ownership, komi=float(row["komi"]), dead_points=dead_points,
+            )
+            if expected.sgf_result != result:
+                raise ValueError("Saved result must match the confirmed point assignments")
+            scoring_json = json.dumps({
+                "node_id": scoring_node_id, "ownership": ownership,
+                "dead": sorted(p.y * state.size + p.x for p in dead_points),
+            })
         with self.connection:
             self.connection.execute(
                 """
                 UPDATE games
-                SET status = 'completed', result = ?, updated_at = ?
+                SET status = 'completed', result = ?, updated_at = ?, scoring_json = ?
                 WHERE id = ?
                 """,
-                (result, _now(), game_id),
+                (result, _now(), scoring_json, game_id),
             )
+
+    def load_scoring(
+        self, game_id: str,
+    ) -> tuple[str, tuple[int, ...], frozenset[Point]] | None:
+        row = self.connection.execute(
+            "SELECT board_size, scoring_json FROM games WHERE id = ?", (game_id,),
+        ).fetchone()
+        if row is None or not row["scoring_json"]:
+            return None
+        try:
+            payload = json.loads(row["scoring_json"])
+            size = int(row["board_size"])
+            points = validate_assignments(payload.get("ownership"), size)
+            node_id = payload.get("node_id")
+            dead = payload.get("dead", [])
+            if (points is not None and isinstance(node_id, str) and isinstance(dead, list)
+                    and all(type(i) is int and 0 <= i < size * size for i in dead)):
+                node = self.connection.execute(
+                    "SELECT n.state_json, g.komi, g.result FROM game_nodes n "
+                    "JOIN games g ON g.id = n.game_id WHERE n.id = ? AND g.id = ?",
+                    (node_id, game_id),
+                ).fetchone()
+                if node is None:
+                    return None
+                dead_points = frozenset(Point(i % size, i // size) for i in dead)
+                score = score_ownership(
+                    _decode_state(str(node["state_json"])), points,
+                    komi=float(node["komi"]), dead_points=dead_points,
+                )
+                if score.sgf_result == node["result"]:
+                    return node_id, points, dead_points
+        except (ValueError, TypeError, AttributeError):
+            pass
+        return None
 
     def save_analysis_snapshot(
         self,

@@ -21,6 +21,7 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 from recurgo.domain.board import BoardState, Color, IllegalMove
 from recurgo.domain.coordinates import GTP_COLUMNS, Point
+from recurgo.domain.score_review import LIVE_OWNERSHIP_CUTOFF
 
 from .preferences import BOARD_THEMES, STONE_STYLES, AppPreferences
 
@@ -38,6 +39,9 @@ class BoardWidget(QWidget):
         self._hover_point: Point | None = None
         self._input_enabled = True
         self._scoring_mode = False
+        self._edit_ownership = False
+        self._scoring_assignments: tuple[int, ...] | None = None
+        self._show_dead_stones = False
         self._dead_points: frozenset[Point] = frozenset()
         self._attention_points: frozenset[Point] = frozenset()
         self._preferences = AppPreferences()
@@ -55,6 +59,7 @@ class BoardWidget(QWidget):
         # A position change invalidates the previous node's ownership map. The
         # caller may immediately provide a cached map for the new node.
         self._ownership = None
+        self._scoring_assignments = None
         self._hover_point = None
         self.update()
 
@@ -81,10 +86,22 @@ class BoardWidget(QWidget):
         self,
         enabled: bool,
         dead_points: frozenset[Point] = frozenset(),
+        *,
+        edit_ownership: bool = False,
     ) -> None:
         self._scoring_mode = enabled
+        self._edit_ownership = enabled and edit_ownership
         self._dead_points = dead_points
         self._hover_point = None
+        self.update()
+
+    def set_scoring_assignments(self, values: tuple[int, ...] | None) -> None:
+        self._scoring_assignments = values
+        self.update()
+
+    def set_show_dead_stones(self, visible: bool) -> None:
+        """v1.0.1.dev1: change presentation only, never the position or score."""
+        self._show_dead_stones = visible
         self.update()
 
     def set_candidates(self, candidates: list[tuple[Point, int, float]]) -> None:
@@ -166,8 +183,8 @@ class BoardWidget(QWidget):
         # Ownership markers must remain visible on top of stones so predicted
         # dead groups can be recognised, matching conventional Go counting UIs.
         self._draw_ownership(painter, origin_x, origin_y, cell)
+        self._draw_scoring_marks(painter, origin_x, origin_y, cell)
         self._draw_candidates(painter, origin_x, origin_y, cell)
-        self._draw_dead_stones(painter, origin_x, origin_y, cell)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if event.button() != Qt.MouseButton.LeftButton or not self._input_enabled:
@@ -176,7 +193,7 @@ class BoardWidget(QWidget):
         if point is None:
             return
         if self._scoring_mode:
-            if self._state.stone_at(point) is not None:
+            if self._edit_ownership or self._state.stone_at(point) is not None:
                 self.score_point_clicked.emit(point.x, point.y)
             return
         self.point_clicked.emit(point.x, point.y)
@@ -279,6 +296,12 @@ class BoardWidget(QWidget):
                 color = self._state.stone_at(point)
                 if color is None:
                     continue
+                dead = self._scoring_mode and point in self._dead_points
+                if dead and not self._show_dead_stones:
+                    continue
+                painter.save()
+                if dead:
+                    painter.setOpacity(0.35)
                 center = QPointF(origin_x + x * cell, origin_y + y * cell)
                 brush, outline = self._stone_brush(color, center, radius)
                 painter.setBrush(brush)
@@ -290,6 +313,7 @@ class BoardWidget(QWidget):
                     painter.setBrush(marker)
                     painter.setPen(Qt.PenStyle.NoPen)
                     painter.drawEllipse(center, max(2.5, cell * 0.11), max(2.5, cell * 0.11))
+                painter.restore()
 
     def _draw_ownership(
         self, painter: QPainter, origin_x: float, origin_y: float, cell: float
@@ -302,7 +326,7 @@ class BoardWidget(QWidget):
         extent = max(5.0, cell * 0.30)
         for index, ownership in enumerate(values):
             strength = abs(ownership)
-            if strength < 0.08:
+            if strength < LIVE_OWNERSHIP_CUTOFF:
                 continue
             x = index % self._state.size
             y = index // self._state.size
@@ -407,24 +431,33 @@ class BoardWidget(QWidget):
             outline = QColor("#a7a8a5")
         return QBrush(gradient), outline
 
-    def _draw_dead_stones(
+    def _draw_scoring_marks(
         self, painter: QPainter, origin_x: float, origin_y: float, cell: float
     ) -> None:
-        if not self._scoring_mode:
+        if not self._scoring_mode or self._scoring_assignments is None:
             return
         painter.save()
-        painter.setPen(QPen(QColor("#e13f3f"), max(2.0, cell * 0.09)))
-        offset = cell * 0.25
-        for point in self._dead_points:
-            center = QPointF(origin_x + point.x * cell, origin_y + point.y * cell)
-            painter.drawLine(
-                QPointF(center.x() - offset, center.y() - offset),
-                QPointF(center.x() + offset, center.y() + offset),
-            )
-            painter.drawLine(
-                QPointF(center.x() - offset, center.y() + offset),
-                QPointF(center.x() + offset, center.y() - offset),
-            )
+        extent = max(6.0, cell * 0.32)
+        for index, value in enumerate(self._scoring_assignments):
+            if value not in (0, 2):
+                continue
+            x = origin_x + (index % self._state.size) * cell
+            y = origin_y + (index // self._state.size) * cell
+            box = QRectF(x - extent / 2, y - extent / 2, extent, extent)
+            if value == 0:
+                painter.fillRect(box, QColor("#f8f8f4"))
+                painter.fillRect(
+                    QRectF(box.x(), box.y(), extent / 2, extent), QColor("#050607")
+                )
+                painter.setPen(QPen(QColor("#555555"), 1))
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.drawRect(box)
+            else:
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+                painter.setPen(QPen(QColor("#f5f2e8"), max(2.5, cell * 0.065)))
+                painter.drawRect(box)
+                painter.setPen(QPen(QColor("#66717b"), max(1.0, cell * 0.025)))
+                painter.drawRect(box)
         painter.restore()
 
     def _draw_candidates(

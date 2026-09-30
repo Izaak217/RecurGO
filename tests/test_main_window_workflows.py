@@ -8,11 +8,125 @@ from pytestqt.qtbot import QtBot
 
 import recurgo.ui.main_window as main_window_module
 from recurgo.domain import Color, GameTree, Point
-from recurgo.engine import EngineFailure, EngineFailureKind
+from recurgo.engine import AnalysisUpdate, EngineFailure, EngineFailureKind
 from recurgo.storage import GameRepository
 from recurgo.ui import MainWindow
 from recurgo.ui.image_import_dialog import ImagePositionOptions
 from recurgo.ui.new_game_dialog import NewGameDialog, NewGameOptions
+from recurgo.ui.scoring_dialog import ScoringDialog
+
+
+def test_scoring_uses_current_live_map_without_engine_query_and_saves_manual_edits(
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    window, repository = _window(tmp_path, qtbot)
+    engine = FakeEngine()
+    window.engine = engine
+    current_id = window.tree.current_id
+    window._ownership_by_node[current_id] = [0.12] * 180 + [-0.12] * 180 + [0.0]
+    window._active_realtime_request_id = "before-review"
+
+    def review(dialog: ScoringDialog) -> int:
+        assert dialog.ownership == (1,) * 180 + (-1,) * 180 + (2,)
+        window._request_analysis()
+        window._request_ai_move()
+        late = AnalysisUpdate(
+            "before-review", current_id, "realtime", {"ownership": [-1.0] * 361}
+        )
+        window._analysis_update(late)
+        window._analysis_finished(late)
+        assert not engine.queries
+        assert dialog.ownership[0] == 1
+        dialog.brush_combo.setCurrentIndex(3)
+        dialog._edit_point(18, 18)
+        dialog._confirm()
+        dialog._stay()
+        return 1
+
+    monkeypatch.setattr(ScoringDialog, "exec", review)
+    window._open_scoring()
+    saved = repository.load_scoring(window.record.id)
+    assert saved == (current_id, (1,) * 180 + (-1,) * 180 + (0,), frozenset())
+    assert window.record.result == "W+3.75"
+    assert "before-review" in window._ignored_analysis_requests
+    assert window._scoring_dialog is None
+
+    def reopen(dialog: ScoringDialog) -> int:
+        assert dialog.ownership[-1] == 0
+        assert dialog.confirmed_score is not None
+        assert not dialog.brush_combo.isEnabled()
+        dialog.show_dead_checkbox.setChecked(True)
+        dialog._stay()
+        return 1
+
+    monkeypatch.setattr(ScoringDialog, "exec", reopen)
+    window._open_scoring()
+    assert not engine.queries
+
+
+def test_cancel_scoring_leaves_game_and_cache_unchanged_and_reopens_cleanly(
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    window, repository = _window(tmp_path, qtbot)
+    current_id = window.tree.current_id
+    window._ownership_by_node[current_id] = [0.3] * 361
+
+    def cancel(dialog: ScoringDialog) -> int:
+        assert dialog.ownership == (1,) * 361
+        dialog.brush_combo.setCurrentIndex(2)
+        dialog._edit_point(0, 0)
+        dialog.reject()
+        return 0
+
+    monkeypatch.setattr(ScoringDialog, "exec", cancel)
+    for _ in range(2):
+        window._open_scoring()
+        assert window.record.status == "in_progress"
+        assert repository.load_scoring(window.record.id) is None
+        assert window._ownership_by_node[current_id] == [0.3] * 361
+
+
+def test_scoring_never_borrows_ownership_from_a_different_node(
+    qtbot: QtBot,
+    tmp_path: Path,
+    monkeypatch: MonkeyPatch,
+) -> None:
+    window, repository = _window(tmp_path, qtbot)
+    window._ownership_by_node[window.tree.current_id] = [1.0] * 361
+    node, _ = window.tree.play(Point(3, 3))
+    repository.save_node(window.record.id, node)
+
+    def check(dialog: ScoringDialog) -> int:
+        assert dialog.ownership == (2,) * 361
+        assert not dialog.confirm_button.isEnabled()
+        dialog.reject()
+        return 0
+
+    monkeypatch.setattr(ScoringDialog, "exec", check)
+    window._open_scoring()
+
+
+def test_confirmed_review_is_discarded_if_position_changes_during_modal(
+    qtbot: QtBot, tmp_path: Path, monkeypatch: MonkeyPatch,
+) -> None:
+    window, repository = _window(tmp_path, qtbot)
+    window._ownership_by_node[window.tree.current_id] = [1.0] * 361
+
+    def change_position(dialog: ScoringDialog) -> int:
+        dialog._confirm()
+        node, _ = window.tree.play(Point(3, 3))
+        repository.save_node(window.record.id, node)
+        dialog._stay()
+        return 1
+
+    monkeypatch.setattr(ScoringDialog, "exec", change_position)
+    window._open_scoring()
+    assert window.record.status == "in_progress"
+    assert repository.load_scoring(window.record.id) is None
 
 
 class FakeAudio:

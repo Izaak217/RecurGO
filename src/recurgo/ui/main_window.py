@@ -217,6 +217,7 @@ class MainWindow(QMainWindow):
         self._last_engine_diagnostic_path: Path | None = None
         self._last_engine_error_message: str | None = None
         self._resume_after_scoring = False
+        self._scoring_dialog: ScoringDialog | None = None
         self._review_line_ids = [node.id for node in self.tree.line_through()]
         self._startup_resume_pending = self._is_unfinished_battle_record(self.record)
         self._review_mode_active = (
@@ -1493,7 +1494,8 @@ class MainWindow(QMainWindow):
 
     def _schedule_ollama_explanation(self) -> None:
         if (
-            self._ollama_closed
+            self._scoring_dialog is not None
+            or self._ollama_closed
             or not self.ollama_settings.enabled
             or self.record.mode == "fair"
             or self._candidate_explanation is None
@@ -2844,6 +2846,8 @@ class MainWindow(QMainWindow):
         self._schedule_ollama_explanation()
 
     def _request_analysis(self) -> None:
+        if self._scoring_dialog is not None:
+            return
         if self._is_ai_turn():
             self._request_ai_move()
             return
@@ -2874,6 +2878,8 @@ class MainWindow(QMainWindow):
         self._update_ollama_controls()
 
     def _analysis_update(self, update: AnalysisUpdate) -> None:
+        if self._scoring_dialog is not None:
+            return
         if update.request_id in self._ignored_analysis_requests:
             return
         if update.purpose not in {"realtime", "full_game"}:
@@ -2970,6 +2976,8 @@ class MainWindow(QMainWindow):
             self._invalidate_ollama_explanation()
 
     def _analysis_finished(self, update: AnalysisUpdate) -> None:
+        if self._scoring_dialog is not None:
+            return
         if update.request_id in self._ignored_analysis_requests:
             return
         if update.request_id == self._active_realtime_request_id:
@@ -3392,6 +3400,8 @@ class MainWindow(QMainWindow):
             )
 
     def _request_ai_move(self) -> None:
+        if self._scoring_dialog is not None:
+            return
         if self.engine is None:
             self.engine_status.setText(
                 self._tr(
@@ -3464,12 +3474,22 @@ class MainWindow(QMainWindow):
             self._request_analysis()
 
     def _open_scoring(self) -> None:
+        if self._scoring_dialog is not None:
+            return
         if self.record.status == "completed":
             self._show_completed_result()
             return
         self._stop_full_game_analysis(request_realtime=False)
+        self._invalidate_ollama_explanation()
+        for request_id in (self._active_realtime_request_id, self._active_full_request_id):
+            if request_id is not None:
+                self._ignored_analysis_requests.add(request_id)
+        self._active_realtime_request_id = None
+        self._active_full_request_id = None
         if self.engine is not None:
             self.engine.stop_analysis()
+        scoring_game_id = self.record.id
+        scoring_node_id = self.tree.current_id
         last_move = None if self.tree.current.move is None else self.tree.current.move.point
         dialog = ScoringDialog(
             self.tree.current.state,
@@ -3477,16 +3497,30 @@ class MainWindow(QMainWindow):
             komi=self.record.komi,
             last_move=last_move,
             language=self.language,
+            initial_ownership=self._ownership_by_node.get(scoring_node_id),
             parent=self,
         )
-        dialog.exec()
+        dialog.board.set_preferences(self.preferences)
+        self._scoring_dialog = dialog
+        try:
+            dialog.exec()
+        finally:
+            dialog._closed = True
+            self._scoring_dialog = None
+        if self.record.id != scoring_game_id or self.tree.current_id != scoring_node_id:
+            self._refresh()
+            self._request_analysis()
+            return
         score = dialog.confirmed_score
         if score is None:
             self._resume_after_scoring = self.tree.current.state.is_game_over
             self._refresh()
             self._request_analysis()
             return
-        self._finish_game(score.sgf_result)
+        self._finish_game(
+            score.sgf_result, scoring_node_id=scoring_node_id, ownership=dialog.ownership,
+            dead_points=dialog.dead_points,
+        )
         if dialog.action == "new":
             self._new_game()
         else:
@@ -3520,10 +3554,17 @@ class MainWindow(QMainWindow):
         self._finish_game(result)
         self._show_completed_result()
 
-    def _finish_game(self, result: str) -> None:
+    def _finish_game(
+        self, result: str, *, scoring_node_id: str | None = None,
+        ownership: tuple[int, ...] | None = None,
+        dead_points: frozenset[Point] = frozenset(),
+    ) -> None:
         if self.engine is not None:
             self.engine.stop_analysis()
-        self.repository.finish_game(self.record.id, result)
+        self.repository.finish_game(
+            self.record.id, result, scoring_node_id=scoring_node_id, ownership=ownership,
+            dead_points=dead_points,
+        )
         self._resume_after_scoring = False
         self.record = replace(
             self.record,
@@ -3533,11 +3574,30 @@ class MainWindow(QMainWindow):
         self._refresh()
 
     def _show_completed_result(self) -> None:
-        dialog = CompletedGameDialog(
-            format_result(self.record.result, language=self.language),
-            self,
-            language=self.language,
-        )
+        saved = self.repository.load_scoring(self.record.id)
+        dialog: ScoringDialog | CompletedGameDialog
+        if saved is not None and saved[0] in self.tree.nodes:
+            node = self.tree.nodes[saved[0]]
+            dialog = ScoringDialog(
+                node.state, rules=self.record.rules, komi=self.record.komi,
+                last_move=node.move.point if node.move is not None else None,
+                language=self.language, confirmed_ownership=saved[1],
+                initial_dead_points=saved[2],
+                parent=self,
+            )
+            dialog._confirm()
+            dialog.source_label.setText(self._tr("已保存的数子结果", "Saved scoring result"))
+            dialog.instructions.setText(self._tr(
+                "这是已确认并保存的数子结果。",
+                "This scoring result was confirmed and saved.",
+            ))
+        else:
+            dialog = CompletedGameDialog(
+                format_result(self.record.result, language=self.language),
+                self, language=self.language,
+            )
+        if isinstance(dialog, ScoringDialog):
+            dialog.board.set_preferences(self.preferences)
         dialog.exec()
         if dialog.action == "new":
             self._new_game()

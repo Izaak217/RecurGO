@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from pathlib import Path
 
 import pytest
 
 from recurgo.domain import GameTree, Point
+from recurgo.domain.score_review import score_ownership
 from recurgo.storage import GameRepository
 
 
@@ -363,6 +365,53 @@ def test_repository_persists_completed_game_result(tmp_path: Path) -> None:
     repository.close()
 
 
+def test_review_map_survives_reopen_and_rejects_mismatched_result(tmp_path: Path) -> None:
+    database_path = tmp_path / "review-map.db"
+    repository = GameRepository(database_path)
+    tree = GameTree()
+    record = repository.create_game(tree)
+    owners = (1,) * 180 + (-1,) * 180 + (0,)
+    result = score_ownership(tree.current.state, owners, komi=7.5).sgf_result
+    with pytest.raises(ValueError, match="match"):
+        repository.finish_game(
+            record.id, "B+100", scoring_node_id=tree.current_id, ownership=owners
+        )
+    assert repository.load_game(record.id)[0].status == "in_progress"
+    repository.finish_game(record.id, result, scoring_node_id=tree.current_id, ownership=owners)
+    repository.close()
+    reopened = GameRepository(database_path)
+    assert reopened.load_scoring(record.id) == (tree.current_id, owners, frozenset())
+    assert reopened.load_game(record.id)[0].result == result
+    reopened.close()
+
+
+@pytest.mark.parametrize("corruption", ["missing_node", "unassigned", "empty_dead", "result"])
+def test_invalid_saved_review_falls_back_to_recorded_result(
+    tmp_path: Path, corruption: str,
+) -> None:
+    repository = GameRepository(tmp_path / "invalid-review.db")
+    tree = GameTree()
+    record = repository.create_game(tree)
+    owners = [1] * 361
+    payload = {"node_id": tree.current_id, "ownership": owners, "dead": []}
+    result = score_ownership(tree.current.state, owners, komi=7.5).sgf_result
+    if corruption == "missing_node":
+        payload["node_id"] = "not-in-this-game"
+    elif corruption == "unassigned":
+        owners[0] = 2
+    elif corruption == "empty_dead":
+        payload["dead"] = [0]
+    else:
+        result = "W+1"
+    with repository.connection:
+        repository.connection.execute(
+            "UPDATE games SET scoring_json = ?, result = ? WHERE id = ?",
+            (json.dumps(payload), result, record.id),
+        )
+    assert repository.load_scoring(record.id) is None
+    repository.close()
+
+
 def test_repository_persists_global_app_settings(tmp_path: Path) -> None:
     database_path = tmp_path / "settings.db"
     repository = GameRepository(database_path)
@@ -427,14 +476,20 @@ def test_delete_game_removes_nodes_and_analysis_but_keeps_other_games(
     with pytest.raises(KeyError):
         repository.load_game(doomed.id)
     assert repository.load_game(kept.id)[0].name == "保留"
-    assert repository.connection.execute(
-        "SELECT COUNT(*) FROM game_nodes WHERE game_id = ?",
-        (doomed.id,),
-    ).fetchone()[0] == 0
-    assert repository.connection.execute(
-        "SELECT COUNT(*) FROM analysis_snapshots WHERE game_id = ?",
-        (doomed.id,),
-    ).fetchone()[0] == 0
+    assert (
+        repository.connection.execute(
+            "SELECT COUNT(*) FROM game_nodes WHERE game_id = ?",
+            (doomed.id,),
+        ).fetchone()[0]
+        == 0
+    )
+    assert (
+        repository.connection.execute(
+            "SELECT COUNT(*) FROM analysis_snapshots WHERE game_id = ?",
+            (doomed.id,),
+        ).fetchone()[0]
+        == 0
+    )
     repository.close()
 
 
@@ -470,12 +525,18 @@ def test_delete_game_rolls_back_all_changes_when_a_dependent_delete_fails(
         repository.delete_game(record.id)
 
     assert repository.load_game(record.id)[0].name == "事务回滚"
-    assert repository.connection.execute(
-        "SELECT COUNT(*) FROM game_nodes WHERE game_id = ?",
-        (record.id,),
-    ).fetchone()[0] == 2
-    assert repository.connection.execute(
-        "SELECT COUNT(*) FROM analysis_snapshots WHERE game_id = ?",
-        (record.id,),
-    ).fetchone()[0] == 1
+    assert (
+        repository.connection.execute(
+            "SELECT COUNT(*) FROM game_nodes WHERE game_id = ?",
+            (record.id,),
+        ).fetchone()[0]
+        == 2
+    )
+    assert (
+        repository.connection.execute(
+            "SELECT COUNT(*) FROM analysis_snapshots WHERE game_id = ?",
+            (record.id,),
+        ).fetchone()[0]
+        == 1
+    )
     repository.close()
