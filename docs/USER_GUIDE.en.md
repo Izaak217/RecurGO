@@ -30,22 +30,24 @@ whether the engine is ready.
 ## Start and play a game
 
 1. Select **New game / 新棋局**. Enter a game name; Black and White player names are optional.
-2. Choose a mode and confirm. **Manual study / 手动打谱** lets you record both sides' moves.
+2. Choose a mode and confirm. **Manual study / 手动打谱** lets users record both sides' moves.
    **Fair play / 公平对战** plays against the local AI with real-time analysis and ownership
    disabled. **Assisted play / 辅助对战** plays against the AI and permits optional analysis.
-3. In a play mode, choose Black or White and a difficulty. The AI plays first when you choose
+3. In a play mode, choose Black or White and a difficulty. The AI plays first when users choose
    White. Beginner through Expert use different Human SL human-style levels; **Strongest / 最强**
    uses the main model's best searched move.
 4. Click a legal board intersection. Wait for the AI when it is its turn. Every move is saved
    automatically in the local game library.
 
-You can also change the current game's mode, difficulty, or play-as color from the toolbar.
+Users can also change the current game's mode, difficulty, or play-as color from the toolbar.
 These controls are temporarily disabled during full-game analysis. **Undo** and **Redo** move
 through the game; in play modes they also handle the corresponding AI move. **Pass** skips a
-turn. Two consecutive passes open scoring, or you can select **Finish / Score** yourself.
+turn. Two consecutive passes open scoring; users can also select **Finish / Score**.
 
-Scoring previews this node's KataGo ownership, then completes a fresh analysis using the
-configured visits. Review the finished proposal before confirming the game.
+Scoring previews the current estimate, then completes a fresh KataGo analysis with the
+configured visits. Version 1.0.1 also considers connected groups, eyes and search
+variation. Users review and correct the suggestion before confirming; automatic judgments
+can still be wrong.
 
 1. Click intersections to cycle through **Black, White, shared equally, unresolved**, or select
    a fixed brush. Split squares mean shared empty points, half a stone for each side; orange
@@ -53,13 +55,14 @@ configured visits. Review the finished proposal before confirming the game.
 2. In seki, private eyes belong to their owner; only common empty points are split. Use
    **Toggle dead group** to remove a whole group, then assign the vacated intersections.
    Click again to restore the group. A whole group assigned to its opponent is also shown dead.
-   Living stones cannot be shared.
-3. Refreshing AI ownership preserves your corrections. Undo all corrections restores the
-   latest proposal. Without AI, assign every point manually. Unresolved points or inconsistent
-   group status prevent final confirmation.
-4. Resolve ko and disputed life/death by continuing play. An ordinary unresolved ko is not
-   automatically shared. Contestable points left after both players agree to end can be treated
-   as seki under Chinese rule 21; special cyclic-ko adjudications are not automated.
+3. **Analyze score again** preserves users’ corrections. Undo all corrections restores the
+   latest suggestion. Manual Black, White and shared assignments take priority; group-status
+   disagreements are advisory and do not block confirmation. Without AI, users can assign
+   every point manually. Any unresolved points must still be completed.
+4. Ordinary unresolved ko is not automatically shared. Under Chinese rule 21, contestable
+   points left after an agreed end are treated as seki. Disputed life and death is resolved by
+   further play, starting with the side claiming the stones are dead. Merely discovering a new
+   tactic after an agreed end does not reopen play. Special cyclic-ko rulings are not automated.
 
 Live stones and owned empty points are counted once; komi is applied once. Shared points can
 produce half-stone area totals, and 3¾-stone compensation can produce quarter-stone margins.
@@ -140,7 +143,7 @@ application does not overwrite that directory as program files.
 
 | Symptom | First check |
 | --- | --- |
-| No candidate moves | Is real-time analysis enabled, and are you outside fair play? Then run the separate checker and read KataGo status. |
+| No candidate moves | Check that real-time analysis is enabled and fair play is off. Then run the separate checker and read KataGo status. |
 | AI does not play | Is it the AI's turn, and did the separate checker complete a real analysis? AI play needs a working engine. |
 | Controls disappear in a narrow window | Open the white-backed overflow button at the toolbar's right edge, or use Menu / 菜单. |
 | Image recognition is inaccurate | Select the correct board size and four corners, then correct the position manually. |

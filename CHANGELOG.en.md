@@ -6,7 +6,8 @@ English | [简体中文](CHANGELOG.md)
 
 - Fix final scoring that treated large, not-yet-enclosed areas as neutral. Preview this node's ownership, complete a fresh KataGo search, then review the assignments.
 - Add per-point Black, White, shared equally and unresolved brushes, plus whole-group death/restoration. Shared empty points count half each; half-stone totals and quarter-stone margins are exact. AI uncertainty and unresolved ko are not automatically shared.
-- Pending points or inconsistent group status prevent final confirmation. Refresh preserves manual corrections; cancellation and stale responses cannot overwrite another position or trigger an AI move.
+- Version 1.0.1 combines group structure, eyes and search variation to improve automatic territory assessment, including provably living groups and a limited class of clear mutual-life shapes.
+- Users’ manual decisions take priority and survive refreshes. Group-status disagreements are advisory; unresolved points still prevent final confirmation. Cancellation and stale responses cannot overwrite another position or trigger an AI move.
 - Persist the final map, dead groups and scored node for reopening, while preserving earlier games and results. Models, search-budget baselines and Strongest play settings remain unchanged.
 - Update bilingual instructions, rule references and the upgrade/release workflow; include both changelogs in the installer.
 
