@@ -94,19 +94,17 @@ class ScoringDialog(QDialog):
         side = QFrame()
         side.setMinimumWidth(330)
         side_layout = QVBoxLayout(side)
-        title = QLabel(tr(language, "核对领地并数子", "Review ownership and score"))
+        title = QLabel(tr(language, "核对数子结果", "Review the score"))
         title.setStyleSheet("font-size: 20px; font-weight: 600;")
         side_layout.addWidget(title)
         self.instructions = QLabel(
             tr(
                 language,
-                "KataGo 提供初始归属，终局分析后核对。逐点设置黑、白、双方各半或待确认；"
-                "死子可整块标记。双活公气各得一半；请解决劫争和死活争议后再确认。",
-                "Review KataGo's assignments after final-position analysis. "
-                "Set points to Black, "
-                "White, shared equally or unresolved; mark dead groups separately. "
-                "Shared liberties count half each. "
-                "Resolve ko and life/death disputes before confirming.",
+                "结合 KataGo 和棋形给出数子建议。用户可逐点设为归黑方、归白方、"
+                "双方各半或待确认，也可整块标记死子。手动修改优先，重新分析时保留。",
+                "KataGo analysis and board shapes provide an initial scoring suggestion. "
+                "Users can assign points to Black, White, shared or unresolved, "
+                "and mark dead groups. Manual decisions take priority and survive refreshes.",
             )
         )
         self.instructions.setWordWrap(True)
@@ -114,10 +112,10 @@ class ScoringDialog(QDialog):
         self.source_label = QLabel(
             tr(
                 language,
-                "已载入当前局面的 KataGo 领地，请核对。"
+                "已载入当前局面的领地估算，供核对。"
                 if self._has_map
                 else "暂无 AI 领地；可获取分析或手动指定。",
-                "Loaded this position's KataGo ownership; please review."
+                "Loaded this position's territory estimate for review."
                 if self._has_map
                 else "No AI ownership yet; request analysis or assign points manually.",
             )
@@ -136,10 +134,10 @@ class ScoringDialog(QDialog):
             self.brush_combo.addItem(tr(language, zh, en), value)
         side_layout.addWidget(self.brush_combo)
         self.refresh_button = QPushButton(
-            tr(language, "重新获取 AI 领地", "Refresh AI ownership")
+            tr(language, "重新分析数子", "Analyze score again")
         )
         self.refresh_button.setToolTip(
-            tr(language, "保留你已修改的点位。", "Keeps your point corrections.")
+            tr(language, "保留用户手动修改的点位。", "Preserves users' manual corrections.")
         )
         self.refresh_button.setEnabled(self._engine is not None)
         self.refresh_button.clicked.connect(self._request_estimate)
@@ -167,7 +165,7 @@ class ScoringDialog(QDialog):
         side_layout.addWidget(notice)
         side_layout.addStretch(1)
         self.confirm_button = QPushButton(
-            tr(language, "确认归属并结束对局", "Confirm ownership and finish game")
+            tr(language, "确认数子结果并结束对局", "Confirm score and finish game")
         )
         self.confirm_button.clicked.connect(self._confirm)
         side_layout.addWidget(self.confirm_button)
@@ -240,12 +238,13 @@ class ScoringDialog(QDialog):
         self.board.set_scoring_assignments(self.ownership)
         self.board.set_scoring_mode(True, self.dead_points, edit_ownership=True)
         issues = scoring_issues(self.state, self.ownership, self._explicit_dead)
+        pending = self.ownership.count(UNSETTLED)
         self.board.set_attention_points(issues)
         available = self._has_map or bool(self._overrides)
         supported = self.rules.lower() in {"chinese", "chinese-ogs"}
         self.confirm_button.setEnabled(
             available
-            and not issues
+            and not pending
             and not self._analysis_pending
             and not self._closed
             and supported
@@ -269,20 +268,20 @@ class ScoringDialog(QDialog):
             self.score_label.setText(
                 tr(
                     self.language,
-                    "贴目须为有限的整数或半整数；请返回并检查棋局设置。",
-                    "Komi must be a finite whole or half point; "
-                    "return and check game settings.",
+                    "计分数据或贴目无效，请返回并检查棋局。贴目须为整数或半整数。",
+                    "Invalid scoring data or komi; return and check the game. "
+                    "Komi must be a finite whole or half point.",
                 )
             )
             return
         rules = format_rules_and_komi(self.rules, self.komi, language=self.language)
         result = (
             _score_result(score, self.language)
-            if not issues
+            if not pending
             else tr(
                 self.language,
-                "存在待确认点或棋块死活矛盾，暂不判胜负。",
-                "Resolve pending points or inconsistent group status before scoring.",
+                "还有待确认点，暂不判胜负。",
+                "Resolve the remaining points before scoring.",
             )
         )
         if not supported:
@@ -296,12 +295,14 @@ class ScoringDialog(QDialog):
                 self.language,
                 f"{rules}\n\n黑方：{score.black_area:g} 子\n白方：{score.white_area:g} 子\n"
                 f"共有空点：{score.neutral_points}（已各分一半）\n"
-                f"待确认／矛盾：{len(issues)} 点\n"
+                f"待确认：{pending} 点\n"
+                f"死活判断提示：{len(issues) - pending} 点（以手动修改为准）\n"
                 f"手动修改：{len(self._overrides)} 点\n\n按当前归属：{result}",
                 f"{rules}\n\nBlack area: {score.black_area:g}\n"
                 f"White area: {score.white_area:g}\n"
                 f"Shared points: {score.neutral_points} (half each included)\n"
-                f"Unresolved / conflicting: {len(issues)}\n"
+                f"Unresolved: {pending}\n"
+                f"Group-status notices: {len(issues) - pending} (manual decisions prevail)\n"
                 f"Edited points: {len(self._overrides)}\n\n"
                 f"From current assignments: {result}",
             )
@@ -318,7 +319,7 @@ class ScoringDialog(QDialog):
             tr(
                 self.language,
                 "正在获取当前局面领地；保留手动修改…",
-                "Getting this position's ownership; keeping your corrections…",
+                "Analyzing territory; preserving manual corrections…",
             )
         )
         self._request_id = self._engine.analyze(
@@ -329,6 +330,7 @@ class ScoringDialog(QDialog):
             max_visits=self._max_visits,
             human_profile=None,
             include_ownership=True,
+            include_ownership_stdev=True,
             purpose="scoring",
         )
 
@@ -343,7 +345,9 @@ class ScoringDialog(QDialog):
             return
         if not update.is_final:
             return
-        points = prepare_proposal(self.state, update.payload.get("ownership"))
+        points = prepare_proposal(
+            self.state, update.payload.get("ownership"), update.payload.get("ownershipStdev")
+        )
         if points is None:
             self._estimate_unavailable()
             return
@@ -355,8 +359,8 @@ class ScoringDialog(QDialog):
         self.source_label.setText(
             tr(
                 self.language,
-                "已更新 KataGo 领地；手动修改已保留。",
-                "KataGo ownership updated; your corrections are preserved.",
+                "数子建议已更新；用户手动修改已保留。",
+                "Scoring suggestion updated; manual corrections are preserved.",
             )
         )
         self._update_score()
@@ -416,8 +420,8 @@ class ScoringDialog(QDialog):
         self.instructions.setText(
             tr(
                 self.language,
-                "已确认当前点位归属和结果。关闭结果界面后保存到棋谱库。",
-                "Ownership and result confirmed. "
+                "已确认数子结果。关闭结果界面后保存到棋谱库。",
+                "Score confirmed. "
                 "Close this result to save to the game library.",
             )
         )

@@ -103,6 +103,7 @@ def test_analysis_missing_map_preserves_budget_and_corrections(qtbot):
     qtbot.waitUntil(lambda: len(engine.queries) == 1)
     assert engine.queries[0]["max_visits"] == 1600
     assert engine.queries[0]["include_ownership"] is True
+    assert engine.queries[0]["include_ownership_stdev"] is True
     assert engine.queries[0]["human_profile"] is None
     dialog.brush_combo.setCurrentIndex(2)
     dialog._edit_point(1, 1)
@@ -194,7 +195,7 @@ def test_dead_group_can_be_restored_or_removed_before_sharing(qtbot):
     qtbot.addWidget(dialog)
     dialog.brush_combo.setCurrentIndex(3)
     dialog._edit_point(0, 0)
-    assert not dialog.confirm_button.isEnabled()
+    assert dialog.confirm_button.isEnabled()  # Manual decisions take priority.
     dialog.brush_combo.setCurrentIndex(5)
     dialog._edit_point(0, 0)
     assert dialog.ownership[:2] == (2, 2)
@@ -220,3 +221,54 @@ def test_invalid_komi_and_other_rules_cannot_confirm(qtbot):
         )
         qtbot.addWidget(dialog)
         assert not dialog.confirm_button.isEnabled()
+
+
+def test_manual_eye_and_group_decisions_survive_shape_correction_and_refresh(qtbot):
+    state = BoardState.from_setup({
+        Point(x, y): Color.BLACK for y in range(5) for x in range(5)
+        if (x, y) not in ((1, 1), (3, 3))
+    }, size=5)
+    tree, engine = GameTree(state), EstimateEngine()
+    dialog = ScoringDialog(
+        state, rules="chinese", komi=0, last_move=None, tree=tree, engine=engine,
+        initial_ownership=[0.] * 25,
+    )
+    qtbot.addWidget(dialog)
+    assert dialog.ownership == (1,) * 25  # Shape evidence fixes the first map.
+    qtbot.waitUntil(lambda: len(engine.queries) == 1)
+    dialog.brush_combo.setCurrentIndex(2)
+    dialog._edit_point(1, 1)  # User assigns a proven Black eye to White.
+    dialog._edit_point(0, 0)  # User also overrides one stone in a connected group.
+    engine.analysis_finished.emit(update(tree, values=[0.] * 25))
+    assert dialog.ownership[6] == dialog.ownership[0] == -1
+    assert dialog.confirm_button.isEnabled()
+    dialog.refresh_button.click()
+    engine.analysis_finished.emit(update(tree, request="estimate-2", values=[1.] * 25))
+    assert dialog.ownership[6] == dialog.ownership[0] == -1
+    dialog._confirm()
+    assert dialog.confirmed_score.black_area == 23
+    assert dialog.confirmed_score.white_area == 2
+
+
+def test_invalid_variation_response_preserves_previous_suggestion(qtbot):
+    dialog, engine, tree = make_dialog(qtbot, initial=[1.] * 5 + [-1.] * 4)
+    qtbot.waitUntil(lambda: len(engine.queries) == 1)
+    result = update(tree)
+    result.payload["ownershipStdev"] = [float("nan")] * 9
+    before = dialog.ownership
+    engine.analysis_finished.emit(result)
+    assert dialog.ownership == before
+    assert "failed" in dialog.source_label.text()
+
+
+def test_manual_priority_does_not_accept_corrupted_dead_point_data(qtbot):
+    for point in (Point(1, 1), Point(9, 9)):
+        dialog = ScoringDialog(
+            BoardState.new(size=3), rules="chinese", komi=7.5, last_move=None,
+            confirmed_ownership=(1,) * 9, initial_dead_points=frozenset({point}),
+        )
+        qtbot.addWidget(dialog)
+        assert not dialog.confirm_button.isEnabled()
+        dialog._confirm()
+        assert dialog.confirmed_score is None
+        assert "Invalid scoring" in dialog.score_label.text()

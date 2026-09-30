@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -22,6 +23,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--language", choices=("en", "zh"), default="en")
     args = parser.parse_args()
+    artifact_dir = root / "build" / f"scoring-ui-probe-{args.language}-{uuid4().hex[:8]}"
     state = BoardState.from_setup(
         {
             Point(0, 0): Color.BLACK,
@@ -50,7 +52,6 @@ def main() -> int:
 
     def verify() -> None:
         nonlocal result_code
-        artifact_dir = root / "build" / "scoring-ui-probe"
         artifact_dir.mkdir(parents=True, exist_ok=True)
         dialog.brush_combo.setCurrentIndex(3)
         dialog._edit_point(9, 9)

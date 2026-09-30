@@ -29,6 +29,25 @@ def _runtime(tmp_path: Path) -> EngineRuntime:
     )
 
 
+def test_scoring_statistics_opt_in_preserves_other_search_parameters(tmp_path, monkeypatch):
+    from recurgo.domain import GameTree
+
+    engine = KataGoEngine(_runtime(tmp_path))
+    monkeypatch.setattr(engine, "start", lambda: None)
+    tree = GameTree()
+    engine.analyze(tree=tree, node_id=tree.current_id, rules="chinese", komi=7.5,
+                   max_visits=1600, human_profile=None, include_ownership=True)
+    baseline = dict(engine._pending_query)
+    engine.analyze(tree=tree, node_id=tree.current_id, rules="chinese", komi=7.5,
+                   max_visits=1600, human_profile=None, include_ownership=True,
+                   include_ownership_stdev=True, purpose="scoring")
+    revised = dict(engine._pending_query)
+    baseline.pop("id")
+    revised.pop("id")
+    assert revised.pop("includeOwnershipStdev") is True
+    assert revised == baseline
+
+
 def test_analysis_protocol_error_is_reported_and_request_is_cleared(
     qtbot: QtBot,
     tmp_path: Path,

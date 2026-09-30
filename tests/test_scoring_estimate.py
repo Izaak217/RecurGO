@@ -102,14 +102,15 @@ def test_whole_group_life_death_and_removed_intersections():
     assert inferred_dead(state, owners) == group
     assert score_ownership(state, owners, komi=0).dead_black == 2
     owners[0] = 0
-    with pytest.raises(ValueError):
-        score_ownership(state, owners, komi=0)
-    # Shared ownership on a former stone is allowed only after removing the whole group.
+    # v1.0.1 revision: conflicts are advisory; the complete manual map is final.
+    assert scoring_issues(state, owners) == group
+    assert score_ownership(state, owners, komi=0).black_area == 0.5
     score = score_ownership(state, owners, komi=0, dead_points=group)
     assert score.dead_black == 2
     assert score.black_area == 0.5
-    with pytest.raises(ValueError):
-        score_ownership(state, owners, komi=0, dead_points=frozenset({Point(0, 0)}))
+    assert score_ownership(
+        state, owners, komi=0, dead_points=frozenset({Point(0, 0)})
+    ).dead_black == 1
 
 
 def test_partial_preview_is_not_a_final_score():

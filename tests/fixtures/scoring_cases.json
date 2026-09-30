@@ -1,0 +1,8 @@
+[
+  {"name":"two_eyes", "board":["XXXXX","X.XXX","XXXXX","XXX.X","XXXXX"], "expected":["BBBBB","BBBBB","BBBBB","BBBBB","BBBBB"], "passes":2},
+  {"name":"no_eye_seki", "board":["XXOOO","XX.OO","XXOOO","XX.OO","XXOOO"], "expected":["BBWWW","BBSWW","BBWWW","BBSWW","BBWWW"], "passes":2},
+  {"name":"private_eye_seki", "board":["XXOOO","XXOOO",".X.O.","XXOOO","XXOOO"], "expected":["BBWWW","BBWWW","BBSWW","BBWWW","BBWWW"], "passes":2},
+  {"name":"dead_stone_in_live_territory", "board":[".XXXX","XXXXX",".XX.X","XXXOX","XXXXX"], "expected":["BBBBB","BBBBB","BBBBB","BBBBB","BBBBB"], "passes":2},
+  {"name":"agreed_dame", "board":[".XXX.OOO.","XXXX.OOOO",".XXX.OOO.","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO"], "expected":["BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW","BBBBSWWWW"], "passes":2},
+  {"name":"unplayed_dame", "board":[".XXX.OOO.","XXXX.OOOO",".XXX.OOO.","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO","XXXX.OOOO"], "expected":["BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW","BBBB?WWWW"], "passes":0}
+]

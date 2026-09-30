@@ -193,6 +193,7 @@ class KataGoEngine(QObject):
         max_visits: int = 800,
         human_profile: str | None = "rank_3k",
         include_ownership: bool = False,
+        include_ownership_stdev: bool = False,
         purpose: str = "realtime",
     ) -> str:
         self.stop_analysis()
@@ -243,6 +244,8 @@ class KataGoEngine(QObject):
         }
         if initial_stones:
             query["initialStones"] = initial_stones
+        if include_ownership_stdev:
+            query["includeOwnershipStdev"] = True
         self._pending_query = query
         self._pending_node_id = node_id
         self._pending_purpose = purpose

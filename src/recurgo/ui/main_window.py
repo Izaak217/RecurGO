@@ -3590,10 +3590,10 @@ class MainWindow(QMainWindow):
                 parent=self,
             )
             dialog._confirm()
-            dialog.source_label.setText(self._tr("已保存的终局归属", "Saved final ownership"))
+            dialog.source_label.setText(self._tr("已保存的数子结果", "Saved scoring result"))
             dialog.instructions.setText(self._tr(
-                "这是已确认并保存的点位归属。",
-                "These point assignments were confirmed and saved.",
+                "这是已确认并保存的数子结果。",
+                "This scoring result was confirmed and saved.",
             ))
         else:
             dialog = CompletedGameDialog(

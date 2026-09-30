@@ -28,6 +28,27 @@ def test_final_ownership_survives_reopen_and_rejects_wrong_node(tmp_path: Path) 
     reopened.close()
 
 
+def test_manual_group_disagreement_survives_save_and_reopen(tmp_path: Path) -> None:
+    from recurgo.domain import BoardState, Color
+    from recurgo.domain.scoring_estimate import score_ownership
+
+    path = tmp_path / "manual-score.db"
+    state = BoardState.from_setup({Point(0, 0): Color.BLACK, Point(1, 0): Color.BLACK}, size=3)
+    tree = GameTree(state)
+    owners = (-1,) + (1,) * 8
+    score = score_ownership(state, owners, komi=7.5)
+    repository = GameRepository(path)
+    record = repository.create_game(tree)
+    repository.finish_game(
+        record.id, score.sgf_result, scoring_node_id=tree.current_id, ownership=owners,
+    )
+    repository.close()
+    reopened = GameRepository(path)
+    assert reopened.load_scoring(record.id) == (tree.current_id, owners, frozenset())
+    assert reopened.load_game(record.id)[0].result == score.sgf_result
+    reopened.close()
+
+
 def test_game_and_variations_survive_repository_reopen(tmp_path: Path) -> None:
     database_path = tmp_path / "coach.db"
     repository = GameRepository(database_path)
