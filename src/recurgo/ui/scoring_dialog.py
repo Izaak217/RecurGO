@@ -1,4 +1,4 @@
-"""v1.0.1.dev1: review the existing live ownership map, without reanalysis."""
+"""v1.0.1.dev2: explain blocked confirmation beside the scoring button."""
 
 from __future__ import annotations
 
@@ -64,6 +64,7 @@ class ScoringDialog(QDialog):
             else live_assignments(initial_ownership, state.size)
         )
         self._base_ownership = initial or (UNASSIGNED,) * (state.size * state.size)
+        self._has_initial_ownership = initial is not None
         self._overrides: dict[int, int] = {}
         self.setWindowTitle(
             tr(language, "结束对局 · 中国规则数子", "Finish game · Chinese area scoring")
@@ -150,6 +151,9 @@ class ScoringDialog(QDialog):
         notice.setWordWrap(True)
         panel.addWidget(notice)
         panel.addStretch(1)
+        self.confirm_hint = QLabel()
+        self.confirm_hint.setWordWrap(True)
+        panel.addWidget(self.confirm_hint)
         self.confirm_button = QPushButton(
             tr(language, "确认数子结果并结束对局", "Confirm score and finish game")
         )
@@ -212,6 +216,12 @@ class ScoringDialog(QDialog):
             self._explicit_dead = frozenset()
             self._update_score()
 
+    def _set_confirm_hint(self, message: str) -> None:
+        self.confirm_hint.setText(message)
+        self.confirm_hint.setVisible(bool(message))
+        self.confirm_button.setToolTip(message)
+        self.confirm_button.setAccessibleDescription(message)
+
     def _update_score(self) -> None:
         owners = self.ownership
         self.board.set_ownership([float(v) if v in (-1, 1) else 0.0 for v in owners])
@@ -227,14 +237,39 @@ class ScoringDialog(QDialog):
             )
         except ValueError:
             self.confirm_button.setEnabled(False)
-            self.score_label.setText(
-                tr(
-                    self.language,
-                    "计分数据或贴目无效，请返回检查棋局。",
-                    "Invalid scoring data or komi; return and check the game.",
-                )
+            message = tr(
+                self.language,
+                "计分数据或贴目无效，请返回检查棋局。",
+                "Invalid scoring data or komi; return and check the game.",
             )
+            self.score_label.setText(message)
+            self._set_confirm_hint(message)
             return
+        if not supported:
+            hint = tr(
+                self.language,
+                "当前计分器仅支持中国围棋规则，请返回检查棋局规则。",
+                "This scorer supports Chinese rules only. Return and check the game rules.",
+            )
+        elif pending and not self._has_initial_ownership:
+            hint = tr(
+                self.language,
+                "尚未载入实时领地数据。请返回棋局开启领地分析，"
+                f"或手动指定剩余 {pending} 个点的归属。",
+                "No live territory data is loaded. Return to enable territory analysis, "
+                f"or manually assign the remaining {pending} points.",
+            )
+        elif pending:
+            hint = tr(
+                self.language,
+                f"还有 {pending} 个点待确认。请用上方选项指定空心方框处的归属，"
+                "全部确认后即可结束对局。",
+                f"Unassigned points remaining: {pending}. Use the selector above to assign "
+                "the hollow squares before confirming the score.",
+            )
+        else:
+            hint = ""
+        self._set_confirm_hint(hint)
         rules = format_rules_and_komi(self.rules, self.komi, language=self.language)
         result = (
             _score_result(score, self.language)
@@ -268,6 +303,7 @@ class ScoringDialog(QDialog):
             self.state, self.ownership, komi=self.komi, dead_points=self._explicit_dead
         )
         self._closed = True
+        self._set_confirm_hint("")
         self.board.set_input_enabled(False)
         self.brush_combo.setEnabled(False)
         self.reset_button.setEnabled(False)

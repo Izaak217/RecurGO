@@ -1,4 +1,4 @@
-# Run from source (v1.0.0)
+# Run from source (v1.0.1)
 
 English | [简体中文](SOURCE_SETUP.md)
 

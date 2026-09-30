@@ -2,6 +2,18 @@
 
 English | [简体中文](CHANGELOG.md)
 
+## v1.0.1 — 2026-10-01
+
+Testing v1.0.0 revealed that some areas were counted as neutral when ending a game, producing results that differed noticeably from KataGo’s territory analysis during play. This update revises the final-scoring workflow and improves score review.
+
+“Finish / Score” now uses the current position’s live KataGo ownership data as its starting point. Users can adjust individual points and mark or restore whole dead groups. The final score follows the assignments confirmed by users.
+
+Under Chinese rules, shared empty points count as half a stone for each side. Unassigned points appear as small hollow squares. A message beside the confirmation button shows how many points remain and how to resolve them. Other conditions, such as missing territory data, also receive an explanation.
+
+The new “Show dead stones” option hides dead stones by default and displays them faintly when enabled, without changing the score. Confirmed assignments, dead-stone markings and results are saved in the game library and can be viewed again later.
+
+Before updating, close RecurGO and back up saved games, then run the new installer.
+
 ## v1.0.0 — 2026-09-26
 
 - Aligned the application, build version, and bilingual user documentation with the first formal version number.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "recurgo"
-version = "1.0.1.dev1"
+version = "1.0.1"
 description = "Local KataGo-powered Go practice, play, and review desktop application"
 readme = "README.md"
 license = "MIT"

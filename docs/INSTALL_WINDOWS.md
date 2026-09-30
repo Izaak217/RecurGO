@@ -1,4 +1,4 @@
-# RecurGO Windows 安装指南（v1.0.0）
+# RecurGO Windows 安装指南（v1.0.1）
 
 [English](INSTALL_WINDOWS.en.md) | 简体中文
 
@@ -13,7 +13,7 @@
 
 ## 下载前先看
 
-RecurGO v1.0.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
+RecurGO v1.0.1 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
 
 目前 KataGo 实际分析已在 NVIDIA GeForce RTX 5070 Ti Laptop GPU 和
 NVIDIA GeForce RTX 2080 Ti 上通过；后者的主程序也已显示候选点和胜率。

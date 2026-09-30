@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import pytest
 from pytestqt.qtbot import QtBot
 
 from recurgo.domain import BoardState, Color, Point
 from recurgo.domain.score_review import UNASSIGNED
+from recurgo.i18n import Language
 from recurgo.ui.scoring_dialog import CompletedGameDialog, ScoringDialog
 
 
@@ -128,3 +130,63 @@ def test_point_override_can_restore_a_saved_dead_stone(qtbot: QtBot) -> None:
     dialog.brush_combo.setCurrentIndex(1)
     dialog._edit_point(0, 0)
     assert not dialog.dead_points
+
+
+@pytest.mark.parametrize("language", ["zh", "en"])
+def test_confirmation_hint_tracks_edits_reset_and_confirmation(
+    qtbot: QtBot, language: Language,
+) -> None:
+    dialog = ScoringDialog(
+        BoardState.new(size=3), rules="chinese", komi=7.5, last_move=None,
+        initial_ownership=[0.0] * 2 + [1.0] * 7, language=language,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    assert dialog.confirm_hint.isVisible()
+    assert "2" in dialog.confirm_hint.text()
+    assert dialog.confirm_hint.geometry().bottom() <= dialog.confirm_button.geometry().top()
+    assert dialog.confirm_hint.text() == dialog.confirm_button.accessibleDescription()
+    dialog.brush_combo.setCurrentIndex(1)
+    dialog._edit_point(0, 0)
+    assert "1" in dialog.confirm_hint.text()
+    assert not dialog.confirm_button.isEnabled()
+    dialog._edit_point(1, 0)
+    assert dialog.confirm_hint.isHidden()
+    assert dialog.confirm_button.toolTip() == ""
+    assert dialog.confirm_button.isEnabled()
+    dialog._reset_points()
+    assert dialog.confirm_hint.isVisible()
+    assert "2" in dialog.confirm_hint.text()
+    dialog._edit_point(0, 0)
+    dialog._edit_point(1, 0)
+    dialog._confirm()
+    assert dialog.confirmed_score is not None
+    assert dialog.confirm_hint.isHidden()
+
+
+@pytest.mark.parametrize("language", ["zh", "en"])
+@pytest.mark.parametrize("reason", ["missing", "rules", "komi"])
+def test_disabled_confirmation_explains_the_actual_blocker(
+    qtbot: QtBot, language: Language, reason: str,
+) -> None:
+    dialog = ScoringDialog(
+        BoardState.new(size=3), rules="japanese" if reason == "rules" else "chinese",
+        komi=7.25 if reason == "komi" else 7.5, last_move=None,
+        initial_ownership=None if reason == "missing" else [1.0] * 9, language=language,
+    )
+    qtbot.addWidget(dialog)
+    dialog.show()
+    assert not dialog.confirm_button.isEnabled()
+    expected = {
+        "zh": {"missing": "尚未载入", "rules": "中国围棋规则", "komi": "贴目无效"},
+        "en": {"missing": "No live territory", "rules": "Chinese rules only", "komi": "komi"},
+    }
+    assert expected[language][reason] in dialog.confirm_hint.text()
+    assert dialog.confirm_hint.isVisible()
+    if reason == "missing":
+        dialog.brush_combo.setCurrentIndex(1)
+        for y in range(3):
+            for x in range(3):
+                dialog._edit_point(x, y)
+        assert dialog.confirm_hint.isHidden()
+        assert dialog.confirm_button.isEnabled()

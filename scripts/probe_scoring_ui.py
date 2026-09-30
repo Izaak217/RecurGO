@@ -1,4 +1,4 @@
-"""v1.0.1.dev1: render dense scoring fixtures; these are UI, not accuracy, tests."""
+"""v1.0.1.dev2: render dense scoring fixtures and confirmation hints."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from recurgo.ui.scoring_dialog import ScoringDialog  # noqa: E402
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    output = root / "build" / f"scoring-ui-dev1-{stamp}-{uuid4().hex[:8]}"
+    output = root / "build" / f"scoring-ui-dev2-{stamp}-{uuid4().hex[:8]}"
     output.mkdir(parents=True, exist_ok=False)
     # Dense visual fixture includes living and dead stones plus low-magnitude ownership.
     stones = {}
@@ -102,15 +102,26 @@ def render_language(
     application.processEvents()
     assert dialog.grab().save(str(output / f"{language}-manual-marks.png"))
     assert not dialog.confirm_button.isEnabled()
+    assert dialog.confirm_hint.isVisible()
     dialog._reset_points()
     dialog._confirm()
     assert dialog.confirmed_score is not None
+    assert dialog.confirm_hint.isHidden()
     application.processEvents()
     assert dialog.grab().save(str(output / f"{language}-confirmed.png"))
     for shown in (False, True):
         dialog.show_dead_checkbox.setChecked(shown)
         assert dialog.ownership == original_owners
     dialog.close()
+    missing = ScoringDialog(
+        state, rules="chinese", komi=7.5, last_move=None, language=language
+    )
+    missing.resize(1320, 900)
+    missing.show()
+    application.processEvents()
+    assert missing.confirm_hint.isVisible()
+    assert missing.grab().save(str(output / f"{language}-missing-territory.png"))
+    missing.close()
 
 
 if __name__ == "__main__":

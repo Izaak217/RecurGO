@@ -1,4 +1,4 @@
-# RecurGO User Manual (v1.0.0)
+# RecurGO User Manual (v1.0.1)
 
 English | [简体中文](USER_GUIDE.md)
 
@@ -44,9 +44,23 @@ These controls are temporarily disabled during full-game analysis. **Undo** and 
 through the game; in play modes they also handle the corresponding AI move. **Pass** skips a
 turn. Two consecutive passes open scoring, or you can select **Finish / Score** yourself.
 
-In scoring, click a whole group to mark it dead and click again to restore it. Check the result
-before confirming. The result is saved in the library and in later SGF exports. **Resign** asks
-for confirmation. Creating a new game does not delete the previous one.
+Scoring starts with the current position's live KataGo ownership. Users can choose
+**Assign Black**, **Assign White**, **Shared: half each**, or **Unassigned** from the selector
+and edit individual points. **Toggle dead group** marks or restores a whole group when clicked.
+The final score follows the assignments reviewed by users.
+
+Under Chinese rules, shared empty points count as half a stone for each side. Small hollow
+squares need assignment and are not automatically shared. The message above the confirmation
+button shows the remaining count and how to proceed. All points must be assigned to finish.
+If the current position has no live territory data, return to a mode that permits real-time
+analysis, enable ownership and wait for analysis, or assign all points manually. Scoring does
+not borrow another move's ownership or start a separate analysis.
+
+Dead stones are hidden by default. **Show dead stones** displays their original positions
+faintly without changing the score. **Undo all point corrections** restores the assignments
+from when the dialog opened. Confirmed assignments, dead-stone markings and results are saved
+in the game library and can be viewed again later; subsequent SGF exports include the result.
+**Resign** asks for confirmation. Creating a new game does not delete the previous one.
 
 ## Analyze the current position
 

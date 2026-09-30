@@ -1,4 +1,4 @@
-# 从源码启动（v1.0.0）
+# 从源码启动（v1.0.1）
 
 [English](SOURCE_SETUP.en.md) | 简体中文
 

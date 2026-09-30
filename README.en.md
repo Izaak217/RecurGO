@@ -58,7 +58,7 @@ To run the existing checks:
 
 ## License and third-party components
 
-RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.0.0**.
+RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.0.1**.
 
 KataGo, its models, Qt/PySide6, and other dependencies remain under their respective terms. RecurGO's MIT license does not replace them. See [Third-party notices](THIRD_PARTY_NOTICES.en.md) and the [license sources](licenses/README.md). Distribution must retain the applicable materials; source and packaging obligations are summarized in the [distribution guide](docs/DISTRIBUTION.en.md).
 
