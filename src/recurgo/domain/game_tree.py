@@ -85,14 +85,28 @@ class GameTree:
         self.current_id = current.parent_id
         return self.current
 
-    def redo(self, child_index: int = 0) -> GameNode:
-        children = self.current.children
-        if not children:
-            return self.current
-        if not (0 <= child_index < len(children)):
-            raise IndexError(child_index)
-        self.current_id = children[child_index]
-        return self.current
+    def remove_subtree(self, node_id: str) -> set[str]:
+        """Permanently remove a variation while retaining its parent and siblings."""
+        if node_id == self.root_id:
+            raise ValueError("Cannot remove the game root")
+        node = self.nodes[node_id]
+        if node.parent_id is None:
+            raise ValueError("A variation must have a parent")
+        parent = self.nodes[node.parent_id]
+        removed: set[str] = set()
+        pending = [node_id]
+        while pending:
+            current_id = pending.pop()
+            if current_id in removed:
+                continue
+            removed.add(current_id)
+            pending.extend(self.nodes[current_id].children)
+        parent.children.remove(node_id)
+        if self.current_id in removed:
+            self.current_id = parent.id
+        for removed_id in removed:
+            del self.nodes[removed_id]
+        return removed
 
     def go_to(self, node_id: str) -> GameNode:
         if node_id not in self.nodes:

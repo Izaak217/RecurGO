@@ -1,4 +1,4 @@
-# RecurGO User Manual (v1.0.1)
+# RecurGO User Manual (v1.0.2)
 
 English | [简体中文](USER_GUIDE.md)
 
@@ -40,9 +40,24 @@ whether the engine is ready.
    automatically in the local game library.
 
 You can also change the current game's mode, difficulty, or play-as color from the toolbar.
-These controls are temporarily disabled during full-game analysis. **Undo** and **Redo** move
-through the game; in play modes they also handle the corresponding AI move. **Pass** skips a
+These controls are temporarily disabled during full-game analysis. **Undo** permanently removes
+the undone move and its continuation, including their win-rate points and analysis data, during
+play and manual study. In play modes it also removes the corresponding AI move. Undone moves
+cannot be restored. Previous and Next in review only browse the saved game and retain its data.
+**Pass** skips a
 turn. Two consecutive passes open scoring, or you can select **Finish / Score** yourself.
+
+Real-time analysis and ownership retain users' selections across restarts. Fair play disables
+both controls; switching back to a mode that permits analysis restores the previous selections.
+Displayed win-rate points are saved with the local game and restored even with analysis off.
+Points recorded during search are estimates and do not count as completed full-game analysis.
+Different visit budgets keep separate data. Preferences, Analysis settings and Local AI
+explanation settings are available from Menu.
+
+While real-time analysis is enabled, searches interrupted by quick moves remain in a saved
+queue. After the current position finishes, RecurGO fills their win-rate points using the same
+visit budget. New moves take priority. The queue survives restart and pauses with analysis off.
+Positions played with analysis off are excluded; full-game analysis can review the entire line.
 
 Scoring starts with the current position's live KataGo ownership. Users can choose
 **Assign Black**, **Assign White**, **Shared: half each**, or **Unassigned** from the selector

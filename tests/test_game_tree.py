@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from recurgo.domain import GameTree, Point
 
 
@@ -16,9 +18,9 @@ def test_variations_are_preserved_and_navigable() -> None:
     assert tree.current is alternative
 
     tree.undo()
-    assert tree.redo(0) is second
+    assert tree.go_to(first.children[0]) is second
     tree.undo()
-    assert tree.redo(1) is alternative
+    assert tree.go_to(first.children[1]) is alternative
 
 
 def test_replaying_existing_variation_reuses_node() -> None:
@@ -48,3 +50,18 @@ def test_line_through_keeps_selected_variation_when_reviewing_from_earlier_node(
         first.id,
         main_reply.id,
     ]
+
+
+def test_remove_subtree_prunes_descendants_and_preserves_siblings() -> None:
+    tree = GameTree()
+    first, _ = tree.play(Point(3, 3))
+    second, _ = tree.play(Point(15, 15))
+    third, _ = tree.play(Point(3, 15))
+    tree.go_to(first.id)
+    sibling, _ = tree.play(Point(15, 3))
+    tree.go_to(third.id)
+    assert tree.remove_subtree(second.id) == {second.id, third.id}
+    assert tree.current_id == first.id
+    assert first.children == [sibling.id]
+    with pytest.raises(ValueError, match="root"):
+        tree.remove_subtree(tree.root_id)

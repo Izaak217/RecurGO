@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pytestqt.qtbot import QtBot
 
-from recurgo.ui.preferences import AppPreferences
+from recurgo.ui.preferences import AnalysisControls, AppPreferences
 from recurgo.ui.preferences_dialog import PreferencesDialog
 
 
@@ -24,6 +24,15 @@ def test_preferences_validate_unknown_ids_and_volume() -> None:
     assert preferences.capture_sound == "wood"
     assert preferences.volume == 100
     assert preferences.muted is True
+
+
+def test_analysis_controls_only_restore_explicit_boolean_values() -> None:
+    assert AnalysisControls.from_mapping(None) == AnalysisControls()
+    assert AnalysisControls.from_mapping({
+        "realtime_enabled": "false", "ownership_enabled": 1,
+    }) == AnalysisControls()
+    controls = AnalysisControls(True, True)
+    assert AnalysisControls.from_mapping(controls.to_mapping()) == controls
 
 
 def test_preferences_dialog_only_offers_builtin_stones_and_sounds(qtbot: QtBot) -> None:

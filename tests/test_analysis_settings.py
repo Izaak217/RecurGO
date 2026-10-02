@@ -78,6 +78,7 @@ def test_analysis_setting_persists_and_cannot_reuse_other_budget_cache(
     assert repository.load_setting("analysis") == {"visits": 1200}
     assert window.analysis_settings.visits == 1200
     assert window._analysis_payload_by_node == {}
+    assert window._analysis_by_node == {}
     assert engine.queries[-1]["max_visits"] == 1200
     assert engine.stop_count >= 1
     assert repository.analysis_snapshots_for_game(

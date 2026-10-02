@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -122,6 +123,25 @@ class GameRepository:
                     key TEXT PRIMARY KEY,
                     value_json TEXT NOT NULL,
                     updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS winrate_points (
+                    game_id TEXT NOT NULL REFERENCES games(id),
+                    node_id TEXT NOT NULL REFERENCES game_nodes(id),
+                    max_visits INTEGER NOT NULL,
+                    black_winrate REAL NOT NULL,
+                    search_visits INTEGER NOT NULL,
+                    is_complete INTEGER NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(node_id, max_visits)
+                );
+
+                CREATE TABLE IF NOT EXISTS winrate_tasks (
+                    game_id TEXT NOT NULL REFERENCES games(id),
+                    node_id TEXT NOT NULL REFERENCES game_nodes(id),
+                    max_visits INTEGER NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY(node_id, max_visits)
                 );
                 """
             )
@@ -374,6 +394,12 @@ class GameRepository:
         """Delete one saved game and its locally cached analysis results."""
         with self.connection:
             self.connection.execute(
+                "DELETE FROM winrate_tasks WHERE game_id = ?", (game_id,)
+            )
+            self.connection.execute(
+                "DELETE FROM winrate_points WHERE game_id = ?", (game_id,)
+            )
+            self.connection.execute(
                 "DELETE FROM analysis_snapshots WHERE game_id = ?",
                 (game_id,),
             )
@@ -387,6 +413,116 @@ class GameRepository:
             )
         if cursor.rowcount == 0:
             raise KeyError(game_id)
+
+    def remove_subtree(
+        self, game_id: str, node_id: str, *, current_node_id: str
+    ) -> set[str]:
+        """Commit destructive undo, including its analysis, as one transaction."""
+        with self.connection:
+            row = self.connection.execute(
+                "SELECT n.parent_id, g.root_node_id, g.status FROM game_nodes n "
+                "JOIN games g ON g.id = n.game_id WHERE n.game_id = ? AND n.id = ?",
+                (game_id, node_id),
+            ).fetchone()
+            if row is None:
+                raise KeyError(node_id)
+            if (
+                row["root_node_id"] == node_id
+                or row["status"] == "completed"
+                or row["parent_id"] != current_node_id
+            ):
+                raise ValueError("Undo must retain the parent in an unfinished game")
+            rows = self.connection.execute(
+                "WITH RECURSIVE removed(id) AS ("
+                "SELECT id FROM game_nodes WHERE game_id = ? AND id = ? "
+                "UNION ALL SELECT n.id FROM game_nodes n JOIN removed r "
+                "ON n.parent_id = r.id WHERE n.game_id = ?) SELECT id FROM removed",
+                (game_id, node_id, game_id),
+            ).fetchall()
+            removed = {str(item["id"]) for item in rows}
+            self.connection.execute(
+                "UPDATE games SET current_node_id = ?, updated_at = ? WHERE id = ?",
+                (current_node_id, _now(), game_id),
+            )
+            ids = sorted(removed)
+            for start in range(0, len(ids), 400):
+                batch = ids[start : start + 400]
+                placeholders = ", ".join("?" for _ in batch)
+                for table in (
+                    "winrate_tasks", "winrate_points", "analysis_snapshots", "game_nodes",
+                ):
+                    column = "id" if table == "game_nodes" else "node_id"
+                    self.connection.execute(
+                        f"DELETE FROM {table} WHERE game_id = ? "
+                        f"AND {column} IN ({placeholders})",
+                        (game_id, *batch),
+                    )
+        return removed
+
+    def save_winrate_point(
+        self,
+        *,
+        game_id: str,
+        node_id: str,
+        max_visits: int,
+        black_winrate: float,
+        search_visits: int,
+        is_complete: bool,
+    ) -> None:
+        """Save a chart point independently of completed analysis snapshots."""
+        if not math.isfinite(black_winrate) or not 0.0 <= black_winrate <= 100.0:
+            raise ValueError("Win rate must be a finite percentage")
+        if max_visits <= 0 or search_visits < 0:
+            raise ValueError("Invalid search visit counts")
+        with self.connection:
+            self.connection.execute(
+                "INSERT INTO winrate_points (game_id, node_id, max_visits, "
+                "black_winrate, search_visits, is_complete, updated_at) "
+                "SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS "
+                "(SELECT 1 FROM game_nodes WHERE game_id = ? AND id = ?) "
+                "ON CONFLICT(node_id, max_visits) DO UPDATE SET "
+                "black_winrate = excluded.black_winrate, "
+                "search_visits = excluded.search_visits, "
+                "is_complete = excluded.is_complete, updated_at = excluded.updated_at",
+                (
+                    game_id, node_id, max_visits, black_winrate, search_visits,
+                    int(is_complete), _now(), game_id, node_id,
+                ),
+            )
+            if is_complete:
+                self.connection.execute(
+                    "DELETE FROM winrate_tasks WHERE game_id = ? "
+                    "AND node_id = ? AND max_visits = ?",
+                    (game_id, node_id, max_visits),
+                )
+
+    def queue_winrate_analysis(self, game_id: str, node_id: str, *, max_visits: int) -> None:
+        """Persist unfinished work before asking the engine to analyze a position."""
+        if max_visits <= 0:
+            raise ValueError("Invalid search visit budget")
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO winrate_tasks "
+                "(game_id, node_id, max_visits, created_at) "
+                "SELECT ?, ?, ?, ? WHERE EXISTS "
+                "(SELECT 1 FROM game_nodes WHERE game_id = ? AND id = ?)",
+                (game_id, node_id, max_visits, _now(), game_id, node_id),
+            )
+
+    def pending_winrate_nodes(self, game_id: str, *, max_visits: int) -> list[str]:
+        rows = self.connection.execute(
+            "SELECT node_id FROM winrate_tasks WHERE game_id = ? AND max_visits = ? "
+            "ORDER BY created_at, rowid", (game_id, max_visits),
+        ).fetchall()
+        return [str(row["node_id"]) for row in rows]
+
+    def winrate_points_for_game(self, game_id: str, *, max_visits: int) -> dict[str, float]:
+        rows = self.connection.execute(
+            "SELECT node_id, black_winrate FROM winrate_points "
+            "WHERE game_id = ? AND max_visits = ?",
+            (game_id, max_visits),
+        ).fetchall()
+        return {str(row["node_id"]): float(row["black_winrate"]) for row in rows}
 
     def finish_game(
         self, game_id: str, result: str, *, scoring_node_id: str | None = None,

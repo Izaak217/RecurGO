@@ -2,6 +2,16 @@
 
 English | [简体中文](CHANGELOG.md)
 
+## v1.0.2 — 2026-10-03
+
+In testing v1.0.1, we found that restarting the application did not retain the real-time analysis and ownership selections, and displayed win-rate points could disappear. Quick consecutive moves interrupted analysis and left gaps in the win-rate curve, while settings entries occupied toolbar space and made common actions harder to find.
+
+To address these issues, we added persistent storage for the settings and win-rate data, along with a saved queue that prioritizes the current position and calculates win rates for interrupted positions at the original search budget. Only positions requiring analysis while real-time analysis was enabled enter this queue. We also moved Preferences, Analysis settings and Local AI explanation settings into Menu, removed Redo, and retained the original order of common controls and the Previous/Next review navigation. Undo in play and manual study now permanently removes the undone move, its continuation and analysis data together.
+
+With this update, users can restore saved settings and win-rate curves after restarting and reopening a game. Missing points are filled after the current position finishes, without replacing its candidates or ownership. The toolbar is simpler while review navigation remains available. The queue resumes after restart and pauses when real-time analysis is off; positions played with analysis off are excluded from automatic backfill.
+
+Before updating, close RecurGO and back up saved games, then run the new installer.
+
 ## v1.0.1 — 2026-10-01
 
 Testing v1.0.0 revealed that some areas were counted as neutral when ending a game, producing results that differed noticeably from KataGo’s territory analysis during play. This update revises the final-scoring workflow and improves score review.

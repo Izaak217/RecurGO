@@ -77,6 +77,23 @@ CAPTURE_SOUNDS: dict[str, str] = {
 
 
 @dataclass(frozen=True, slots=True)
+class AnalysisControls:
+    realtime_enabled: bool = False
+    ownership_enabled: bool = False
+
+    @classmethod
+    def from_mapping(cls, raw: dict[str, object] | None) -> AnalysisControls:
+        raw = raw or {}
+        return cls(
+            realtime_enabled=raw.get("realtime_enabled") is True,
+            ownership_enabled=raw.get("ownership_enabled") is True,
+        )
+
+    def to_mapping(self) -> dict[str, object]:
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
 class AppPreferences:
     board_theme: str = "classic"
     custom_board_path: str = ""

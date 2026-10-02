@@ -470,12 +470,19 @@ def test_delete_game_removes_nodes_and_analysis_but_keeps_other_games(
         result={"rootInfo": {"winrate": 0.5}},
     )
     kept = repository.create_game(GameTree(), name="保留")
+    repository.save_winrate_point(
+        game_id=doomed.id, node_id=move.id, max_visits=800,
+        black_winrate=50.0, search_visits=9, is_complete=False,
+    )
+    repository.queue_winrate_analysis(doomed.id, move.id, max_visits=800)
 
     repository.delete_game(doomed.id)
 
     with pytest.raises(KeyError):
         repository.load_game(doomed.id)
     assert repository.load_game(kept.id)[0].name == "保留"
+    assert repository.winrate_points_for_game(doomed.id, max_visits=800) == {}
+    assert repository.pending_winrate_nodes(doomed.id, max_visits=800) == []
     assert (
         repository.connection.execute(
             "SELECT COUNT(*) FROM game_nodes WHERE game_id = ?",
@@ -539,4 +546,116 @@ def test_delete_game_rolls_back_all_changes_when_a_dependent_delete_fails(
         ).fetchone()[0]
         == 1
     )
+    repository.close()
+
+
+def test_winrate_points_reopen_with_visit_metadata_and_keep_budgets_separate(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "points.db"
+    repository = GameRepository(path)
+    tree = GameTree()
+    record = repository.create_game(tree)
+    for budget, winrate in ((800, 40.0), (1200, 60.0)):
+        repository.save_winrate_point(
+            game_id=record.id, node_id=tree.root_id, max_visits=budget,
+            black_winrate=winrate, search_visits=9, is_complete=False,
+        )
+    assert repository.analysis_snapshots_for_game(record.id) == {}
+    repository.close()
+    reopened = GameRepository(path)
+    assert reopened.winrate_points_for_game(record.id, max_visits=800) == {tree.root_id: 40.0}
+    assert reopened.winrate_points_for_game(record.id, max_visits=1200) == {tree.root_id: 60.0}
+    row = reopened.connection.execute(
+        "SELECT search_visits, is_complete FROM winrate_points WHERE max_visits = 800"
+    ).fetchone()
+    assert tuple(row) == (9, 0)
+    reopened.save_winrate_point(
+        game_id=record.id, node_id=tree.root_id, max_visits=800,
+        black_winrate=50.0, search_visits=800, is_complete=True,
+    )
+    row = reopened.connection.execute(
+        "SELECT search_visits, is_complete FROM winrate_points WHERE max_visits = 800"
+    ).fetchone()
+    assert tuple(row) == (800, 1)
+    reopened.close()
+
+
+def test_subtree_removal_rejects_root_foreign_parent_and_completed_game(
+    tmp_path: Path,
+) -> None:
+    repository = GameRepository(tmp_path / "protected.db")
+    tree = GameTree()
+    record = repository.create_game(tree)
+    move, _ = tree.play(Point(3, 3))
+    repository.save_node(record.id, move)
+    other_tree = GameTree()
+    repository.create_game(other_tree)
+    with pytest.raises(ValueError):
+        repository.remove_subtree(record.id, tree.root_id, current_node_id=tree.root_id)
+    with pytest.raises(ValueError):
+        repository.remove_subtree(record.id, move.id, current_node_id=other_tree.root_id)
+    repository.finish_game(record.id, "B+R")
+    with pytest.raises(ValueError):
+        repository.remove_subtree(record.id, move.id, current_node_id=tree.root_id)
+    assert set(repository.load_game(record.id)[1].nodes) == {tree.root_id, move.id}
+    repository.close()
+
+
+def test_pending_winrate_work_is_durable_deduplicated_and_scoped_to_game_and_budget(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "pending.db"
+    repository = GameRepository(path)
+    tree = GameTree()
+    record = repository.create_game(tree)
+    move, _ = tree.play(Point(3, 3))
+    repository.save_node(record.id, move)
+    other_tree = GameTree()
+    other = repository.create_game(other_tree)
+    for _ in range(2):
+        repository.queue_winrate_analysis(record.id, tree.root_id, max_visits=800)
+    repository.queue_winrate_analysis(record.id, move.id, max_visits=800)
+    repository.queue_winrate_analysis(record.id, move.id, max_visits=1200)
+    repository.queue_winrate_analysis(record.id, other_tree.root_id, max_visits=800)
+    repository.queue_winrate_analysis(other.id, other_tree.root_id, max_visits=800)
+    repository.close()
+    reopened = GameRepository(path)
+    assert reopened.pending_winrate_nodes(record.id, max_visits=800) == [tree.root_id, move.id]
+    assert reopened.pending_winrate_nodes(record.id, max_visits=1200) == [move.id]
+    assert reopened.pending_winrate_nodes(other.id, max_visits=800) == [other_tree.root_id]
+    reopened.save_winrate_point(
+        game_id=record.id, node_id=tree.root_id, max_visits=800,
+        black_winrate=50.0, search_visits=9, is_complete=False,
+    )
+    assert reopened.pending_winrate_nodes(record.id, max_visits=800) == [tree.root_id, move.id]
+    reopened.save_winrate_point(
+        game_id=record.id, node_id=tree.root_id, max_visits=800,
+        black_winrate=50.0, search_visits=800, is_complete=True,
+    )
+    assert reopened.pending_winrate_nodes(record.id, max_visits=800) == [move.id]
+    reopened.remove_subtree(record.id, move.id, current_node_id=tree.root_id)
+    assert reopened.pending_winrate_nodes(record.id, max_visits=800) == []
+    assert reopened.pending_winrate_nodes(record.id, max_visits=1200) == []
+    assert reopened.pending_winrate_nodes(other.id, max_visits=800) == [other_tree.root_id]
+    reopened.close()
+
+
+def test_winrate_point_and_job_completion_rollback_together(tmp_path: Path) -> None:
+    repository = GameRepository(tmp_path / "point-rollback.db")
+    tree = GameTree()
+    record = repository.create_game(tree)
+    repository.queue_winrate_analysis(record.id, tree.root_id, max_visits=800)
+    with repository.connection:
+        repository.connection.execute(
+            "CREATE TRIGGER block_task_completion BEFORE DELETE ON winrate_tasks "
+            "BEGIN SELECT RAISE(ABORT, 'task completion blocked'); END"
+        )
+    with pytest.raises(sqlite3.DatabaseError):
+        repository.save_winrate_point(
+            game_id=record.id, node_id=tree.root_id, max_visits=800,
+            black_winrate=50.0, search_visits=800, is_complete=True,
+        )
+    assert repository.winrate_points_for_game(record.id, max_visits=800) == {}
+    assert repository.pending_winrate_nodes(record.id, max_visits=800) == [tree.root_id]
     repository.close()

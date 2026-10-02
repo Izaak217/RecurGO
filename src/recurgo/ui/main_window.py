@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
+import math
 import sqlite3
 from collections.abc import Callable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 
@@ -66,6 +67,7 @@ from recurgo.engine import (
     PRESETS,
     AnalysisUpdate,
     EngineFailure,
+    EngineFailureKind,
     KataGoEngine,
     human_policy_probability,
     select_ai_move,
@@ -89,7 +91,7 @@ from .image_import_dialog import ImageImportDialog
 from .library_dialog import GameLibraryDialog
 from .new_game_dialog import NewGameDialog
 from .ollama_dialog import OllamaSettingsDialog
-from .preferences import AppPreferences
+from .preferences import AnalysisControls, AppPreferences
 from .preferences_dialog import PreferencesDialog
 from .scoring_dialog import CompletedGameDialog, ScoringDialog
 
@@ -103,6 +105,16 @@ def _as_float(value: object, default: float = 0.0) -> float:
     return default
 
 
+@dataclass(frozen=True, slots=True)
+class _AnalysisRequest:
+    game_id: str
+    node_id: str
+    purpose: str
+    max_visits: int
+    include_ownership: bool
+    difficulty: str
+
+
 class _HoverPlotWidget(PlotWidget):  # type: ignore[misc]
     """Plot widget that also reports when the real mouse leaves its viewport."""
 
@@ -114,6 +126,12 @@ class _HoverPlotWidget(PlotWidget):  # type: ignore[misc]
 
 
 class MainWindow(QMainWindow):
+    _ANALYSIS_REQUEST_FIELDS = {
+        "realtime": "_active_realtime_request_id",
+        "full_game": "_active_full_request_id",
+        "winrate_backfill": "_active_backfill_request_id",
+        "ai_move": "_active_ai_request_id",
+    }
     MODE_VALUES = {
         "手动打谱": "manual",
         "公平对战": "fair",
@@ -206,6 +224,9 @@ class MainWindow(QMainWindow):
         self.analysis_settings = AnalysisSettings.from_mapping(
             self.repository.load_setting("analysis")
         )
+        self.analysis_controls = AnalysisControls.from_mapping(
+            self.repository.load_setting("analysis_controls")
+        )
         self.audio_feedback = audio_feedback or AudioFeedback(self)
         self._configure_audio_feedback()
         self._analysis_payload_by_node = self._load_analysis_payloads(record.id)
@@ -231,6 +252,9 @@ class MainWindow(QMainWindow):
         self._full_analysis_current_visits = 0
         self._active_realtime_request_id: str | None = None
         self._active_full_request_id: str | None = None
+        self._active_backfill_request_id: str | None = None
+        self._active_ai_request_id: str | None = None
+        self._analysis_requests: dict[str, _AnalysisRequest] = {}
         self._ignored_analysis_requests: set[str] = set()
         self.setWindowTitle(self._tr("RecurGO — 本地围棋教练", "RecurGO — Local Go Coach"))
         self.resize(1460, 900)
@@ -260,12 +284,9 @@ class MainWindow(QMainWindow):
         toolbar.addAction(library_action)
 
         undo_action = QAction(self._tr("悔棋", "Undo"), self)
+        self.undo_action = undo_action
         undo_action.triggered.connect(self._undo)
         toolbar.addAction(undo_action)
-
-        redo_action = QAction(self._tr("前进", "Redo"), self)
-        redo_action.triggered.connect(self._redo)
-        toolbar.addAction(redo_action)
 
         pass_action = QAction(self._tr("停一手", "Pass"), self)
         pass_action.triggered.connect(self._pass)
@@ -287,17 +308,14 @@ class MainWindow(QMainWindow):
 
         preferences_action = QAction(self._tr("偏好设置", "Preferences"), self)
         preferences_action.triggered.connect(self._open_preferences)
-        toolbar.addAction(preferences_action)
 
         analysis_settings_action = QAction(self._tr("分析设置", "Analysis settings"), self)
         analysis_settings_action.triggered.connect(self._open_analysis_settings)
-        toolbar.addAction(analysis_settings_action)
 
         self.ollama_settings_action = QAction(
             self._tr("本机 AI 解释设置", "Local AI explanation settings"), self
         )
         self.ollama_settings_action.triggered.connect(self._open_ollama_settings)
-        toolbar.addAction(self.ollama_settings_action)
 
         import_action = QAction(self._tr("导入 SGF", "Import SGF"), self)
         import_action.triggered.connect(self._import_sgf)
@@ -364,12 +382,12 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self.human_color_combo)
 
         self.analysis_checkbox = QCheckBox(self._tr("实时分析", "Real-time analysis"))
-        self.analysis_checkbox.setChecked(False)
+        self.analysis_checkbox.setChecked(self.analysis_controls.realtime_enabled)
         self.analysis_checkbox.toggled.connect(self._analysis_toggled)
         toolbar.addWidget(self.analysis_checkbox)
 
         self.ownership_checkbox = QCheckBox(self._tr("领地", "Ownership"))
-        self.ownership_checkbox.setChecked(False)
+        self.ownership_checkbox.setChecked(self.analysis_controls.ownership_enabled)
         self.ownership_checkbox.toggled.connect(self._analysis_option_changed)
         toolbar.addWidget(self.ownership_checkbox)
         self.difficulty_combo.currentTextChanged.connect(self._difficulty_changed)
@@ -378,7 +396,6 @@ class MainWindow(QMainWindow):
             (new_action, "新棋局", "New game"),
             (library_action, "棋谱库", "Game library"),
             (undo_action, "悔棋", "Undo"),
-            (redo_action, "前进", "Redo"),
             (pass_action, "停一手", "Pass"),
             (score_action, "结束/数子", "Finish / Score"),
             (resign_action, "认输", "Resign"),
@@ -401,7 +418,6 @@ class MainWindow(QMainWindow):
             new_action=new_action,
             library_action=library_action,
             undo_action=undo_action,
-            redo_action=redo_action,
             pass_action=pass_action,
             score_action=score_action,
             resign_action=resign_action,
@@ -418,7 +434,6 @@ class MainWindow(QMainWindow):
         new_action: QAction,
         library_action: QAction,
         undo_action: QAction,
-        redo_action: QAction,
         pass_action: QAction,
         score_action: QAction,
         resign_action: QAction,
@@ -441,7 +456,7 @@ class MainWindow(QMainWindow):
         for action in (new_action, library_action):
             game_menu.addAction(action)
         game_menu.addSeparator()
-        for action in (undo_action, redo_action, pass_action, score_action, resign_action):
+        for action in (undo_action, pass_action, score_action, resign_action):
             game_menu.addAction(action)
         game_menu.addSeparator()
         for action in (import_action, image_import_action, export_action):
@@ -1046,30 +1061,37 @@ class MainWindow(QMainWindow):
             self._request_analysis()
 
     def _undo(self) -> None:
+        if self._full_analysis_active:
+            return
         if self._review_mode_active:
             self._navigate_previous()
             return
-        if self.engine is not None and not self._full_analysis_active:
-            self.engine.stop_analysis()
-        node = self.tree.undo()
+        if self.tree.current.parent_id is None:
+            return
+        path = self.tree.path_to()
+        node = self.tree.nodes[self.tree.current.parent_id]
         if self._is_battle_mode():
             while node.parent_id is not None and node.state.to_play is self._ai_color():
-                node = self.tree.undo()
-        self.repository.set_current(self.record.id, node.id)
-        self._refresh()
-        self._request_analysis()
-
-    def _redo(self) -> None:
-        if self._review_mode_active:
-            self._navigate_next()
+                node = self.tree.nodes[node.parent_id]
+        removed_root = path[path.index(node) + 1].id
+        self._stop_analysis_requests()
+        try:
+            removed = self.repository.remove_subtree(
+                self.record.id, removed_root, current_node_id=node.id
+            )
+        except (sqlite3.Error, KeyError, ValueError) as exc:
+            self.statusBar().showMessage(
+                self._tr(f"悔棋未保存：{exc}", f"Could not save undo: {exc}"), 6000
+            )
+            self._request_analysis()
             return
-        if self.engine is not None and not self._full_analysis_active:
-            self.engine.stop_analysis()
-        node = self.tree.redo()
-        if self._is_battle_mode():
-            while node.children and node.state.to_play is self._ai_color():
-                node = self.tree.redo()
-        self.repository.set_current(self.record.id, node.id)
+        self.tree.remove_subtree(removed_root)
+        for removed_id in removed:
+            self._analysis_by_node.pop(removed_id, None)
+            self._analysis_payload_by_node.pop(removed_id, None)
+            self._ownership_by_node.pop(removed_id, None)
+        self._set_review_line_from_current()
+        self._resume_after_scoring = False
         self._refresh()
         self._request_analysis()
 
@@ -1085,7 +1107,7 @@ class MainWindow(QMainWindow):
             return
         options = dialog.options()
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._stop_full_game_analysis(request_realtime=False)
         tree = GameTree()
         record = self.repository.create_game(
@@ -1349,16 +1371,11 @@ class MainWindow(QMainWindow):
         settings = dialog.settings()
         if settings == self.analysis_settings:
             return
-        for request_id in (self._active_realtime_request_id, self._active_full_request_id):
-            if request_id is not None:
-                self._ignored_analysis_requests.add(request_id)
-        self._active_realtime_request_id = None
-        self._active_full_request_id = None
         if self._full_analysis_active:
             self._stop_full_game_analysis(request_realtime=False)
             self.full_analysis_progress.hide()
         elif self.engine is not None and not self._is_ai_turn():
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self.repository.save_setting("analysis", settings.to_mapping())
         self.analysis_settings = settings
         self._full_analysis_visits = settings.visits
@@ -1465,6 +1482,7 @@ class MainWindow(QMainWindow):
     def _ollama_katago_busy(self) -> bool:
         return (
             self._full_analysis_active
+            or self._active_backfill_request_id is not None
             or getattr(self.engine, "active_request_id", None) is not None
             or getattr(self.engine, "state", None) in {"starting", "loading", "analyzing"}
         )
@@ -1665,7 +1683,7 @@ class MainWindow(QMainWindow):
                 return
             review_mode = action != "continue"
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._stop_full_game_analysis(request_realtime=False)
         self._apply_loaded_game(record, tree, review_mode=review_mode)
         mode_text = (
@@ -1688,7 +1706,7 @@ class MainWindow(QMainWindow):
             return
         options = dialog.options()
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._stop_full_game_analysis(request_realtime=False)
         state = BoardState.from_setup(
             options.stones,
@@ -1763,6 +1781,7 @@ class MainWindow(QMainWindow):
         *,
         review_mode: bool,
     ) -> None:
+        self._stop_analysis_requests(stop_engine=False)
         self.record = record
         self.tree = tree
         self._analysis_payload_by_node = self._load_analysis_payloads(record.id)
@@ -1819,7 +1838,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, self._tr("SGF 导入失败", "SGF import failed"), str(exc))
             return
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._stop_full_game_analysis(request_realtime=False)
         self._apply_loaded_game(record, imported.tree, review_mode=True)
         self.statusBar().showMessage(
@@ -1963,6 +1982,11 @@ class MainWindow(QMainWindow):
             value = black_winrate(self.tree, node_id, payload)
             if value is not None:
                 values[node_id] = value
+        values.update({
+            node_id: winrate for node_id, winrate in self.repository.winrate_points_for_game(
+                self.record.id, max_visits=self.analysis_settings.visits
+            ).items() if node_id in self.tree.nodes
+        })
         return values
 
     def _load_analysis_payloads(self, game_id: str) -> dict[str, dict[str, object]]:
@@ -2040,7 +2064,7 @@ class MainWindow(QMainWindow):
             self._sync_navigation_controls()
             return
         if self.engine is not None and not self._full_analysis_active:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self.tree.go_to(node_id)
         self.repository.set_current(self.record.id, node_id)
         self._refresh()
@@ -2655,6 +2679,10 @@ class MainWindow(QMainWindow):
         )
 
     def _analysis_toggled(self, enabled: bool) -> None:
+        self.analysis_controls = replace(
+            self.analysis_controls, realtime_enabled=enabled and self.engine is not None
+        )
+        self.repository.save_setting("analysis_controls", self.analysis_controls.to_mapping())
         if self.engine is None:
             reason = (
                 f"：{self._engine_unavailable_reason}"
@@ -2680,13 +2708,17 @@ class MainWindow(QMainWindow):
             self._show_cached_ownership_for_current()
             self._request_analysis()
         else:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
             self._clear_analysis_display()
             self.engine_status.setText(
                 self._tr("KataGo：实时分析已关闭", "KataGo: real-time analysis off")
             )
 
     def _analysis_option_changed(self, _value: object) -> None:
+        self.analysis_controls = replace(
+            self.analysis_controls, ownership_enabled=self.ownership_checkbox.isChecked()
+        )
+        self.repository.save_setting("analysis_controls", self.analysis_controls.to_mapping())
         self._invalidate_ollama_explanation()
         if not self.ownership_checkbox.isChecked():
             self.board_widget.set_ownership(None)
@@ -2718,7 +2750,7 @@ class MainWindow(QMainWindow):
             return
         if not self._review_line_ids:
             return
-        self.engine.stop_analysis()
+        self._stop_analysis_requests()
         completed_snapshots = self.repository.analysis_snapshots_for_game(
             self.record.id,
             cache_keys=(f"full-game-{self._full_analysis_visits}",),
@@ -2806,12 +2838,12 @@ class MainWindow(QMainWindow):
                 8000,
             )
             self._refresh()
+            self._start_next_winrate_analysis()
             return
         node_id = self._full_analysis_queue.pop()
         node = self.tree.nodes[node_id]
         self._update_full_analysis_progress(0)
-        self._active_full_request_id = self.engine.analyze(
-            tree=self.tree,
+        self._analyze_position(
             node_id=node_id,
             rules=self.record.rules,
             komi=self.record.komi,
@@ -2836,7 +2868,7 @@ class MainWindow(QMainWindow):
         self._full_analysis_active = False
         self._full_analysis_queue.clear()
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self.full_analysis_action.setText(self._tr("全盘AI分析", "Analyze full game"))
         self._apply_mode_controls()
         if request_realtime:
@@ -2845,9 +2877,91 @@ class MainWindow(QMainWindow):
             self._show_cached_analysis_for_current()
         self._schedule_ollama_explanation()
 
-    def _request_analysis(self) -> None:
-        if self._scoring_dialog is not None:
+    def _stop_analysis_requests(self, *, stop_engine: bool = True) -> None:
+        """Invalidate callbacks while retaining durable unfinished win-rate work."""
+        for field in self._ANALYSIS_REQUEST_FIELDS.values():
+            request_id = getattr(self, field)
+            if request_id is not None:
+                self._ignored_analysis_requests.add(request_id)
+            setattr(self, field, None)
+        self._ignored_analysis_requests.update(self._analysis_requests)
+        self._analysis_requests.clear()
+        if stop_engine and self.engine is not None:
+            self.engine.stop_analysis()
+
+    def _analyze_position(
+        self, *, node_id: str, rules: str, komi: float, max_visits: int,
+        human_profile: str | None, include_ownership: bool, purpose: str,
+    ) -> str:
+        if self.engine is None:
+            raise RuntimeError("KataGo is unavailable")
+        request = _AnalysisRequest(
+            self.record.id, node_id, purpose, max_visits, include_ownership,
+            str(self.difficulty_combo.currentData()),
+        )
+        field = self._ANALYSIS_REQUEST_FIELDS[purpose]
+        active_id = getattr(self, field)
+        if active_id is not None and self._analysis_requests.get(active_id) == request:
+            return str(active_id)
+        # analyze() cancels the old engine request; keep its persisted task for later.
+        self._stop_analysis_requests(stop_engine=False)
+        request_id = self.engine.analyze(
+            tree=self.tree, node_id=node_id, rules=rules, komi=komi,
+            max_visits=max_visits, human_profile=human_profile,
+            include_ownership=include_ownership, purpose=purpose,
+        )
+        self._analysis_requests[request_id] = request
+        setattr(self, field, request_id)
+        return request_id
+
+    def _queue_winrate_position(self) -> None:
+        self.repository.queue_winrate_analysis(
+            self.record.id, self.tree.current_id, max_visits=self.analysis_settings.visits,
+        )
+
+    def _start_next_winrate_analysis(self) -> None:
+        if (
+            self._ollama_closed or self.engine is None or self._scoring_dialog is not None
+            or self._full_analysis_active or not self.analysis_checkbox.isChecked()
+            or self.mode_combo.currentData() == "fair" or self._is_ai_turn()
+            or self._last_engine_failure is not None
+            or any(getattr(self, field) is not None
+                   for field in self._ANALYSIS_REQUEST_FIELDS.values())
+        ):
             return
+        pending = self.repository.pending_winrate_nodes(
+            self.record.id, max_visits=self.analysis_settings.visits,
+        )
+        node_id = next((
+            candidate for candidate in pending
+            if candidate in self.tree.nodes and candidate != self.tree.current_id
+        ), None)
+        if node_id is None:
+            self._update_ollama_controls()
+            self._schedule_ollama_explanation()
+            return
+        self._ollama_timer.stop()
+        if self._ollama_request_id is not None:
+            self._invalidate_ollama_explanation()
+        self._analyze_position(
+            node_id=node_id, rules=self.record.rules, komi=self.record.komi,
+            max_visits=self.analysis_settings.visits, human_profile=None,
+            include_ownership=False, purpose="winrate_backfill",
+        )
+        move_number = self.tree.nodes[node_id].state.move_number
+        self.engine_status.setText(self._tr(
+            f"KataGo：补算第 {move_number} 手胜率（待补 {len(pending)} 个局面）",
+            f"KataGo: filling win rate for move {move_number} ({len(pending)} pending)",
+        ))
+        self._update_ollama_controls()
+
+    def _request_analysis(self) -> None:
+        if self._ollama_closed or self._scoring_dialog is not None:
+            return
+        if (self.engine is not None and not self._full_analysis_active
+                and self.analysis_checkbox.isChecked()
+                and self.mode_combo.currentData() != "fair"):
+            self._queue_winrate_position()
         if self._is_ai_turn():
             self._request_ai_move()
             return
@@ -2862,8 +2976,7 @@ class MainWindow(QMainWindow):
         self._ollama_timer.stop()
         if self._ollama_request_id is not None:
             self._invalidate_ollama_explanation()
-        self._active_realtime_request_id = self.engine.analyze(
-            tree=self.tree,
+        self._analyze_position(
             node_id=self.tree.current_id,
             rules=self.record.rules,
             komi=self.record.komi,
@@ -2878,9 +2991,15 @@ class MainWindow(QMainWindow):
         self._update_ollama_controls()
 
     def _analysis_update(self, update: AnalysisUpdate) -> None:
-        if self._scoring_dialog is not None:
+        if (self._ollama_closed or self._scoring_dialog is not None
+                or update.node_id not in self.tree.nodes):
             return
         if update.request_id in self._ignored_analysis_requests:
+            return
+        if update.purpose == "winrate_backfill":
+            if update.request_id == self._active_backfill_request_id:
+                self._save_winrate_point(update, is_complete=update.is_final)
+                self._redraw_winrate_plot()
             return
         if update.purpose not in {"realtime", "full_game"}:
             return
@@ -2892,7 +3011,34 @@ class MainWindow(QMainWindow):
                     self._update_full_analysis_progress(int(visits))
         if update.node_id != self.tree.current_id:
             return
+        if isinstance(update.payload.get("moveInfos"), list):
+            self._save_winrate_point(update, is_complete=update.is_final)
+            self._redraw_winrate_plot()
         self._display_analysis_payload(update.node_id, update.payload)
+
+    def _save_winrate_point(
+        self, update: AnalysisUpdate, *, is_complete: bool,
+        request: _AnalysisRequest | None = None,
+    ) -> bool:
+        winrate = black_winrate(self.tree, update.node_id, update.payload)
+        if winrate is None or not math.isfinite(winrate) or not 0.0 <= winrate <= 100.0:
+            return False
+        root = update.payload.get("rootInfo")
+        raw_visits = root.get("visits", 0) if isinstance(root, dict) else 0
+        search_visits = (
+            max(0, int(raw_visits)) if isinstance(raw_visits, (int, float))
+            and math.isfinite(raw_visits) else 0
+        )
+        request = request or self._analysis_requests.get(update.request_id)
+        self.repository.save_winrate_point(
+            game_id=self.record.id, node_id=update.node_id,
+            max_visits=(request.max_visits if request is not None else
+                        self._full_analysis_visits if update.purpose == "full_game"
+                        else self.analysis_settings.visits),
+            black_winrate=winrate, search_visits=search_visits, is_complete=is_complete,
+        )
+        self._analysis_by_node[update.node_id] = winrate
+        return True
 
     def _update_full_analysis_progress(self, current_visits: int) -> None:
         visits = max(0, min(current_visits, self._full_analysis_visits))
@@ -2964,10 +3110,6 @@ class MainWindow(QMainWindow):
             self._ownership_by_node[node_id] = ownership
         self._show_cached_ownership_for_current()
 
-        root_winrate = black_winrate(self.tree, node_id, payload)
-        if root_winrate is not None:
-            self._analysis_by_node[node_id] = root_winrate
-        self._redraw_winrate_plot()
         if move_infos:
             self._show_candidate_explanation(0)
         else:
@@ -2976,19 +3118,48 @@ class MainWindow(QMainWindow):
             self._invalidate_ollama_explanation()
 
     def _analysis_finished(self, update: AnalysisUpdate) -> None:
-        if self._scoring_dialog is not None:
+        if (self._ollama_closed or self._scoring_dialog is not None
+                or update.node_id not in self.tree.nodes):
             return
         if update.request_id in self._ignored_analysis_requests:
             return
-        if update.request_id == self._active_realtime_request_id:
-            self._active_realtime_request_id = None
-        if update.request_id == self._active_full_request_id:
-            self._active_full_request_id = None
+        request = self._analysis_requests.get(update.request_id)
+        if request is not None and (
+            request.game_id != self.record.id or request.node_id != update.node_id
+            or request.purpose != update.purpose
+        ):
+            return
+        if (update.purpose == "winrate_backfill"
+                and update.request_id != self._active_backfill_request_id):
+            return
+        self._analysis_requests.pop(update.request_id, None)
+        for field in self._ANALYSIS_REQUEST_FIELDS.values():
+            if update.request_id == getattr(self, field):
+                setattr(self, field, None)
+        if update.purpose == "winrate_backfill":
+            if not self._save_winrate_point(update, is_complete=True, request=request):
+                if request is not None:
+                    self._analysis_requests[update.request_id] = request
+                self._active_backfill_request_id = update.request_id
+                self._engine_failure(EngineFailure(
+                    kind=EngineFailureKind.PROTOCOL_ERROR,
+                    message=self._tr(
+                        "补算结果缺少有效胜率，任务已保留，可重试。",
+                        "Backfill returned no valid win rate. The task is saved for retry.",
+                    ),
+                    recoverable=True, request_id=update.request_id,
+                    node_id=update.node_id, purpose=update.purpose,
+                ))
+                return
+            self._redraw_winrate_plot()
+            self._start_next_winrate_analysis()
+            return
         if update.purpose == "ai_move":
             if update.node_id == self.tree.current_id:
                 self._play_ai_move(update)
             return
         if update.purpose == "full_game":
+            self._save_winrate_point(update, is_complete=True, request=request)
             self._save_analysis_snapshot(
                 update,
                 cache_key=f"full-game-{self._full_analysis_visits}",
@@ -3012,29 +3183,36 @@ class MainWindow(QMainWindow):
             )
             if update.node_id == self.tree.current_id:
                 self._display_analysis_payload(update.node_id, update.payload)
-            else:
-                self._redraw_winrate_plot()
+            self._redraw_winrate_plot()
             self._update_review_summary()
             self._start_next_full_game_position()
             return
         if update.purpose != "realtime":
             return
+        max_visits = (
+            request.max_visits if request is not None else self.analysis_settings.visits
+        )
+        include_ownership = (
+            request.include_ownership if request is not None
+            else self.ownership_checkbox.isChecked()
+        )
+        self._save_winrate_point(update, is_complete=True, request=request)
+        self._redraw_winrate_plot()
         self._save_analysis_snapshot(
             update,
-            cache_key=(
-                f"realtime-{self.analysis_settings.visits}-"
-                f"{int(self.ownership_checkbox.isChecked())}"
-            ),
-            max_visits=self.analysis_settings.visits,
-            include_ownership=self.ownership_checkbox.isChecked(),
+            cache_key=f"realtime-{max_visits}-{int(include_ownership)}",
+            max_visits=max_visits,
+            include_ownership=include_ownership,
+            difficulty=request.difficulty if request is not None else None,
         )
         self._analysis_payload_by_node[update.node_id] = update.payload
-        if self.ownership_checkbox.isChecked():
+        if include_ownership:
             ownership = self._ownership_values(update.payload)
             if ownership is not None:
                 self._ownership_by_node[update.node_id] = ownership
         if update.node_id == self.tree.current_id:
             self._update_ollama_controls()
+            self._start_next_winrate_analysis()
             self._schedule_ollama_explanation()
 
     def _save_analysis_snapshot(
@@ -3044,6 +3222,7 @@ class MainWindow(QMainWindow):
         cache_key: str,
         max_visits: int,
         include_ownership: bool,
+        difficulty: str | None = None,
     ) -> None:
         self.repository.save_analysis_snapshot(
             game_id=self.record.id,
@@ -3058,7 +3237,7 @@ class MainWindow(QMainWindow):
             parameters={
                 "maxVisits": max_visits,
                 "includeOwnership": include_ownership,
-                "difficulty": self.difficulty_combo.currentData(),
+                "difficulty": difficulty or self.difficulty_combo.currentData(),
             },
             result=update.payload,
         )
@@ -3104,7 +3283,8 @@ class MainWindow(QMainWindow):
         log_path = self._write_engine_diagnostic(failure)
         self._last_engine_diagnostic_path = log_path
         self._last_engine_error_message = None
-        self._clear_analysis_display()
+        if failure.purpose != "winrate_backfill":
+            self._clear_analysis_display()
         if self._full_analysis_active:
             self.full_analysis_progress.setFormat(
                 self._tr(
@@ -3147,7 +3327,16 @@ class MainWindow(QMainWindow):
     def _retry_engine_analysis(self) -> None:
         if self.engine is None:
             return
+        failed_id = (
+            self._last_engine_failure.request_id if self._last_engine_failure is not None
+            else None
+        )
+        request = self._analysis_requests.get(failed_id) if failed_id is not None else None
+        self._stop_analysis_requests(stop_engine=False)
         request_id = self.engine.retry_last_request()
+        if request_id is not None and request is not None:
+            self._analysis_requests[request_id] = request
+            setattr(self, self._ANALYSIS_REQUEST_FIELDS[request.purpose], request_id)
         if request_id is None:
             self.engine.restart()
             self.engine_status.setText(self._tr("KataGo：正在重新启动…", "KataGo: restarting…"))
@@ -3162,6 +3351,7 @@ class MainWindow(QMainWindow):
         self.engine_close_analysis_button.hide()
 
     def _close_failed_analysis(self) -> None:
+        self._stop_analysis_requests(stop_engine=False)
         if self.engine is not None:
             self.engine.cancel_analysis()
         if self._full_analysis_active:
@@ -3169,6 +3359,8 @@ class MainWindow(QMainWindow):
         self.analysis_checkbox.blockSignals(True)
         self.analysis_checkbox.setChecked(False)
         self.analysis_checkbox.blockSignals(False)
+        self.analysis_controls = replace(self.analysis_controls, realtime_enabled=False)
+        self.repository.save_setting("analysis_controls", self.analysis_controls.to_mapping())
         if self._is_battle_mode():
             self._review_mode_active = True
         self._last_engine_failure = None
@@ -3343,7 +3535,7 @@ class MainWindow(QMainWindow):
         self.repository.update_human_color(self.record.id, human_color)
         self.record = replace(self.record, human_color=human_color)
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._apply_mode_controls()
         self._refresh()
         self._request_analysis()
@@ -3353,7 +3545,7 @@ class MainWindow(QMainWindow):
         self.repository.update_mode(self.record.id, mode)
         self.record = replace(self.record, mode=mode)
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._apply_mode_controls()
         self._refresh()
         self._request_analysis()
@@ -3366,14 +3558,21 @@ class MainWindow(QMainWindow):
         self.repository.update_difficulty(self.record.id, difficulty)
         self.record = replace(self.record, difficulty=difficulty)
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self._request_analysis()
 
     def _apply_mode_controls(self) -> None:
         fair = self.mode_combo.currentData() == "fair"
         if fair:
             self._invalidate_ollama_explanation()
-            self.analysis_checkbox.setChecked(False)
+        for checkbox, wanted in (
+            (self.analysis_checkbox, self.analysis_controls.realtime_enabled),
+            (self.ownership_checkbox, self.analysis_controls.ownership_enabled),
+        ):
+            checkbox.blockSignals(True)
+            checkbox.setChecked(wanted and not fair)
+            checkbox.blockSignals(False)
+        self.undo_action.setEnabled(not self._full_analysis_active)
         self.mode_combo.setEnabled(not self._full_analysis_active)
         self.difficulty_combo.setEnabled(not self._full_analysis_active)
         self.human_color_combo.setEnabled(
@@ -3381,6 +3580,7 @@ class MainWindow(QMainWindow):
         )
         self.analysis_checkbox.setEnabled(not fair and not self._full_analysis_active)
         self.ownership_checkbox.setEnabled(not fair and not self._full_analysis_active)
+        self._sync_toolbar_menu()
         if self._is_battle_mode():
             human = (
                 self._tr("黑", "Black")
@@ -3411,8 +3611,7 @@ class MainWindow(QMainWindow):
             )
             return
         preset = PRESETS[str(self.difficulty_combo.currentData())]
-        self.engine.analyze(
-            tree=self.tree,
+        self._analyze_position(
             node_id=self.tree.current_id,
             rules=self.record.rules,
             komi=self.record.komi,
@@ -3481,13 +3680,7 @@ class MainWindow(QMainWindow):
             return
         self._stop_full_game_analysis(request_realtime=False)
         self._invalidate_ollama_explanation()
-        for request_id in (self._active_realtime_request_id, self._active_full_request_id):
-            if request_id is not None:
-                self._ignored_analysis_requests.add(request_id)
-        self._active_realtime_request_id = None
-        self._active_full_request_id = None
-        if self.engine is not None:
-            self.engine.stop_analysis()
+        self._stop_analysis_requests()
         scoring_game_id = self.record.id
         scoring_node_id = self.tree.current_id
         last_move = None if self.tree.current.move is None else self.tree.current.move.point
@@ -3560,7 +3753,7 @@ class MainWindow(QMainWindow):
         dead_points: frozenset[Point] = frozenset(),
     ) -> None:
         if self.engine is not None:
-            self.engine.stop_analysis()
+            self._stop_analysis_requests()
         self.repository.finish_game(
             self.record.id, result, scoring_node_id=scoring_node_id, ownership=ownership,
             dead_points=dead_points,
