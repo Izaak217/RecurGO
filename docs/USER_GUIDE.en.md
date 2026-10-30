@@ -1,8 +1,10 @@
-# RecurGO User Manual (v1.0.2)
+# RecurGO User Manual (v1.1.0)
 
 English | [简体中文](USER_GUIDE.md)
 
 This manual explains everyday use of RecurGO. For installation, downloads, CUDA/cuDNN, and environment checks, see the [Windows Installation Guide](INSTALL_WINDOWS.en.md). Developers running from source should use [Run from source](SOURCE_SETUP.en.md).
+
+This release uses the TF3 main model. Games, variations, comments, and preferences are retained. Games analyzed with the previous model need fresh analysis to show the new results. Each engine startup loads the model and warms up the GPU, so the first candidate may take longer to appear. The wait varies with hardware, power mode, and system load; changing positions in the same running engine does not repeat the full warmup.
 
 ## Three common tasks
 
@@ -31,8 +33,9 @@ whether the engine is ready.
 
 1. Select **New game / 新棋局**. Enter a game name; Black and White player names are optional.
 2. Choose a mode and confirm. **Manual study / 手动打谱** lets you record both sides' moves.
-   **Fair play / 公平对战** plays against the local AI with real-time analysis and ownership
-   disabled. **Assisted play / 辅助对战** plays against the AI and permits optional analysis.
+   **Fair play / 公平对战** plays against the local AI with analysis and review data hidden;
+   real-time analysis, ownership, and full-game analysis are disabled.
+   **Assisted play / 辅助对战** plays against the AI and permits optional analysis.
 3. In a play mode, choose Black or White and a difficulty. The AI plays first when you choose
    White. Beginner through Expert use different Human SL human-style levels; **Strongest / 最强**
    uses the main model's best searched move.
@@ -47,12 +50,18 @@ cannot be restored. Previous and Next in review only browse the saved game and r
 **Pass** skips a
 turn. Two consecutive passes open scoring, or you can select **Finish / Score** yourself.
 
-Real-time analysis and ownership retain users' selections across restarts. Fair play disables
-both controls; switching back to a mode that permits analysis restores the previous selections.
-Displayed win-rate points are saved with the local game and restored even with analysis off.
-Points recorded during search are estimates and do not count as completed full-game analysis.
-Different visit budgets keep separate data. Preferences, Analysis settings and Local AI
-explanation settings are available from Menu.
+Real-time analysis and ownership retain users' selections across restarts. Fair play hides
+candidate moves, variations, explanations, ownership, win-rate trends, and review evaluations.
+Cached results also stay hidden after reopening the game or navigating between moves.
+These caches remain saved. Returning to Manual study or Assisted play restores the previous
+switch selections and applicable cached displays. These display restrictions do not change
+AI move selection, difficulty, or search budgets.
+
+Displayed win-rate points are saved with the local game. In modes that permit analysis displays,
+they can be restored even with real-time analysis off. Points recorded during search are
+estimates and do not count as completed full-game analysis. Different visit budgets keep
+separate data. Preferences, Analysis settings and Local AI explanation settings are available
+from Menu.
 
 While real-time analysis is enabled, searches interrupted by quick moves remain in a saved
 queue. After the current position finishes, RecurGO fills their win-rate points using the same
@@ -98,8 +107,10 @@ game and choose **Open game / 进入棋谱**, or double-click it. For an unfinis
 details in the library. Deleting a game permanently removes its branches and related review
 data and cannot be undone.
 
-Use the controls below the board to step through a saved or imported game. Select
-**Analyze full game / 全盘AI分析** to begin; the same button can stop the run. Completed positions
+Use the controls below the board to step through a saved or imported game. Full-game analysis
+cannot start during fair play. Switch to Manual study or Assisted play, then select
+**Analyze full game / 全盘AI分析** to begin; the same button can stop the run. Entering fair play
+stops an existing full-game analysis. Completed positions
 are saved, and another run can continue unfinished positions. The review area has Win-rate
 trend, Move quality, Problem moves, Match rate, and Overview views. **Scope / 范围** selects the
 whole game, opening, middle game, or endgame. Click problem-move or match-rate marks to jump
@@ -117,6 +128,10 @@ to their positions. Review grades are analysis-based estimates, not infallible j
   comments, and the result, so inspect it before sharing.
 
 Image recognition runs locally; the image is not uploaded.
+
+After automatic recognition, check that all four corners lie on the outermost grid
+intersections. Coordinate labels, edge stones, frames, or strong perspective can still
+interfere; select the four corners manually and recognize again if they are offset.
 
 ## Language, appearance, and optional local AI text
 

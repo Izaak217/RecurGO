@@ -80,6 +80,7 @@ class KataGoEngine(QObject):
     analysis_cancelled = Signal(str)
     engine_error = Signal(str)
     failure_reported = Signal(object)
+    metadata_received = Signal(object)
 
     def __init__(
         self,
@@ -99,9 +100,9 @@ class KataGoEngine(QObject):
         self.analysis_stall_timeout_ms = analysis_stall_timeout_ms
         self.process = QProcess(self)
         self.process.setWorkingDirectory(str(runtime.project_root))
-        environment = QProcessEnvironment.systemEnvironment()
-        current_path = environment.value("PATH")
-        environment.insert("PATH", f"{runtime.cudnn_bin};{runtime.cuda_bin};{current_path}")
+        environment = QProcessEnvironment()
+        for name, value in runtime.process_environment().items():
+            environment.insert(name, value)
         self.process.setProcessEnvironment(environment)
         self.process.readyReadStandardOutput.connect(self._read_stdout)
         self.process.readyReadStandardError.connect(self._read_stderr)
@@ -131,6 +132,7 @@ class KataGoEngine(QObject):
         self._last_node_id: str | None = None
         self._last_purpose: str | None = None
         self._terminate_ids: set[str] = set()
+        self._metadata_ids: dict[str, str] = {}
         self._shutdown_requested = False
         self._restart_requested = False
         self._process_failure_reported = False
@@ -167,6 +169,7 @@ class KataGoEngine(QObject):
         self._stdout_buffer = ""
         self._stderr_buffer = ""
         self._stderr_lines.clear()
+        self._metadata_ids.clear()
         self._ready = False
         self._set_state(EngineState.STARTING)
         self.status_changed.emit("KataGo：正在加载模型…")
@@ -182,6 +185,16 @@ class KataGoEngine(QObject):
         ]
         self._arm_startup_timer()
         self.process.start(str(self.runtime.engine), arguments)
+
+    def query_metadata(self) -> None:
+        """Inspect the live process without changing analysis requests or search settings."""
+
+        if not self._ready:
+            raise RuntimeError("KataGo is not ready for metadata queries")
+        for action in ("query_version", "query_models"):
+            request_id = f"{action}-{uuid4()}"
+            self._metadata_ids[request_id] = action
+            self._write_json({"id": request_id, "action": action})
 
     def analyze(
         self,
@@ -274,11 +287,7 @@ class KataGoEngine(QObject):
     def retry_last_request(self) -> str | None:
         """Queue a fresh copy of the last analysis request and return its new ID."""
 
-        if (
-            self._last_query is None
-            or self._last_node_id is None
-            or self._last_purpose is None
-        ):
+        if self._last_query is None or self._last_node_id is None or self._last_purpose is None:
             return None
         self._cancel_query(send_terminate=True)
         query = dict(self._last_query)
@@ -343,6 +352,7 @@ class KataGoEngine(QObject):
         self._shutdown_requested = True
         self._restart_requested = False
         self._startup_timer.stop()
+        self._metadata_ids.clear()
         self._cancel_query(send_terminate=True)
         if not self.is_running:
             self._set_state(EngineState.STOPPED)
@@ -448,6 +458,20 @@ class KataGoEngine(QObject):
                 )
                 continue
             response_id = str(payload.get("id", ""))
+            if response_id in self._metadata_ids:
+                action = self._metadata_ids.pop(response_id)
+                error = payload.get("error", payload.get("errorMessage"))
+                if error is not None or payload.get("action") != action:
+                    self._report_failure(
+                        EngineFailureKind.PROTOCOL_ERROR,
+                        f"KataGo metadata query failed ({action}): {error or payload}",
+                        recoverable=True,
+                        request_id=response_id,
+                        purpose="environment_check",
+                    )
+                else:
+                    self.metadata_received.emit(payload)
+                continue
             if response_id in self._terminate_ids:
                 self._terminate_ids.discard(response_id)
                 continue

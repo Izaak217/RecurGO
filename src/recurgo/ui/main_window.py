@@ -72,6 +72,7 @@ from recurgo.engine import (
     human_policy_probability,
     select_ai_move,
 )
+from recurgo.engine.analysis_identity import AnalysisIdentity
 from recurgo.i18n import localize_error
 from recurgo.llm.ollama import OllamaClient
 from recurgo.llm.settings import OllamaSettings
@@ -199,6 +200,17 @@ class MainWindow(QMainWindow):
         self.record = record
         self.tree = tree
         self.engine = engine
+        # v1.1.0.dev1: one stable provenance value for this engine session.
+        self.analysis_identity = AnalysisIdentity.from_runtime(getattr(engine, "runtime", None))
+        if self.analysis_identity.is_available:
+            self.repository.register_analysis_source(
+                self.analysis_identity.key,
+                engine_version=self.analysis_identity.engine_version,
+                model_hash=self.analysis_identity.model_sha256,
+                config_hash=self.analysis_identity.config_sha256,
+                engine_hash=self.analysis_identity.engine_sha256,
+                backend=self.analysis_identity.backend,
+            )
         self._engine_unavailable_reason = engine_unavailable_reason
         self.ollama_settings = OllamaSettings.from_mapping(
             self.repository.load_setting("ollama")
@@ -1593,6 +1605,7 @@ class MainWindow(QMainWindow):
     def _ollama_explanation_partial(self, request_id: str, text: str) -> None:
         if (
             self._ollama_closed
+            or not self._can_show_analysis()
             or request_id != self._ollama_request_id
             or self._ollama_request_generation != self._ollama_generation
         ):
@@ -1608,6 +1621,7 @@ class MainWindow(QMainWindow):
     def _ollama_explanation_ready(self, request_id: str, text: str) -> None:
         if (
             self._ollama_closed
+            or not self._can_show_analysis()
             or request_id != self._ollama_request_id
             or self._ollama_request_generation != self._ollama_generation
         ):
@@ -1970,11 +1984,18 @@ class MainWindow(QMainWindow):
 
     def _show_manual_candidate_placeholder(self) -> None:
         self.candidate_table.setRowCount(1)
-        values = ["—", "—", "—", "—", self._tr("等待AI分析", "Waiting for AI analysis")]
+        status = (
+            self._tr("等待AI分析", "Waiting for AI analysis")
+            if self._can_show_analysis()
+            else self._tr("公平对战中隐藏分析", "Analysis hidden during fair play")
+        )
+        values = ["—", "—", "—", "—", status]
         for column, value in enumerate(values):
             self.candidate_table.setItem(0, column, QTableWidgetItem(value))
 
     def _black_winrates_from_payloads(self) -> dict[str, float]:
+        if not self._has_analysis_source():
+            return {}
         values: dict[str, float] = {}
         for node_id, payload in self._analysis_payload_by_node.items():
             if node_id not in self.tree.nodes:
@@ -1984,26 +2005,33 @@ class MainWindow(QMainWindow):
                 values[node_id] = value
         values.update({
             node_id: winrate for node_id, winrate in self.repository.winrate_points_for_game(
-                self.record.id, max_visits=self.analysis_settings.visits
+                self.record.id, max_visits=self.analysis_settings.visits,
+                analysis_identity=self.analysis_identity.key,
             ).items() if node_id in self.tree.nodes
         })
         return values
 
     def _load_analysis_payloads(self, game_id: str) -> dict[str, dict[str, object]]:
+        if not self._has_analysis_source():
+            return {}
         visits = self.analysis_settings.visits
         return self.repository.analysis_snapshots_for_game(
             game_id,
+            analysis_identity=self.analysis_identity.key,
             cache_keys=(
-                f"realtime-{visits}-0",
-                f"realtime-{visits}-1",
+                self._realtime_cache_key(visits, False),
+                self._realtime_cache_key(visits, True),
                 f"full-game-{visits}",
             ),
         )
 
     def _load_cached_ownership(self, game_id: str) -> dict[str, list[float]]:
+        if not self._has_analysis_source():
+            return {}
         snapshots = self.repository.analysis_snapshots_for_game(
             game_id,
-            cache_keys=(f"realtime-{self.analysis_settings.visits}-1",),
+            analysis_identity=self.analysis_identity.key,
+            cache_keys=(self._realtime_cache_key(self.analysis_settings.visits, True),),
         )
         ownership_by_node: dict[str, list[float]] = {}
         for node_id, payload in snapshots.items():
@@ -2011,6 +2039,15 @@ class MainWindow(QMainWindow):
             if ownership is not None:
                 ownership_by_node[node_id] = ownership
         return ownership_by_node
+
+    def _has_analysis_source(self) -> bool:
+        return self.engine is not None and self.analysis_identity.is_available
+
+    def _realtime_cache_key(
+        self, visits: int, ownership: bool, difficulty: str | None = None,
+    ) -> str:
+        preset = PRESETS[difficulty or self.record.difficulty]
+        return self.analysis_identity.realtime_key(visits, ownership, preset.human_profile)
 
     @staticmethod
     def _ownership_values(payload: dict[str, object]) -> list[float] | None:
@@ -2079,7 +2116,14 @@ class MainWindow(QMainWindow):
     def _navigate_last(self) -> None:
         self._navigate_review(len(self._review_line_ids) - 1)
 
+    def _can_show_analysis(self) -> bool:
+        """Fair play hides analysis independently of cache and real-time settings."""
+        return self.record.mode != "fair"
+
     def _show_cached_analysis_for_current(self) -> None:
+        if not self._can_show_analysis():
+            self._clear_analysis_display()
+            return
         payload = self._analysis_payload_by_node.get(self.tree.current_id)
         if payload is not None:
             self._display_analysis_payload(self.tree.current_id, payload)
@@ -2087,12 +2131,18 @@ class MainWindow(QMainWindow):
             self._show_cached_ownership_for_current()
 
     def _show_cached_ownership_for_current(self) -> None:
-        if not (self.analysis_checkbox.isChecked() and self.ownership_checkbox.isChecked()):
+        if not (
+            self._can_show_analysis()
+            and self.analysis_checkbox.isChecked()
+            and self.ownership_checkbox.isChecked()
+        ):
             self.board_widget.set_ownership(None)
             return
         self.board_widget.set_ownership(self._ownership_by_node.get(self.tree.current_id))
 
     def _move_reviews(self) -> list[MoveReview]:
+        if not self._can_show_analysis():
+            return []
         return build_move_reviews(
             self.tree,
             self._review_line_ids,
@@ -2131,6 +2181,12 @@ class MainWindow(QMainWindow):
         return ""
 
     def _update_review_summary(self, _scope: str = "") -> None:
+        if not self._can_show_analysis():
+            self._clear_review_plots()
+            self.review_summary.setText(
+                self._tr("公平对战中隐藏分析。", "Analysis is hidden during fair play.")
+            )
+            return
         total_positions = len(self._review_line_ids)
         analyzed_positions = sum(
             node_id in self._analysis_payload_by_node for node_id in self._review_line_ids
@@ -2740,7 +2796,15 @@ class MainWindow(QMainWindow):
         self._start_full_game_analysis()
 
     def _start_full_game_analysis(self) -> None:
-        if self.engine is None:
+        if not self._can_show_analysis():
+            self.engine_status.setText(
+                self._tr(
+                    "公平对战中无法进行全盘分析",
+                    "Full-game analysis is unavailable during fair play",
+                )
+            )
+            return
+        if not self._has_analysis_source():
             self.engine_status.setText(
                 self._tr(
                     "KataGo：运行配置不可用，无法进行全盘分析",
@@ -2753,6 +2817,7 @@ class MainWindow(QMainWindow):
         self._stop_analysis_requests()
         completed_snapshots = self.repository.analysis_snapshots_for_game(
             self.record.id,
+            analysis_identity=self.analysis_identity.key,
             cache_keys=(f"full-game-{self._full_analysis_visits}",),
         )
         self._analysis_payload_by_node.update(completed_snapshots)
@@ -2915,13 +2980,17 @@ class MainWindow(QMainWindow):
         return request_id
 
     def _queue_winrate_position(self) -> None:
+        if not self._has_analysis_source():
+            return
         self.repository.queue_winrate_analysis(
             self.record.id, self.tree.current_id, max_visits=self.analysis_settings.visits,
+            analysis_identity=self.analysis_identity.key,
         )
 
     def _start_next_winrate_analysis(self) -> None:
         if (
-            self._ollama_closed or self.engine is None or self._scoring_dialog is not None
+            self._ollama_closed or not self._has_analysis_source()
+            or self._scoring_dialog is not None
             or self._full_analysis_active or not self.analysis_checkbox.isChecked()
             or self.mode_combo.currentData() == "fair" or self._is_ai_turn()
             or self._last_engine_failure is not None
@@ -2931,6 +3000,7 @@ class MainWindow(QMainWindow):
             return
         pending = self.repository.pending_winrate_nodes(
             self.record.id, max_visits=self.analysis_settings.visits,
+            analysis_identity=self.analysis_identity.key,
         )
         node_id = next((
             candidate for candidate in pending
@@ -3020,6 +3090,8 @@ class MainWindow(QMainWindow):
         self, update: AnalysisUpdate, *, is_complete: bool,
         request: _AnalysisRequest | None = None,
     ) -> bool:
+        if not self._has_analysis_source():
+            return False
         winrate = black_winrate(self.tree, update.node_id, update.payload)
         if winrate is None or not math.isfinite(winrate) or not 0.0 <= winrate <= 100.0:
             return False
@@ -3036,6 +3108,7 @@ class MainWindow(QMainWindow):
                         self._full_analysis_visits if update.purpose == "full_game"
                         else self.analysis_settings.visits),
             black_winrate=winrate, search_visits=search_visits, is_complete=is_complete,
+            analysis_identity=self.analysis_identity.key,
         )
         self._analysis_by_node[update.node_id] = winrate
         return True
@@ -3065,6 +3138,9 @@ class MainWindow(QMainWindow):
         node_id: str,
         payload: dict[str, object],
     ) -> None:
+        if not self._can_show_analysis():
+            self._clear_analysis_display()
+            return
         move_infos_raw = payload.get("moveInfos")
         root_raw = payload.get("rootInfo")
         if not isinstance(move_infos_raw, list) or not isinstance(root_raw, dict):
@@ -3200,7 +3276,10 @@ class MainWindow(QMainWindow):
         self._redraw_winrate_plot()
         self._save_analysis_snapshot(
             update,
-            cache_key=f"realtime-{max_visits}-{int(include_ownership)}",
+            cache_key=self._realtime_cache_key(
+                max_visits, include_ownership,
+                request.difficulty if request is not None else None,
+            ),
             max_visits=max_visits,
             include_ownership=include_ownership,
             difficulty=request.difficulty if request is not None else None,
@@ -3224,20 +3303,24 @@ class MainWindow(QMainWindow):
         include_ownership: bool,
         difficulty: str | None = None,
     ) -> None:
+        if not self._has_analysis_source():
+            return
         self.repository.save_analysis_snapshot(
             game_id=self.record.id,
             node_id=update.node_id,
             cache_key=cache_key,
-            engine_version=(
-                self.engine.runtime.engine_version if self.engine is not None else "unknown"
-            ),
-            model_hash=(
-                self.engine.runtime.model_sha256 if self.engine is not None else "unknown"
-            ),
+            analysis_identity=self.analysis_identity.key,
+            engine_version=self.analysis_identity.engine_version,
+            model_hash=self.analysis_identity.model_sha256,
             parameters={
+                **self.analysis_identity.metadata(),
                 "maxVisits": max_visits,
                 "includeOwnership": include_ownership,
                 "difficulty": difficulty or self.difficulty_combo.currentData(),
+                "humanSLProfile": (
+                    PRESETS[difficulty or self.record.difficulty].human_profile
+                    if update.purpose == "realtime" else None
+                ),
             },
             result=update.payload,
         )
@@ -3246,6 +3329,9 @@ class MainWindow(QMainWindow):
         self._show_candidate_explanation(row)
 
     def _show_candidate_explanation(self, row: int) -> None:
+        if not self._can_show_analysis():
+            self._clear_analysis_display()
+            return
         if (
             not (0 <= row < len(self._candidate_payloads))
             or self._displayed_analysis_payload is None
@@ -3404,6 +3490,8 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(error, 8000)
 
     def _current_winrate_series(self) -> tuple[list[int], list[float]]:
+        if not self._can_show_analysis():
+            return [], []
         move_numbers: list[int] = []
         winrates: list[float] = []
         nodes = (
@@ -3424,6 +3512,10 @@ class MainWindow(QMainWindow):
         self.winrate_curve.setData(move_numbers, winrates)
         self.winrate_cursor.hide()
         self.winrate_tooltip.hide()
+        if not self._can_show_analysis():
+            self.winrate_plot.setXRange(0, 10, padding=0.02)
+            self.winrate_plot.setYRange(0, 100, padding=0.02)
+            return
         x_max = (
             self.tree.nodes[self._review_line_ids[-1]].state.move_number
             if self._review_mode_active and self._review_line_ids
@@ -3544,6 +3636,8 @@ class MainWindow(QMainWindow):
         mode = str(self.mode_combo.currentData())
         self.repository.update_mode(self.record.id, mode)
         self.record = replace(self.record, mode=mode)
+        if mode == "fair":
+            self._stop_full_game_analysis(request_realtime=False)
         if self.engine is not None:
             self._stop_analysis_requests()
         self._apply_mode_controls()
@@ -3559,12 +3653,19 @@ class MainWindow(QMainWindow):
         self.record = replace(self.record, difficulty=difficulty)
         if self.engine is not None:
             self._stop_analysis_requests()
+        self._analysis_payload_by_node = self._load_analysis_payloads(self.record.id)
+        self._ownership_by_node = self._load_cached_ownership(self.record.id)
+        self._analysis_by_node = self._black_winrates_from_payloads()
+        self._clear_analysis_display()
+        self._refresh()
         self._request_analysis()
 
     def _apply_mode_controls(self) -> None:
         fair = self.mode_combo.currentData() == "fair"
         if fair:
             self._invalidate_ollama_explanation()
+            self.full_analysis_progress.hide()
+        self.full_analysis_action.setEnabled(not fair)
         for checkbox, wanted in (
             (self.analysis_checkbox, self.analysis_controls.realtime_enabled),
             (self.ownership_checkbox, self.analysis_controls.ownership_enabled),

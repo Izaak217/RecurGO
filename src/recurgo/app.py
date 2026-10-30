@@ -40,7 +40,7 @@ def data_directory() -> Path:
 
 
 def writable_analysis_runtime(runtime: EngineRuntime, data_root: Path) -> EngineRuntime:
-    """Place KataGo logs in user data when the application directory is read-only."""
+    """v1.1.0.dev1: keep logs and engine state in the selected data directory."""
 
     original = runtime.analysis_config.read_text(encoding="utf-8")
     log_dir = data_root / "logs" / "katago"
@@ -53,6 +53,13 @@ def writable_analysis_runtime(runtime: EngineRuntime, data_root: Path) -> Engine
     )
     if count != 1:
         raise ValueError("KataGo analysis.cfg 缺少 logDir 设置。")
+    home_dir = data_root / "katago"
+    home_dir.mkdir(parents=True, exist_ok=True)
+    home_setting = f"homeDataDir = {home_dir.as_posix()}"
+    if re.search(r"(?m)^homeDataDir\s*=", config):
+        config = re.sub(r"(?m)^homeDataDir\s*=.*$", home_setting, config)
+    else:
+        config += f"\n{home_setting}\n"
     config_dir = data_root / "configs"
     config_dir.mkdir(parents=True, exist_ok=True)
     digest = sha256(config.encode("utf-8")).hexdigest()[:16]
@@ -83,7 +90,10 @@ def build_window() -> MainWindow:
             local_dependencies_root=dependencies_root,
             validate=False,
         )
-        if getattr(sys, "frozen", False):
+        # Verify actual files before MainWindow registers a source or loads its
+        # cached results. GPU/dependency checks remain in the standalone checker.
+        runtime.verify_artifact_hashes()
+        if getattr(sys, "frozen", False) or os.environ.get("RECURGO_DATA_DIR"):
             runtime = writable_analysis_runtime(runtime, data_root)
         engine = KataGoEngine(runtime)
     except (OSError, KeyError, ValueError) as exc:

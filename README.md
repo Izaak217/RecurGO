@@ -6,10 +6,9 @@
 
 本地 KataGo 围棋练习、对战和复盘程序。
 
-首次公开版本为 **v1.0.0**；Windows x64 安装程序与源码使用同一版本号。
-KataGo 实际分析已在 Windows x64 的 NVIDIA GeForce RTX 5070 Ti Laptop GPU 和
-NVIDIA GeForce RTX 2080 Ti 上通过；后者在主程序中也显示了候选点和胜率。
-这不代表所有 NVIDIA 显卡或全部功能均已验收。
+当前版本为 **v1.1.0**，接入 KataGo v1.18.2 与固定 TF3 主模型，Human SL 模型保持不变。
+本版面向 Windows 10/11 x64 和 NVIDIA 显卡，已在 RTX 5070 Ti Laptop GPU 上完成
+TF3 模型加载及真实分析检查；其他设备须通过独立环境检测确认。
 多显卡后端选择尚未完成。仓库不包含模型、运行库、个人棋谱或缓存。
 
 面向普通用户的[Windows 安装指南](docs/INSTALL_WINDOWS.md)介绍安装流程；[用户说明书](docs/USER_GUIDE.md)介绍日常操作。安装程序和校验文件见同版本 GitHub Release；程序已有访问量设置和 Ollama 安装提示。
@@ -20,11 +19,12 @@ Windows 中安装，工具会检查其可用性。主程序没有环境配置或
 
 当前状态：
 
-- KataGo v1.16.5 CUDA 运行环境已验证。
+- KataGo v1.18.2 CUDA 12.8/cuDNN 9.8 构建与 TF3 主模型按明确路径和 SHA-256 固定。
 - 实时分析和全盘复盘可在工具栏“分析设置”中修改 visits；默认 800，旧预算缓存保留但不混用。
-- 主分析模型与 Human SL 模型已验证。
+- Human SL 仍用于原有陪练档位；TF3 负责客观分析与“最强”搜索。
 - 长期运行的 JSON 分析进程、增量结果和取消请求已接入 Qt 界面。
 - 支持手动打谱、公平对战、辅助对战；对战可选择玩家执黑或执白，执白时 AI 自动先行。
+- 公平对战隐藏已有分析和复盘数据，禁用全盘分析；缓存保留，退出公平模式后恢复显示。
 - 六档难度中，入门至顶级按 Human SL 段位策略概率抽样，最强采用主模型最佳手。
 - 候选点、胜率、目差、人类偏好、PV 和胜率折线可实时更新。
 - 胜率折线严格跟随当前变化路径，悔棋后立即回退。
@@ -86,7 +86,7 @@ AI 分析。当前 CUDA 配置步骤和限制见 [源码启动说明](docs/SOURC
 ## 许可与第三方组件
 
 RecurGO 自有代码与文档以 [MIT License](LICENSE) 发布，版权署名为
-[izaak (izaak217)](https://github.com/izaak217)。当前源码版本为 **v1.0.1**。
+[izaak (izaak217)](https://github.com/izaak217)。当前源码版本为 **v1.1.0**。
 
 KataGo 引擎、模型、Qt/PySide6 及其他依赖分别遵循各自的许可证；本项目的 MIT
 许可不替代第三方条款。组件清单与许可原文见

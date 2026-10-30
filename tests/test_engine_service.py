@@ -29,6 +29,44 @@ def _runtime(tmp_path: Path) -> EngineRuntime:
     )
 
 
+def test_live_metadata_does_not_replace_active_analysis(
+    qtbot: QtBot, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    engine = KataGoEngine(_runtime(tmp_path))
+    engine._ready = True
+    engine._current_request_id = "active-analysis"
+    engine._current_node_id = "node"
+    engine._current_purpose = "realtime"
+    written: list[dict[str, object]] = []
+    received: list[dict[str, object]] = []
+    monkeypatch.setattr(engine, "_write_json", written.append)
+    engine.metadata_received.connect(received.append)
+    engine.query_metadata()
+    assert {query["action"] for query in written} == {"query_version", "query_models"}
+    responses = [dict(query, version="1.18.2", models=[]) for query in written]
+    engine._stdout_buffer = "".join(json.dumps(reply) + "\n" for reply in responses)
+    engine._read_stdout()
+    assert received == responses
+    assert engine._current_request_id == "active-analysis"
+    assert engine._metadata_ids == {}
+    # Late/duplicate responses cannot complete a second environment check.
+    engine._stdout_buffer = json.dumps(responses[0]) + "\n"
+    engine._read_stdout()
+    assert received == responses
+
+
+def test_metadata_error_reports_failure_without_claiming_success(
+    qtbot: QtBot, tmp_path: Path
+) -> None:
+    engine = KataGoEngine(_runtime(tmp_path))
+    engine._metadata_ids["models"] = "query_models"
+    engine._stdout_buffer = json.dumps({"id": "models", "error": "unsupported action"}) + "\n"
+    with qtbot.waitSignal(engine.failure_reported, timeout=1000) as blocker:
+        engine._read_stdout()
+    assert blocker.args[0].purpose == "environment_check"
+    assert engine._metadata_ids == {}
+
+
 def test_analysis_protocol_error_is_reported_and_request_is_cleared(
     qtbot: QtBot,
     tmp_path: Path,
@@ -37,13 +75,16 @@ def test_analysis_protocol_error_is_reported_and_request_is_cleared(
     engine._current_request_id = "analysis-test"
     engine._current_node_id = "node-test"
     engine._current_purpose = "full_game"
-    engine._stdout_buffer = json.dumps(
-        {
-            "id": "analysis-test",
-            "field": "komi",
-            "error": "Must be between -150 and 150",
-        }
-    ) + "\n"
+    engine._stdout_buffer = (
+        json.dumps(
+            {
+                "id": "analysis-test",
+                "field": "komi",
+                "error": "Must be between -150 and 150",
+            }
+        )
+        + "\n"
+    )
 
     with qtbot.waitSignal(engine.engine_error, timeout=1000) as blocker:
         engine._read_stdout()
@@ -151,13 +192,16 @@ def test_matching_search_update_rearms_stall_timer(tmp_path: Path) -> None:
     engine._current_request_id = "analysis-live"
     engine._current_node_id = "node-live"
     engine._current_purpose = "realtime"
-    engine._stdout_buffer = json.dumps(
-        {
-            "id": "analysis-live",
-            "isDuringSearch": True,
-            "moveInfos": [],
-        }
-    ) + "\n"
+    engine._stdout_buffer = (
+        json.dumps(
+            {
+                "id": "analysis-live",
+                "isDuringSearch": True,
+                "moveInfos": [],
+            }
+        )
+        + "\n"
+    )
 
     engine._read_stdout()
 

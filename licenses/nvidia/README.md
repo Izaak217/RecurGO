@@ -2,6 +2,11 @@
 
 文档版本：v0.1.2；核实日期：2026-09-23。
 
+v1.1.0.dev1（2026-10-29）说明：TF3 候选继续使用 CUDA 12.8/cuDNN 9.8 构建，并要求核对 NVRTC 依赖。
+CUDA、NVRTC、cuDNN 均不随安装包候选分发。KataGo 内置开源 cuDNN frontend 的 MIT 原文在
+[引擎许可目录](../katago/v1.18.2/README.md)，不替代本目录记录的 NVIDIA 运行库协议。
+以下历史材料继续保留，不代表已完成新组合的人工运行或再分发验收。
+
 当前运行配置使用 CUDA 12.8 系列路径及本地 `nvidia-cudnn-cu12 9.8.0.87`。cuDNN 安装元数据将其声明为 NVIDIA 专有软件；项目源码的 MIT 许可不替代 NVIDIA 的协议。本目录保存协议资料，尚不是允许直接发布整个 CUDA/cuDNN 目录的结论。
 
 ## 原文与来源

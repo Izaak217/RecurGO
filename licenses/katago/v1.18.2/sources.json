@@ -1,0 +1,155 @@
+{
+  "document_version": "1.1.0.dev1",
+  "checked_on": "2026-10-29",
+  "katago": {
+    "version": "1.18.2",
+    "git_revision": "fd0723fdbc0e9d82cf269c9630af8c27c57c07c4",
+    "archive": "katago-v1.18.2-cuda12.8-cudnn9.8.0-windows-x64.zip",
+    "archive_sha256": "69a94227afaaf268634134805b9469f9f482760ee6c986d315d89525de0eefa2"
+  },
+  "license_files": [
+    {
+      "path": "LICENSE",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/LICENSE",
+      "source_archive_member": null,
+      "sha256": "ead22455d923920cd152546d89e4f415c94d6b580aa109fda3b57a69c57c32e0",
+      "size_kb": 2.554688,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "CONTRIBUTORS",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/CONTRIBUTORS",
+      "source_archive_member": null,
+      "sha256": "6c6d353f188e27a511e269cdc7adc6ebf495ed6c215e89a95dada0a51effe5ee",
+      "size_kb": 4.476562,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "cudnn-frontend-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/cudnn-frontend/LICENSE.txt",
+      "source_archive_member": null,
+      "sha256": "3fc4b473a2c08768a8066bf7e4a58a1185060f3ad674f2ca9e2011bca4adf2ce",
+      "size_kb": 1.121094,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "cutlass-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/cutlass/LICENSE.txt",
+      "source_archive_member": null,
+      "sha256": "80a7a18b73d41f64dd9ca881af35938f8de88b18c728703251f4c94d1299884d",
+      "size_kb": 1.810547,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "filesystem-LICENSE",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/filesystem-1.5.8/LICENSE",
+      "source_archive_member": null,
+      "sha256": "1b265537c97cfb422ffb52492c96979943f54fab8746a6dd38d8329953d487cc",
+      "size_kb": 1.060547,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "half-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/half-2.2.0/LICENSE.txt",
+      "source_archive_member": null,
+      "sha256": "b74a5c2b685e8fc30073606d69a0c3bad38924eea9b5e07984da03716a7d773d",
+      "size_kb": 1.074219,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "httplib-LICENSE",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/httplib/LICENSE",
+      "source_archive_member": null,
+      "sha256": "4b45cbe16d7b71b89ae6127e26e0d90a029198ca5e958ad8e3d0b8bbed364d8b",
+      "size_kb": 1.049805,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "tclap-COPYING",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/tclap-1.2.5/COPYING",
+      "source_archive_member": null,
+      "sha256": "cd81a61d47aeb1ed63036ca260baee37719923bbd7ebd988ec4edae128f3b6eb",
+      "size_kb": 1.115234,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "sha2.cpp",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/core/sha2.cpp",
+      "source_archive_member": null,
+      "sha256": "c8ef199e699ccddd6167c647f7b0de3a3636517a88e8d8440f515e6f17c578d1",
+      "size_kb": 45.623047,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "json.hpp",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/nlohmann_json/json.hpp",
+      "source_archive_member": null,
+      "sha256": "be7bbfbc7c62c35aa6f27dfbdd950384f247dd9f2281b5930bdaa3a6ab95eef7",
+      "size_kb": 855.724609,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "mozilla-cacerts-LICENSE",
+      "source_url": "https://raw.githubusercontent.com/lightvector/KataGo/v1.18.2/cpp/external/mozilla-cacerts/LICENSE",
+      "source_archive_member": null,
+      "sha256": "8767f414caf80dce7775d9a2d54334d83afb32d73ae24ea2e85e311d4a79b7d3",
+      "size_kb": 0.21875,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "openssl-3.6.3-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.6.3/LICENSE.txt",
+      "source_archive_member": null,
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a",
+      "size_kb": 9.936523,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "zlib-1.3.2-README.txt",
+      "source_url": "https://raw.githubusercontent.com/madler/zlib/v1.3.2/README",
+      "source_archive_member": null,
+      "sha256": "4026d921213bb2e311d8d42b44ef53361c102d5d45ae32f93f8e52eaee8d068f",
+      "size_kb": 5.166992,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "libzip-1.11.4-LICENSE.txt",
+      "source_url": "https://raw.githubusercontent.com/nih-at/libzip/v1.11.4/LICENSE",
+      "source_archive_member": null,
+      "sha256": "01c022eca6d566e2e8792fd0f091a28653b2a608319922bcd4de91c49d1438e1",
+      "size_kb": 1.419922,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    },
+    {
+      "path": "bzip2-1.0.8-LICENSE",
+      "source_url": "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz",
+      "source_archive_member": "bzip2-1.0.8/LICENSE",
+      "sha256": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3",
+      "size_kb": 1.851562,
+      "retrieved_on": "2026-10-29",
+      "verification": "Official HTTPS retrieval; local SHA-256 records content, not an upstream signature"
+    }
+  ],
+  "binary_version_evidence": {
+    "libcrypto-3-x64.dll": "PE ProductVersion/FileVersion 3.6.3",
+    "libssl-3-x64.dll": "PE ProductVersion/FileVersion 3.6.3",
+    "z.dll": "PE ProductVersion/FileVersion 1.3.2",
+    "zip.dll": "zip_libzip_version() returned 1.11.4",
+    "bz2.dll": "BZ2_bzlibVersion() returned 1.0.8, 13-Jul-2019"
+  },
+  "bzip2_source_archive_sha256": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
+}

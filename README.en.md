@@ -6,16 +6,17 @@ User documentation: [Windows Installation Guide](docs/INSTALL_WINDOWS.en.md) · 
 
 RecurGO is a local desktop application for Go practice, play, and review powered by KataGo.
 
-The first public version is **v1.0.0**, with source and a Windows x64 installer under the same version number. Real KataGo analysis has passed on Windows x64 with an NVIDIA GeForce RTX 5070 Ti Laptop GPU and an NVIDIA GeForce RTX 2080 Ti; the latter also showed candidate moves and win rates in the application. This does not establish support for every NVIDIA GPU or acceptance of every feature. Selection among GPU backends remains in development. The source repository excludes models, runtimes, personal game records, and caches.
+The current version is **v1.1.0**, integrating KataGo v1.18.2 and a fixed TF3 main model while retaining Human SL. This release targets Windows 10/11 x64 with an NVIDIA GPU. TF3 model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU; other machines must pass the separate environment check. Selection among GPU backends remains in development. The source repository excludes models, runtimes, personal game records, and caches.
 
 The [Windows installation guide](docs/INSTALL_WINDOWS.en.md) explains installation; the matching GitHub Release provides the installer and checksum file. The application has an analysis visits setting and Ollama setup guidance. CUDA/cuDNN path selection and a real KataGo check live in the separate `check_analysis_environment.cmd` tool. Source mode first looks under `runtime/cuda_deps/nvidia/`; installed mode first looks under `cuda_deps/nvidia/` in the current user's data directory. Both accept manually selected paths. The NVIDIA driver is installed in Windows and checked by that tool. The main application has no environment setup or test entry point.
 
 ## Current capabilities
 
-- A KataGo v1.16.5 CUDA environment, the main analysis model, and the Human SL model have been verified on the development machine.
+- The KataGo v1.18.2 CUDA 12.8/cuDNN 9.8 build and TF3 main model are pinned by explicit paths and SHA-256. Human SL retains its existing practice roles; TF3 supplies objective analysis and Strongest searches.
 - Real-time analysis and full-game review have a configurable visits setting, initially 800. Cached results from another budget remain available but are not presented as results from the new budget.
 - A persistent KataGo JSON analysis process streams updates, supports cancellation, and integrates with the Qt interface.
 - Manual study, fair play, and assisted play are available. The human can play either color; when the human chooses white, the AI plays first.
+- Fair play hides existing analysis and review data and disables full-game analysis. Cached results remain saved and become visible again after leaving fair play.
 - Five Human SL difficulty levels sample moves from rank-specific human policy. The sixth, Strongest, uses the main model's best searched move.
 - Candidate moves, win rate, score lead, human preference, principal variation, and a win-rate plot update during analysis. The plot follows the current variation and moves back after undo.
 - The board previews legal moves and plays built-in move and capture sounds. Four board themes and four stone styles are available, along with separate sound selection, volume, and mute. These preferences are stored in the local database.
@@ -58,7 +59,7 @@ To run the existing checks:
 
 ## License and third-party components
 
-RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.0.1**.
+RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.1.0**.
 
 KataGo, its models, Qt/PySide6, and other dependencies remain under their respective terms. RecurGO's MIT license does not replace them. See [Third-party notices](THIRD_PARTY_NOTICES.en.md) and the [license sources](licenses/README.md). Distribution must retain the applicable materials; source and packaging obligations are summarized in the [distribution guide](docs/DISTRIBUTION.en.md).
 

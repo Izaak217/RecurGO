@@ -1,15 +1,34 @@
 {
-  "schemaVersion": 1,
-  "engineVersion": "1.16.5",
+  "schemaVersion": 2,
+  "engineVersion": "1.18.2",
+  "engineGitRevision": "fd0723fdbc0e9d82cf269c9630af8c27c57c07c4",
+  "engineArchiveSha256": "69a94227afaaf268634134805b9469f9f482760ee6c986d315d89525de0eefa2",
+  "runtimePaths": {
+    "engine": "runtime/engine/katago.exe",
+    "model": "runtime/models/kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz",
+    "humanModel": "runtime/models/b18c384nbt-humanv0.bin.gz",
+    "analysisConfig": "runtime/configs/analysis.cfg"
+  },
+  "engineFiles": [
+    "runtime/engine/katago.exe",
+    "runtime/engine/libcrypto-3-x64.dll",
+    "runtime/engine/libssl-3-x64.dll",
+    "runtime/engine/z.dll",
+    "runtime/engine/zip.dll",
+    "runtime/engine/bz2.dll",
+    "runtime/engine/cacert.pem",
+    "runtime/engine/README.txt"
+  ],
   "files": {
-    "runtime/engine/katago.exe": "60275844632567e8ccb2d1fc5080c3205cf0f78fe2b57d12bce07f3a5f167f8e",
-    "runtime/engine/libcrypto-3-x64.dll": "1f6560dc57d177417932d04295fcb5f5b9b3414bd3baa75897d8e8bb49e904b7",
-    "runtime/engine/libssl-3-x64.dll": "45434db8a17a9ddf3953d85de7e2e4d0c22866593c490e18128ee5c7931db6d1",
-    "runtime/engine/libz.dll": "f41b06ae70e84ce4215e657a9fed61b71b590423d0b19687dced8f95d759b319",
-    "runtime/engine/libzip.dll": "1c3151e9eab8bddffffd0cd180a5258b0de6cb8e780e47f7bd61b48875c1522f",
+    "runtime/engine/katago.exe": "e6b5fbba87dd57e810c4b6163d24e3499e2a437552b3cbd8570ecc9bf16fa6a4",
+    "runtime/engine/libcrypto-3-x64.dll": "1c2152bcb085a7a85b1e81a0a8cb8c353a4c02fe4bb3b46c5e8b75903b2d0cfd",
+    "runtime/engine/libssl-3-x64.dll": "d29823911faf71b9d71aa7be306887a6d090dc11dff48e1d432ece66ad534229",
+    "runtime/engine/z.dll": "a07ca94d3843a64b8b916ed83899ad9029578f1a931ec088d81da82834459e0c",
+    "runtime/engine/zip.dll": "0d88c137ddfaf3a506672cdc8da35658a1ea15fb5fd9d91950cb0658266e600e",
+    "runtime/engine/bz2.dll": "ce4a0c4b2e8d4409efb9e882df0adeba4a7332ab5194483aff50a28efee27897",
     "runtime/engine/cacert.pem": "2782f0f8e89c786f40240fc1916677be660fb8d8e25dede50c9f6f7b0c2c2178",
-    "runtime/engine/README.txt": "df44df1dacaf63b878a4163962710390a310b131615d891055d900b453286cce",
-    "runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz": "c5bca453d7b08ea8df6546439325d4dd681e77d975e1da3f7593d771147b73bc",
+    "runtime/engine/README.txt": "e2bcf69de018c38952838fa70c67740d742b94b84eadcd48b56dd41066d865b8",
+    "runtime/models/kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz": "93bdb63a3bfae4a70db0cb5265287495ecfc10b1ba1cc6814feeba1cdf055871",
     "runtime/models/b18c384nbt-humanv0.bin.gz": "637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5"
   }
 }

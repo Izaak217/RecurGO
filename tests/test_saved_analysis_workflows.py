@@ -8,11 +8,16 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QMenu
 from pytestqt.qtbot import QtBot
 
-from recurgo.domain import GameTree, Point
+from recurgo.domain import Color, GameTree, Point
 from recurgo.engine import PRESETS, AnalysisUpdate, EngineFailure, EngineFailureKind
+from recurgo.engine.analysis_identity import AnalysisIdentity
 from recurgo.storage import GameRepository
 from recurgo.ui import MainWindow
 from recurgo.ui.analysis_settings_dialog import AnalysisSettings, AnalysisSettingsDialog
+
+TEST_ANALYSIS_IDENTITY = AnalysisIdentity.from_runtime(
+    SimpleNamespace(engine_version="test", model_sha256="test-model")
+).key
 
 
 class SilentAudio:
@@ -51,6 +56,7 @@ class RecordingEngine(QObject):
 
 def _window(
     repository: GameRepository, qtbot: QtBot,
+    *, runtime: SimpleNamespace | None = None,
 ) -> tuple[MainWindow, RecordingEngine]:
     latest = repository.latest_game()
     if latest is None:
@@ -59,6 +65,8 @@ def _window(
     else:
         record, tree = latest
     engine = RecordingEngine()
+    if runtime is not None:
+        engine.runtime = runtime
     window = MainWindow(
         repository, record, tree, engine, audio_feedback=SilentAudio(),
     )
@@ -120,6 +128,154 @@ def test_fair_mode_suppresses_analysis_without_erasing_saved_preferences(
     assert engine.queries[-1]["include_ownership"] is True
 
 
+def _assert_fair_analysis_hidden(window: MainWindow) -> None:
+    assert window._candidate_payloads == []
+    assert window._displayed_analysis_payload is None
+    assert window.board_widget._candidates == []
+    assert window.board_widget.ownership is None
+    assert window.explanation.toPlainText() == ""
+    assert window.ollama_explanation.toPlainText() == ""
+    assert window._current_winrate_series() == ([], [])
+    x_values, _y_values = window.winrate_curve.getData()
+    assert x_values is None or len(x_values) == 0
+    assert window._move_reviews() == []
+    assert window._problem_review_positions == []
+    assert window._match_reviews_by_color == {Color.BLACK: [], Color.WHITE: []}
+    assert not window.quality_plot.listDataItems()
+    assert len(window.problem_scatter.points()) == 0
+    assert len(window.match_scatter.points()) == 0
+    assert not window.full_analysis_action.isEnabled()
+    assert window.full_analysis_progress.isHidden()
+    assert "This move:" not in window.game_info.text()
+    assert "本手复盘：" not in window.game_info.text()
+    assert window.review_summary.text() == window._tr(
+        "公平对战中隐藏分析。", "Analysis is hidden during fair play."
+    )
+
+
+def test_fair_mode_hides_saved_analysis_across_refresh_navigation_language_and_reopen(
+    qtbot: QtBot, tmp_path: Path,
+) -> None:
+    path = tmp_path / "fair-saved-analysis.db"
+    repository = GameRepository(path)
+    window, engine = _window(repository, qtbot)
+    window.analysis_checkbox.setChecked(True)
+    window.ownership_checkbox.setChecked(True)
+    _finish_latest(engine, ownership=[0.2] * 361)
+    window._play_point(3, 3)
+    latest = _finish_latest(
+        engine, ownership=[0.3] * 361,
+        moveInfos=[{"move": "Q16", "order": 0, "winrate": 0.6, "visits": 800}],
+    )
+    assert window._candidate_payloads
+    assert window._move_reviews()
+    expected_snapshots = repository.analysis_snapshots_for_game(
+        window.record.id, analysis_identity=window.analysis_identity.key,
+    )
+    expected_points = repository.winrate_points_for_game(
+        window.record.id, max_visits=800, analysis_identity=window.analysis_identity.key,
+    )
+    assert len(expected_snapshots) == len(expected_points) == 2
+    expected_series = window._current_winrate_series()
+    window._review_mode_active = True
+    window.mode_combo.setCurrentIndex(window.mode_combo.findData("fair"))
+    _assert_fair_analysis_hidden(window)
+
+    # Every normal refresh path must honor the mode even when caches already exist.
+    window._navigate_previous()
+    _assert_fair_analysis_hidden(window)
+    window._navigate_last()
+    for language in ("zh", "en"):
+        window.language = language
+        window._retranslate_ui()
+        window._refresh()
+        _assert_fair_analysis_hidden(window)
+
+    # Late callbacks and direct display entry points cannot reveal hidden analysis.
+    engine.analysis_updated.emit(latest)
+    engine.analysis_finished.emit(latest)
+    window._display_analysis_payload(window.tree.current_id, latest.payload)
+    window._candidate_selected(0, 0)
+    window._ollama_request_id = "late-explanation"
+    window._ollama_request_generation = window._ollama_generation
+    window._ollama_explanation_partial("late-explanation", "hidden partial")
+    window._ollama_explanation_ready("late-explanation", "hidden final")
+    _assert_fair_analysis_hidden(window)
+    query_count = len(engine.queries)
+    window._start_full_game_analysis()
+    window._toggle_full_game_analysis()
+    assert len(engine.queries) == query_count
+    assert not window._full_analysis_active
+    assert repository.analysis_snapshots_for_game(
+        window.record.id, analysis_identity=window.analysis_identity.key,
+    ) == expected_snapshots
+    assert repository.winrate_points_for_game(
+        window.record.id, max_visits=800, analysis_identity=window.analysis_identity.key,
+    ) == expected_points
+    window.close()
+
+    reopened, _engine = _window(GameRepository(path), qtbot)
+    _assert_fair_analysis_hidden(reopened)
+    reopened.mode_combo.setCurrentIndex(reopened.mode_combo.findData("manual"))
+    assert reopened.full_analysis_action.isEnabled()
+    assert reopened._candidate_payloads
+    assert reopened.board_widget.ownership == tuple([0.3] * 361)
+    assert reopened._move_reviews()
+    assert reopened._current_winrate_series() == expected_series
+    assert reopened.repository.analysis_snapshots_for_game(
+        reopened.record.id, analysis_identity=reopened.analysis_identity.key,
+    ) == expected_snapshots
+
+
+def test_manual_analysis_off_keeps_saved_review_after_leaving_fair_mode(
+    qtbot: QtBot, tmp_path: Path,
+) -> None:
+    window, engine = _window(GameRepository(tmp_path / "manual-saved-review.db"), qtbot)
+    window.analysis_checkbox.setChecked(True)
+    _finish_latest(engine)
+    window._play_point(3, 3)
+    _finish_latest(engine, moveInfos=[{"move": "Q16", "order": 0, "winrate": 0.6}])
+    expected_series = window._current_winrate_series()
+    window.analysis_checkbox.setChecked(False)
+    window._refresh()
+    assert window._current_winrate_series() == expected_series
+    assert window._move_reviews()
+    window._review_mode_active = True
+    window.mode_combo.setCurrentIndex(window.mode_combo.findData("fair"))
+    _assert_fair_analysis_hidden(window)
+    query_count = len(engine.queries)
+    window.mode_combo.setCurrentIndex(window.mode_combo.findData("manual"))
+    assert not window.analysis_checkbox.isChecked()
+    assert len(engine.queries) == query_count
+    assert window._current_winrate_series() == expected_series
+    assert window._move_reviews()
+    assert window.full_analysis_action.isEnabled()
+
+
+@pytest.mark.parametrize("difficulty", ["中级", "最强"])
+def test_fair_mode_keeps_ai_reply_and_search_preset(
+    qtbot: QtBot, tmp_path: Path, difficulty: str,
+) -> None:
+    window, engine = _window(GameRepository(tmp_path / "fair-ai.db"), qtbot)
+    window.difficulty_combo.setCurrentIndex(window.difficulty_combo.findData(difficulty))
+    window.mode_combo.setCurrentIndex(window.mode_combo.findData("fair"))
+    window._play_point(3, 3)
+    query = engine.queries[-1]
+    assert query["purpose"] == "ai_move"
+    assert query["max_visits"] == PRESETS[difficulty].max_visits
+    assert query["human_profile"] == PRESETS[difficulty].human_profile
+    policy = [0.0] * 362
+    policy[3 * 19 + 15] = 1.0
+    _finish_latest(
+        engine, humanPolicy=policy,
+        moveInfos=[{"move": "Q16", "order": 0, "winrate": 0.6, "visits": 800}],
+    )
+    assert window.tree.current.state.move_number == 2
+    assert window.tree.current.state.stone_at(Point(15, 3)) is Color.WHITE
+    assert len(engine.queries) == 1
+    _assert_fair_analysis_hidden(window)
+
+
 def test_partial_points_survive_moves_and_restart_with_realtime_off(
     qtbot: QtBot, tmp_path: Path,
 ) -> None:
@@ -171,11 +327,13 @@ def test_cached_completed_payload_cannot_overwrite_newer_saved_chart_point(
 def _save_analysis(repository: GameRepository, game_id: str, node_id: str) -> None:
     repository.save_analysis_snapshot(
         game_id=game_id, node_id=node_id, cache_key="full-game-800",
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
         engine_version="test", model_hash="test-model", parameters={},
         result=_payload(0.5, complete=True),
     )
     repository.save_winrate_point(
         game_id=game_id, node_id=node_id, max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
         black_winrate=50.0, search_visits=9, is_complete=False,
     )
 
@@ -214,7 +372,11 @@ def test_undo_removes_descendants_analysis_and_points_but_retains_siblings(
         engine.analysis_updated.emit(late)
         engine.analysis_finished.emit(late)
     assert set(repository.analysis_snapshots_for_game(record.id)) == remaining
-    assert set(repository.winrate_points_for_game(record.id, max_visits=800)) == remaining
+    assert set(repository.winrate_points_for_game(
+        record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )) == remaining
     window._play_point(15, 15)
     new_id = window.tree.current_id
     assert new_id != second.id
@@ -285,7 +447,11 @@ def test_review_previous_next_and_undo_browse_without_deleting(
     assert window.tree.current_id == first.id
     assert set(repository.load_game(record.id)[1].nodes) == set(tree.nodes)
     assert len(repository.analysis_snapshots_for_game(record.id)) == 3
-    assert len(repository.winrate_points_for_game(record.id, max_visits=800)) == 3
+    assert len(repository.winrate_points_for_game(
+        record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )) == 3
 
 
 def test_failed_undo_rolls_back_storage_and_keeps_the_live_tree(
@@ -306,7 +472,11 @@ def test_failed_undo_rolls_back_storage_and_keeps_the_live_tree(
     assert len(window.tree.nodes) == 2
     assert repository.load_game(window.record.id)[1].current_id == current_id
     assert current_id in repository.analysis_snapshots_for_game(window.record.id)
-    assert current_id in repository.winrate_points_for_game(window.record.id, max_visits=800)
+    assert current_id in repository.winrate_points_for_game(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )
     assert "blocked for rollback test" in window.statusBar().currentMessage()
 
 
@@ -391,7 +561,11 @@ def test_fast_moves_fill_every_requested_position_without_replacing_live_analysi
     for x, y in ((3, 3), (15, 15), (3, 15)):
         window._play_point(x, y)
     assert window._current_winrate_series() == ([], [])
-    assert len(repository.pending_winrate_nodes(window.record.id, max_visits=800)) == 4
+    assert len(repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )) == 4
     current_id = window.tree.current_id
     current = _finish_latest(engine, ownership=[0.3] * 361)
     assert engine.queries[-1]["purpose"] == "winrate_backfill"
@@ -402,7 +576,11 @@ def test_fast_moves_fill_every_requested_position_without_replacing_live_analysi
     live_ownership = window._ownership_by_node[current_id]
     _drain_backfill(window, engine)
     assert window._current_winrate_series()[0] == [0, 1, 2, 3]
-    assert repository.pending_winrate_nodes(window.record.id, max_visits=800) == []
+    assert repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == []
     assert window._displayed_analysis_payload == current.payload
     assert window._candidate_payloads == live_candidates
     assert window._ownership_by_node == {current_id: live_ownership}
@@ -438,9 +616,17 @@ def test_enabling_analysis_never_backfills_moves_played_with_analysis_off(
     window._play_point(3, 3)
     window._play_point(15, 15)
     assert engine.queries == []
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == []
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == []
     window.analysis_checkbox.setChecked(True)
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == [
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == [
         window.tree.current_id,
     ]
     _finish_latest(engine)
@@ -470,7 +656,11 @@ def test_saved_backfill_pauses_with_analysis_off_and_resumes_after_restart(
     qtbot.wait(10)
     assert not reopened.analysis_checkbox.isChecked()
     assert engine.queries == []
-    pending = reopened.repository.pending_winrate_nodes(reopened.record.id, max_visits=800)
+    pending = reopened.repository.pending_winrate_nodes(
+        reopened.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )
     assert len(pending) == 2
     reopened.analysis_checkbox.setChecked(True)
     assert engine.queries[-1]["node_id"] == reopened.tree.current_id
@@ -493,12 +683,20 @@ def test_undo_removes_pending_work_and_cannot_resurrect_deleted_winrates(
     window._play_point(15, 15)
     window._undo()
     window._undo()
-    pending = window.repository.pending_winrate_nodes(window.record.id, max_visits=800)
+    pending = window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )
     assert doomed not in pending
     late = AnalysisUpdate("cancelled", doomed, "winrate_backfill", _payload(0.8, complete=True))
     engine.analysis_finished.emit(late)
     _finish_latest(engine)
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == []
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == []
     assert window._current_winrate_series()[0] == [0]
 
 
@@ -522,7 +720,11 @@ def test_backfill_is_scoped_to_the_selected_game_and_preserved_when_switching(
     _finish_latest(engine)
     assert window._active_backfill_request_id is None
     assert original_tree.root_id not in window._analysis_by_node
-    assert repository.pending_winrate_nodes(original_record.id, max_visits=800) == [
+    assert repository.pending_winrate_nodes(
+        original_record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == [
         original_tree.root_id,
     ]
     window._apply_loaded_game(original_record, original_tree, review_mode=False)
@@ -580,7 +782,11 @@ def test_full_game_analysis_completes_pending_jobs_without_duplicate_backfill(
         _finish_latest(engine)
     assert not window._full_analysis_active
     assert window._active_backfill_request_id is None
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == []
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == []
     assert window._current_winrate_series()[0] == [0, 1, 2]
 
 
@@ -606,7 +812,11 @@ def test_budget_change_keeps_old_pending_work_and_rejects_cancelled_backfill(
     _finish_latest(engine)
     assert window._active_backfill_request_id is None
     assert window._current_winrate_series()[0] == [1]
-    saved_points = window.repository.winrate_points_for_game(window.record.id, max_visits=801)
+    saved_points = window.repository.winrate_points_for_game(
+        window.record.id,
+        max_visits=801,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    )
     assert saved_points.keys() == {window.tree.current_id}
     monkeypatch.setattr(
         AnalysisSettingsDialog, "settings", lambda _dialog: AnalysisSettings(800),
@@ -635,7 +845,11 @@ def test_failed_backfill_retains_work_and_retry_uses_a_new_request_id(
             request_id=old_id, node_id=window.tree.root_id, purpose="winrate_backfill",
         ))
     assert len(engine.queries) == count
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == [
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == [
         window.tree.root_id,
     ]
     window._retry_engine_analysis()
@@ -645,5 +859,128 @@ def test_failed_backfill_retains_work_and_retry_uses_a_new_request_id(
         old_id or "missing", window.tree.root_id, "winrate_backfill", _payload(0.9),
     ))
     _drain_backfill(window, engine)
-    assert window.repository.pending_winrate_nodes(window.record.id, max_visits=800) == []
+    assert window.repository.pending_winrate_nodes(
+        window.record.id,
+        max_visits=800,
+        analysis_identity=TEST_ANALYSIS_IDENTITY,
+    ) == []
     assert window._current_winrate_series()[0] == [0, 1]
+
+
+def test_engine_upgrade_does_not_restore_old_analysis_or_resume_old_tasks(
+    qtbot: QtBot, tmp_path: Path,
+) -> None:
+    path = tmp_path / "engine-upgrade.db"
+    old, engine = _window(GameRepository(path), qtbot)
+    old.analysis_checkbox.setChecked(True)
+    old.ownership_checkbox.setChecked(True)
+    _finish_latest(engine, ownership=[0.3] * 361)
+    old._play_point(3, 3)
+    old._start_full_game_analysis()
+    _finish_latest(engine)
+    old._stop_full_game_analysis(request_realtime=False)
+    game_id, root_id = old.record.id, old.tree.root_id
+    old_source = old.analysis_identity.key
+    old.analysis_checkbox.setChecked(False)
+    old.close()
+
+    repo = GameRepository(path)
+    _snapshot = repo.analysis_snapshots_for_game(game_id, analysis_identity=old_source)
+    assert root_id in _snapshot
+    old_pending = repo.pending_winrate_nodes(
+        game_id,
+        max_visits=800,
+        analysis_identity=old_source,
+    )
+    assert old_pending
+    upgraded, new_engine = _window(
+        repo, qtbot,
+        runtime=SimpleNamespace(engine_version="1.18.2", model_sha256="tf3-model"),
+    )
+    assert upgraded.analysis_identity.key != old_source
+    assert upgraded._analysis_payload_by_node == {}
+    assert upgraded._ownership_by_node == {}
+    assert upgraded._current_winrate_series() == ([], [])
+    upgraded._start_next_winrate_analysis()
+    assert new_engine.queries == []
+    upgraded._start_full_game_analysis()
+    assert upgraded._full_analysis_completed == 0
+    assert new_engine.queries[-1]["node_id"] == root_id
+    _finish_latest(new_engine, 0.75)
+    assert repo.analysis_snapshots_for_game(game_id, analysis_identity=old_source) == _snapshot
+    assert repo.pending_winrate_nodes(
+        game_id, max_visits=800, analysis_identity=old_source,
+    ) == old_pending
+    assert repo.analysis_snapshots_for_game(
+        game_id, analysis_identity=upgraded.analysis_identity.key,
+    )[root_id]["rootInfo"]["winrate"] == 0.75
+
+
+def test_difficulty_switch_isolates_human_output_but_keeps_objective_chart(
+    qtbot: QtBot, tmp_path: Path,
+) -> None:
+    window, engine = _window(GameRepository(tmp_path / "human-source.db"), qtbot)
+    window.analysis_checkbox.setChecked(True)
+    window.ownership_checkbox.setChecked(True)
+    first = _finish_latest(engine, humanPolicy=[0.1] * 362, ownership=[0.3] * 361)
+    original_difficulty = window.record.difficulty
+    original_key = window._realtime_cache_key(800, True)
+    window.difficulty_combo.setCurrentIndex(window.difficulty_combo.findData("顶级"))
+    assert window._realtime_cache_key(800, True) != original_key
+    assert window._analysis_payload_by_node == {}
+    assert window._ownership_by_node == {}
+    assert window._displayed_analysis_payload is None
+    assert window._current_winrate_series() == ([0], [60.0])
+    assert engine.queries[-1]["human_profile"] == "rank_6d"
+    assert engine.queries[-1]["max_visits"] == 800
+    second = _finish_latest(engine, humanPolicy=[0.2] * 362, ownership=[0.4] * 361)
+    assert window._displayed_analysis_payload == second.payload
+    window.difficulty_combo.setCurrentIndex(window.difficulty_combo.findData(original_difficulty))
+    assert window._analysis_payload_by_node[window.tree.root_id] == first.payload
+    assert window._ownership_by_node[window.tree.root_id] == [0.3] * 361
+
+
+def test_no_engine_preserves_manual_games_without_registering_or_writing_analysis(
+    qtbot: QtBot, tmp_path: Path,
+) -> None:
+    repository = GameRepository(tmp_path / "no-engine.db")
+    tree = GameTree()
+    record = repository.create_game(tree)
+    old_payload = _payload(0.8, complete=True)
+    for source in ("", AnalysisIdentity.from_runtime(None).key):
+        repository.save_analysis_snapshot(
+            game_id=record.id, node_id=tree.root_id, cache_key="full-game-800",
+            engine_version="old", model_hash="old", parameters={}, result=old_payload,
+            analysis_identity=source,
+        )
+        repository.save_winrate_point(
+            game_id=record.id, node_id=tree.root_id, max_visits=800,
+            black_winrate=80.0, search_visits=800, is_complete=True,
+            analysis_identity=source,
+        )
+    window = MainWindow(repository, record, tree, audio_feedback=SilentAudio())
+    qtbot.addWidget(window)
+    assert not window.analysis_identity.is_available
+    assert repository.connection.execute(
+        "SELECT COUNT(*) FROM analysis_sources"
+    ).fetchone()[0] == 0
+    assert window._analysis_payload_by_node == {}
+    assert window._ownership_by_node == {}
+    assert window._current_winrate_series() == ([], [])
+    window.analysis_checkbox.setChecked(True)
+    window._queue_winrate_position()
+    update = AnalysisUpdate("unavailable", tree.root_id, "realtime", _payload(0.2))
+    assert not window._save_winrate_point(update, is_complete=True)
+    window._save_analysis_snapshot(
+        update, cache_key="realtime-800-0", max_visits=800, include_ownership=False,
+    )
+    assert repository.analysis_snapshots_for_game(record.id) == {tree.root_id: old_payload}
+    assert repository.winrate_points_for_game(record.id, max_visits=800) == {tree.root_id: 80.0}
+    assert repository.connection.execute(
+        "SELECT COUNT(*) FROM winrate_tasks"
+    ).fetchone()[0] == 0
+    assert repository.connection.execute(
+        "SELECT COUNT(*) FROM winrate_tasks_by_source"
+    ).fetchone()[0] == 0
+    window._play_point(3, 3)
+    assert repository.load_game(record.id)[1].current.state.move_number == 1

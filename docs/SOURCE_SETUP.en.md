@@ -1,4 +1,4 @@
-# Run from source (v1.0.1)
+# Run from source (v1.1.0)
 
 English | [简体中文](SOURCE_SETUP.md)
 
@@ -19,16 +19,16 @@ This editable installation lets the application find `runtime/` and `data/` rela
 
 ## Prepare KataGo
 
-Get the matching Windows CUDA 12.8 engine from the [official KataGo v1.16.5 release](https://github.com/lightvector/KataGo/releases/tag/v1.16.5). Keep the runtime libraries and license materials required by that package. The current setup also needs the CUDA 12.8 runtime and cuDNN 9.x (9.8 has been verified by this project; other 9.x releases require a real analysis check). Install the NVIDIA driver in Windows. Project-level runtime libraries can be placed in the fixed directories below; do not copy system directories from another computer.
+Get `katago-v1.18.2-cuda12.8-cudnn9.8.0-windows-x64.zip` from the [official KataGo v1.18.2 release](https://github.com/lightvector/KataGo/releases/tag/v1.18.2). Use the standard board build, not `+bs50`, and retain its required runtime libraries and license materials. The setup also needs CUDA 12.8, NVRTC, and cuDNN 9.x. Tests with the earlier engine do not establish TF3 acceptance; require real model loading and analysis on the current machine. Install the NVIDIA driver in Windows. Project-level runtime libraries can be placed in the fixed directories below; do not copy system directories from another computer.
 
 The main application does not run a separate environment precheck. To set CUDA/cuDNN paths and perform a real KataGo test, run `check_analysis_environment.cmd` from the project root.
 
 Get the main model from the [official KataGo network directory](https://katagotraining.org/networks/) and Human SL from the [extra networks directory](https://katagotraining.org/extra_networks/):
 
-- `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`
+- `kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz`
 - `b18c384nbt-humanv0.bin.gz`
 
-The files and checked SHA-256 hashes are listed in the [model notes](../licenses/models/README.md). The current runtime loader requires both files, even if you only use the Strongest difficulty.
+The files and checked SHA-256 hashes are listed in the [model notes](../licenses/models/README.md). The current runtime loader requires both files, even if users only use the Strongest difficulty. TF3 names the main-model family, not the engine version; prepare it together with the v1.18.2 engine.
 
 Suggested layout:
 
@@ -47,6 +47,8 @@ data/logs/katago/
 For a new setup, copy `docs/setup/runtime.example.json` to `runtime/runtime.local.json` and `docs/setup/analysis.example.cfg` to `runtime/configs/analysis.cfg`. Create the target directories first. Compare existing configurations before replacing anything.
 
 The fixed CUDA directory needs matching 12.8 runtime libraries such as `cublas64_12.dll` and `cudart64_12.dll`. Obtain matching releases from NVIDIA's [CUDA Runtime ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/) and [cuBLAS ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/), extract them, and put their `bin` DLLs in the CUDA `bin` directory shown above. Obtain the Windows 9.8 ZIP for CUDA 12 from the [NVIDIA cuDNN archive](https://developer.nvidia.com/cudnn-archive), extract it, and put its `bin` DLLs in the cuDNN `bin` directory. These are **extracted runtime libraries**, not an installer EXE or an unextracted ZIP. A regular CUDA Toolkit installation following NVIDIA's instructions can also be found by the separate detection tool.
+
+For standalone ZIP setup, also obtain the matching CUDA 12.8 component from NVIDIA's [NVRTC ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/). Keep its main NVRTC DLL and `nvrtc-builtins` DLL together from the same archive. A complete CUDA Toolkit 12.8 installation normally supplies this component.
 
 Run `check_analysis_environment.cmd`, choose automatic detection, and select Save and Test. The tool checks the NVIDIA driver in Windows, then the fixed directories, existing manifest, system installation, and `PATH`, and finally runs KataGo. If automatic detection fails, choose manual paths to the folders actually containing the required DLLs. Manual paths are saved in a separate local configuration under `data/`; the main program reads them after a restart.
 

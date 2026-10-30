@@ -143,6 +143,38 @@ class GameRepository:
                     created_at TEXT NOT NULL,
                     PRIMARY KEY(node_id, max_visits)
                 );
+
+                -- v1.1.0.dev1: retain legacy tables for history and rollback.
+                CREATE TABLE IF NOT EXISTS analysis_sources (
+                    identity TEXT PRIMARY KEY,
+                    engine_version TEXT NOT NULL,
+                    model_hash TEXT NOT NULL,
+                    config_hash TEXT NOT NULL,
+                    engine_hash TEXT NOT NULL DEFAULT '',
+                    backend TEXT NOT NULL DEFAULT '',
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS winrate_points_by_source (
+                    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+                    node_id TEXT NOT NULL REFERENCES game_nodes(id) ON DELETE CASCADE,
+                    max_visits INTEGER NOT NULL,
+                    analysis_identity TEXT NOT NULL,
+                    black_winrate REAL NOT NULL,
+                    search_visits INTEGER NOT NULL,
+                    is_complete INTEGER NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY(node_id, max_visits, analysis_identity)
+                );
+
+                CREATE TABLE IF NOT EXISTS winrate_tasks_by_source (
+                    game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE,
+                    node_id TEXT NOT NULL REFERENCES game_nodes(id) ON DELETE CASCADE,
+                    max_visits INTEGER NOT NULL,
+                    analysis_identity TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY(node_id, max_visits, analysis_identity)
+                );
                 """
             )
             self._ensure_column(
@@ -172,6 +204,8 @@ class GameRepository:
             )
             self._normalize_legacy_game_metadata()
             self._ensure_column("games", "scoring_json", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column("analysis_sources", "engine_hash", "TEXT NOT NULL DEFAULT ''")
+            self._ensure_column("analysis_sources", "backend", "TEXT NOT NULL DEFAULT ''")
 
     def _normalize_legacy_game_metadata(self) -> None:
         """Repair metadata imported before Fox SGF normalization was added."""
@@ -393,6 +427,8 @@ class GameRepository:
     def delete_game(self, game_id: str) -> None:
         """Delete one saved game and its locally cached analysis results."""
         with self.connection:
+            for table in ("winrate_tasks_by_source", "winrate_points_by_source"):
+                self.connection.execute(f"DELETE FROM {table} WHERE game_id = ?", (game_id,))
             self.connection.execute(
                 "DELETE FROM winrate_tasks WHERE game_id = ?", (game_id,)
             )
@@ -449,6 +485,7 @@ class GameRepository:
                 batch = ids[start : start + 400]
                 placeholders = ", ".join("?" for _ in batch)
                 for table in (
+                    "winrate_tasks_by_source", "winrate_points_by_source",
                     "winrate_tasks", "winrate_points", "analysis_snapshots", "game_nodes",
                 ):
                     column = "id" if table == "game_nodes" else "node_id"
@@ -459,6 +496,22 @@ class GameRepository:
                     )
         return removed
 
+    def register_analysis_source(
+        self, identity: str, *, engine_version: str, model_hash: str, config_hash: str,
+        engine_hash: str = "", backend: str = "",
+    ) -> None:
+        """Keep provenance available even when only partial chart points exist."""
+        with self.connection:
+            self.connection.execute(
+                "INSERT OR IGNORE INTO analysis_sources "
+                "(identity, engine_version, model_hash, config_hash, engine_hash, "
+                "backend, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    identity, engine_version, model_hash, config_hash,
+                    engine_hash, backend, _now(),
+                ),
+            )
+
     def save_winrate_point(
         self,
         *,
@@ -468,59 +521,83 @@ class GameRepository:
         black_winrate: float,
         search_visits: int,
         is_complete: bool,
+        analysis_identity: str = "",
     ) -> None:
         """Save a chart point independently of completed analysis snapshots."""
         if not math.isfinite(black_winrate) or not 0.0 <= black_winrate <= 100.0:
             raise ValueError("Win rate must be a finite percentage")
         if max_visits <= 0 or search_visits < 0:
             raise ValueError("Invalid search visit counts")
+        table = "winrate_points_by_source" if analysis_identity else "winrate_points"
+        task_table = "winrate_tasks_by_source" if analysis_identity else "winrate_tasks"
+        identity_column = ", analysis_identity" if analysis_identity else ""
+        identity_value = ", ?" if analysis_identity else ""
+        identity_args = (analysis_identity,) if analysis_identity else ()
+        identity_filter = " AND analysis_identity = ?" if analysis_identity else ""
         with self.connection:
             self.connection.execute(
-                "INSERT INTO winrate_points (game_id, node_id, max_visits, "
-                "black_winrate, search_visits, is_complete, updated_at) "
-                "SELECT ?, ?, ?, ?, ?, ?, ? WHERE EXISTS "
+                f"INSERT INTO {table} (game_id, node_id, max_visits, "
+                f"black_winrate, search_visits, is_complete, updated_at{identity_column}) "
+                f"SELECT ?, ?, ?, ?, ?, ?, ?{identity_value} WHERE EXISTS "
                 "(SELECT 1 FROM game_nodes WHERE game_id = ? AND id = ?) "
-                "ON CONFLICT(node_id, max_visits) DO UPDATE SET "
+                f"ON CONFLICT(node_id, max_visits{identity_column}) DO UPDATE SET "
                 "black_winrate = excluded.black_winrate, "
                 "search_visits = excluded.search_visits, "
                 "is_complete = excluded.is_complete, updated_at = excluded.updated_at",
                 (
                     game_id, node_id, max_visits, black_winrate, search_visits,
-                    int(is_complete), _now(), game_id, node_id,
+                    int(is_complete), _now(), *identity_args, game_id, node_id,
                 ),
             )
             if is_complete:
                 self.connection.execute(
-                    "DELETE FROM winrate_tasks WHERE game_id = ? "
-                    "AND node_id = ? AND max_visits = ?",
-                    (game_id, node_id, max_visits),
+                    f"DELETE FROM {task_table} WHERE game_id = ? "
+                    f"AND node_id = ? AND max_visits = ?{identity_filter}",
+                    (game_id, node_id, max_visits, *identity_args),
                 )
 
-    def queue_winrate_analysis(self, game_id: str, node_id: str, *, max_visits: int) -> None:
+    def queue_winrate_analysis(
+        self, game_id: str, node_id: str, *, max_visits: int, analysis_identity: str = "",
+    ) -> None:
         """Persist unfinished work before asking the engine to analyze a position."""
         if max_visits <= 0:
             raise ValueError("Invalid search visit budget")
+        table = "winrate_tasks_by_source" if analysis_identity else "winrate_tasks"
+        identity_column = ", analysis_identity" if analysis_identity else ""
+        identity_value = ", ?" if analysis_identity else ""
+        identity_args = (analysis_identity,) if analysis_identity else ()
         with self.connection:
             self.connection.execute(
-                "INSERT OR IGNORE INTO winrate_tasks "
-                "(game_id, node_id, max_visits, created_at) "
-                "SELECT ?, ?, ?, ? WHERE EXISTS "
+                f"INSERT OR IGNORE INTO {table} "
+                f"(game_id, node_id, max_visits, created_at{identity_column}) "
+                f"SELECT ?, ?, ?, ?{identity_value} WHERE EXISTS "
                 "(SELECT 1 FROM game_nodes WHERE game_id = ? AND id = ?)",
-                (game_id, node_id, max_visits, _now(), game_id, node_id),
+                (game_id, node_id, max_visits, _now(), *identity_args, game_id, node_id),
             )
 
-    def pending_winrate_nodes(self, game_id: str, *, max_visits: int) -> list[str]:
+    def pending_winrate_nodes(
+        self, game_id: str, *, max_visits: int, analysis_identity: str = "",
+    ) -> list[str]:
+        table = "winrate_tasks_by_source" if analysis_identity else "winrate_tasks"
+        identity_filter = " AND analysis_identity = ?" if analysis_identity else ""
+        identity_args = (analysis_identity,) if analysis_identity else ()
         rows = self.connection.execute(
-            "SELECT node_id FROM winrate_tasks WHERE game_id = ? AND max_visits = ? "
-            "ORDER BY created_at, rowid", (game_id, max_visits),
+            f"SELECT node_id FROM {table} WHERE game_id = ? AND max_visits = ?"
+            f"{identity_filter} ORDER BY created_at, rowid",
+            (game_id, max_visits, *identity_args),
         ).fetchall()
         return [str(row["node_id"]) for row in rows]
 
-    def winrate_points_for_game(self, game_id: str, *, max_visits: int) -> dict[str, float]:
+    def winrate_points_for_game(
+        self, game_id: str, *, max_visits: int, analysis_identity: str = "",
+    ) -> dict[str, float]:
+        table = "winrate_points_by_source" if analysis_identity else "winrate_points"
+        identity_filter = " AND analysis_identity = ?" if analysis_identity else ""
+        identity_args = (analysis_identity,) if analysis_identity else ()
         rows = self.connection.execute(
-            "SELECT node_id, black_winrate FROM winrate_points "
-            "WHERE game_id = ? AND max_visits = ?",
-            (game_id, max_visits),
+            f"SELECT node_id, black_winrate FROM {table} "
+            f"WHERE game_id = ? AND max_visits = ?{identity_filter}",
+            (game_id, max_visits, *identity_args),
         ).fetchall()
         return {str(row["node_id"]): float(row["black_winrate"]) for row in rows}
 
@@ -603,7 +680,10 @@ class GameRepository:
         model_hash: str,
         parameters: dict[str, object],
         result: dict[str, object],
+        analysis_identity: str = "",
     ) -> None:
+        if analysis_identity:
+            cache_key = f"source/{analysis_identity}/{cache_key}"
         with self.connection:
             self.connection.execute(
                 """
@@ -612,6 +692,9 @@ class GameRepository:
                     parameters_json, result_json, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(node_id, cache_key) DO UPDATE SET
+                    engine_version = excluded.engine_version,
+                    model_hash = excluded.model_hash,
+                    parameters_json = excluded.parameters_json,
                     result_json = excluded.result_json,
                     created_at = excluded.created_at
                 """,
@@ -678,9 +761,16 @@ class GameRepository:
         *,
         cache_prefix: str | None = None,
         cache_keys: tuple[str, ...] | None = None,
+        analysis_identity: str = "",
     ) -> dict[str, dict[str, object]]:
         if cache_prefix is not None and cache_keys is not None:
             raise ValueError("cache_prefix and cache_keys cannot be combined")
+        if analysis_identity:
+            source_prefix = f"source/{analysis_identity}/"
+            if cache_keys is not None:
+                cache_keys = tuple(source_prefix + key for key in cache_keys)
+            else:
+                cache_prefix = source_prefix + (cache_prefix or "")
         if cache_keys is not None:
             if not cache_keys:
                 return {}
@@ -721,8 +811,13 @@ class GameRepository:
                 snapshots[str(row["node_id"])] = payload
         return snapshots
 
-    def analysis_winrates_for_game(self, game_id: str) -> dict[str, float]:
-        snapshots = self.analysis_snapshots_for_game(game_id)
+    def analysis_winrates_for_game(
+        self, game_id: str, *, analysis_identity: str = "",
+    ) -> dict[str, float]:
+        """Read one source, or the legacy all-source history view when omitted."""
+        snapshots = self.analysis_snapshots_for_game(
+            game_id, analysis_identity=analysis_identity,
+        )
         winrates: dict[str, float] = {}
         for node_id, payload in snapshots.items():
             root_info = payload.get("rootInfo")

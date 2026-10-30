@@ -3,11 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
+from PySide6.QtCore import QObject, Signal
 from pytest import MonkeyPatch
 from pytestqt.qtbot import QtBot
 
 from recurgo.domain import GameTree
 from recurgo.engine import AnalysisUpdate
+from recurgo.engine.analysis_identity import AnalysisIdentity
 from recurgo.storage import GameRepository
 from recurgo.ui.analysis_settings_dialog import AnalysisSettings, AnalysisSettingsDialog
 from recurgo.ui.main_window import MainWindow
@@ -21,8 +23,14 @@ class SilentAudio:
         return
 
 
-class FakeEngine:
+class FakeEngine(QObject):
+    status_changed = Signal(str)
+    failure_reported = Signal(object)
+    analysis_updated = Signal(object)
+    analysis_finished = Signal(object)
+
     def __init__(self) -> None:
+        super().__init__()
         self.queries: list[dict[str, object]] = []
         self.stop_count = 0
         self.runtime = SimpleNamespace(engine_version="test", model_sha256="test-model")
@@ -45,20 +53,21 @@ def test_analysis_setting_persists_and_cannot_reuse_other_budget_cache(
     tree = GameTree()
     record = repository.create_game(tree)
     repository.save_setting("analysis", {"visits": 800})
+    engine = FakeEngine()
+    identity = AnalysisIdentity.from_runtime(engine.runtime)
     old_payload = {"rootInfo": {"winrate": 0.6}, "moveInfos": [{"move": "D4"}]}
     repository.save_analysis_snapshot(
         game_id=record.id,
         node_id=tree.root_id,
-        cache_key="realtime-800-0",
+        cache_key=identity.realtime_key(800, False, "rank_3k"),
+        analysis_identity=identity.key,
         engine_version="test",
         model_hash="test-model",
         parameters={"maxVisits": 800},
         result=old_payload,
     )
-    window = MainWindow(repository, record, tree, audio_feedback=SilentAudio())
+    window = MainWindow(repository, record, tree, engine, audio_feedback=SilentAudio())
     qtbot.addWidget(window)
-    engine = FakeEngine()
-    window.engine = engine  # type: ignore[assignment]
     window.analysis_checkbox.setChecked(True)
     assert window.analysis_settings.visits == 800
     assert window._analysis_payload_by_node[tree.root_id] == old_payload
@@ -82,7 +91,8 @@ def test_analysis_setting_persists_and_cannot_reuse_other_budget_cache(
     assert engine.queries[-1]["max_visits"] == 1200
     assert engine.stop_count >= 1
     assert repository.analysis_snapshots_for_game(
-        record.id, cache_keys=("realtime-800-0",)
+        record.id, cache_keys=(window._realtime_cache_key(800, False),),
+        analysis_identity=identity.key,
     ) == {tree.root_id: old_payload}
 
     current_payload = {"rootInfo": {"winrate": 0.58}, "moveInfos": [{"move": "Q16"}]}
@@ -92,11 +102,14 @@ def test_analysis_setting_persists_and_cannot_reuse_other_budget_cache(
         AnalysisUpdate(current_id, tree.root_id, "realtime", current_payload)
     )
     assert repository.analysis_snapshots_for_game(
-        record.id, cache_keys=("realtime-1200-0",)
+        record.id, cache_keys=(window._realtime_cache_key(1200, False),),
+        analysis_identity=identity.key,
     ) == {tree.root_id: current_payload}
 
     reopened_repository = GameRepository(repository.database_path)
-    reopened = MainWindow(reopened_repository, record, tree, audio_feedback=SilentAudio())
+    reopened = MainWindow(
+        reopened_repository, record, tree, FakeEngine(), audio_feedback=SilentAudio(),
+    )
     qtbot.addWidget(reopened)
     assert reopened.analysis_settings.visits == 1200
     assert reopened._analysis_payload_by_node[tree.root_id] == current_payload
@@ -108,10 +121,9 @@ def test_analysis_setting_discards_late_result_and_isolates_review_budget(
     repository = GameRepository(tmp_path / "switch.db")
     tree = GameTree()
     record = repository.create_game(tree)
-    window = MainWindow(repository, record, tree, audio_feedback=SilentAudio())
-    qtbot.addWidget(window)
     engine = FakeEngine()
-    window.engine = engine  # type: ignore[assignment]
+    window = MainWindow(repository, record, tree, engine, audio_feedback=SilentAudio())
+    qtbot.addWidget(window)
     window.analysis_checkbox.setChecked(True)
     old_id = window._active_realtime_request_id
     assert old_id == "request-1"

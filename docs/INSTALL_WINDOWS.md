@@ -1,4 +1,4 @@
-# RecurGO Windows 安装指南（v1.0.1）
+# RecurGO Windows 安装指南（v1.1.0）
 
 [English](INSTALL_WINDOWS.en.md) | 简体中文
 
@@ -13,11 +13,9 @@
 
 ## 下载前先看
 
-RecurGO v1.0.1 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
+RecurGO v1.1.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
 
-目前 KataGo 实际分析已在 NVIDIA GeForce RTX 5070 Ti Laptop GPU 和
-NVIDIA GeForce RTX 2080 Ti 上通过；后者的主程序也已显示候选点和胜率。
-这是两张显卡的测试结果，不代表所有 NVIDIA 显卡均可运行。
+本版接入 KataGo v1.18.2 和 TF3 主模型，Human SL 保持不变。已在 RTX 5070 Ti Laptop GPU 上完成真实模型加载与分析检查；此前 RTX 2080 Ti 的旧引擎检查不能代替本版检测，当前机器仍须通过独立工具确认。
 
 随包的 KataGo 要加载 `cudnn64_9.dll`，因此本版要求 **cuDNN 9.x**；其他主版本不能代替。自动识别会检查 NVIDIA 标准位置下的 `v9.*` 安装目录及其子文件夹，也检查 `CUDNN_PATH` 和 `PATH`。若安装在别处且没有设置这些路径，可在检测工具中选择实际 DLL 文件，不必重装。多个 9.x 共存时，以工具显示的选中路径和真实 KataGo 检测结果为准。
 
@@ -26,7 +24,7 @@ NVIDIA GeForce RTX 2080 Ti 上通过；后者的主程序也已显示候选点�
 | 组件 | 放在哪里 | 是否必须 |
 | --- | --- | --- |
 | NVIDIA 显卡驱动 | 安装在 Windows 中；多数 NVIDIA 电脑已有 | 必须 |
-| CUDA 12.8 运行库、兼容的 cuDNN 9.x | 使用 NVIDIA 官方 Windows 安装程序安装到系统，或从官方 ZIP 解压到检测工具显示的用户数据目录 | 必须有可用版本；cuDNN 9.8 已验证，9.25.1 在 RTX 2080 Ti 上手动指定后实际分析通过，其他组合以本机检测结果为准 |
+| CUDA 12.8 运行库、兼容的 cuDNN 9.x | 使用 NVIDIA 官方 Windows 安装程序安装到系统，或从官方 ZIP 解压到检测工具显示的用户数据目录 | 须包含 CUDA 12.8 的 NVRTC 组件；采用 cuDNN 9.8 构建，实际兼容性以 TF3 分析检测结果为准 |
 | Microsoft Visual C++ Redistributable x64 | 安装在 Windows 中；已有兼容版本则无须重复安装 | KataGo 启动需要 |
 | Ollama 和语言模型 | 可选，建议放在下文的用户数据目录 | 仅使用本机 AI 补充讲解时需要 |
 
@@ -72,11 +70,12 @@ NVIDIA 显卡驱动安装在 Windows 系统中，无须放入 RecurGO 的安装�
 ZIP 方式需要：
 
 1. 从 NVIDIA 官方 [CUDA Runtime ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/)下载 **Windows x86_64、12.8** 的压缩包；再从 [cuBLAS ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/)下载对应的 **Windows x86_64、12.8** 压缩包。分别解压，把这两个压缩包中 bin 文件夹里的 DLL 放进上面的 cuda\bin。
+同时从 [NVRTC ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/)取得 CUDA 12.8、Windows x86_64 组件；将同一包中的 NVRTC 主 DLL 与 `nvrtc-builtins` DLL 一起放到 CUDA `bin`。仅有 cuDNN、cuBLAS 和 cudart 不足以证明新引擎依赖齐全。
 2. 从 [NVIDIA cuDNN 9.8 官方页面](https://developer.nvidia.com/cudnn-9-8-0-download-archive)下载 **cuDNN 9.8、CUDA 12、Windows x86_64** 的 ZIP。解压，把其中 bin 文件夹里的 DLL 放进上面的 cudnn\bin。
 
 使用 ZIP 方式时，要放的是解压后的 DLL，不是还没解压的 ZIP；使用官方安装程序时，不必再把 DLL 复制到固定目录。不用从其他电脑的系统目录复制 DLL。路径识别和 DLL 文件检查仍不是最终兼容性证明，请点击 **“保存并检测”**，以实际启动 KataGo 并取得分析结果为准。
 
-项目已验证 cuDNN 9.8；在 NVIDIA GeForce RTX 2080 Ti 的测试机器上，手动指定 cuDNN 9.25.1 后，实际 KataGo 分析也已通过。NVIDIA 的 [cuDNN 9.25.1 支持矩阵](https://docs.nvidia.com/deeplearning/cudnn/backend/v9.25.1/reference/support-matrix.html)列出其 **CUDA 12.x** 组件支持 CUDA 12.8。9.25.1 安装程序可能把 `cudnn64_9.dll` 放在 `C:\Program Files\NVIDIA\CUDNN\v9.25\bin\12.9\x64` 这样的深层目录；其中的 `12.9` 表示所装组件的 CUDA 版本目录，不能仅凭找到 DLL 就认定它与本机 CUDA 12.8 可配合。先让检测工具识别或手动指定**实际含有 DLL 的文件夹**，再以本机实际 KataGo 分析结果判断。上述 9.25.1 测试不等于其他安装方式或机器均已验收。
+旧引擎曾验证 cuDNN 9.8，并在 RTX 2080 Ti 上手动指定 cuDNN 9.25.1 后完成实际分析；这些是历史记录，不代表 TF3 已通过相同组合。NVIDIA 的 [cuDNN 9.25.1 支持矩阵](https://docs.nvidia.com/deeplearning/cudnn/backend/v9.25.1/reference/support-matrix.html)列出其 **CUDA 12.x** 组件支持 CUDA 12.8。9.25.1 安装程序可能把 `cudnn64_9.dll` 放在 `C:\Program Files\NVIDIA\CUDNN\v9.25\bin\12.9\x64` 这样的深层目录；其中的 `12.9` 表示所装组件的 CUDA 版本目录，不能仅凭找到 DLL 就认定它与本机 CUDA 12.8 可配合。先让检测工具识别或手动指定**实际含有 DLL 的文件夹**，再以本机实际 KataGo 分析结果判断。上述 9.25.1 测试不等于其他安装方式或机器均已验收。
 
 ## 第四步：实际检测一次
 

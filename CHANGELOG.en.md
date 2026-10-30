@@ -2,6 +2,37 @@
 
 English | [简体中文](CHANGELOG.md)
 
+## v1.1.0 — 2026-10-30
+
+- Upgrade to KataGo v1.18.2 and replace the b28 main model with TF3. As of 2026-10-30, the selected TF3 and previous b28 models are rated at about 14605 and 14105 Elo in the [official training run](https://katagotraining.org/networks/), a difference of about 500 Elo at [equal search visits](https://github.com/lightvector/KataGo/blob/master/docs/NetworkArchitectures.md). Retain Human SL practice levels.
+- Each analysis-engine startup loads TF3 and warms up the GPU before searching. The first candidate may take longer to appear; the wait varies with hardware, drivers, power mode, and system load. Position changes within one running engine do not repeat the full warmup; restarting the application or engine does.
+- Fix fair play showing existing analysis. Hide candidates, ownership, explanations, trends, and review evaluations; disable full-game analysis and restore applicable cached displays after leaving fair play.
+- Improve automatic image corners by comparing original-edge, closed-edge, and line candidates using grid evidence. Preserve manual calibration and stone correction.
+- Fix analysis compatibility for 9- and 13-line positions. Preserve saved games and settings; reanalyze earlier model results to obtain TF3 candidates, trends, and review results. Preserve search budgets and AI difficulty strategies.
+- Update the separate environment checker and setup instructions for the CUDA 12.8/cuDNN 9.8 build. Close RecurGO and back up games before an in-place upgrade; run the independent checker after updating.
+
+## v1.1.0.dev3 — 2026-10-29 (Image-recognition corner fix)
+
+- Compare board contours from original edges and gap-closing preprocessing, then select corners using actual grid evidence. This reduces offsets caused by edge stones, coordinate labels, or surrounding interface frames.
+- Reject rectangular frames without sufficient grid evidence and retain manual corner selection when automatic detection fails.
+- Preserve manual calibration, stone classification, point corrections, and explicit side-to-play confirmation. KataGo, Human SL, search budgets, and fair-play behavior remain unchanged.
+
+## v1.1.0.dev2 — 2026-10-29 (Fair-play display fix)
+
+- Fixed existing analysis remaining visible during fair play. Candidate moves, variations, explanations, ownership, win-rate trends, and review evaluations are hidden, including after reopening a game or navigating between moves.
+- Fair play preserves saved analysis caches and control preferences. Leaving fair play restores the applicable cached displays and previous switch selections.
+- Disabled the full-game analysis action during fair play and blocked it from starting. Entering fair play stops an existing full-game analysis.
+- This update only changes fair-play display and action boundaries. AI move selection, Human SL difficulty levels, Strongest mode, and analysis search budgets remain unchanged.
+
+## v1.1.0.dev1 — 2026-10-29 (TF3 development candidate)
+
+- Integrate the standard KataGo v1.18.2 Windows CUDA 12.8/cuDNN 9.8 build and pin the main model to `kata1-tf3-b11c768-s11003M-d5973M-7gres`. Retain the Human SL model and practice difficulty profiles.
+- Separate analysis caches, saved trends, and full-game review by engine and model identity. Preserve old records without treating them as TF3 results. Preserve search budgets and KataGo's legal `order = 0` move as the first choice.
+- Resolve the fixed 19-line configuration conflict with 9/13-line imports without reducing 19-line search budgets.
+- Update CUDA/NVRTC detection, setup guidance, the explicit engine/model SHA-256 allowlist, and third-party license records. Package only the new engine and current two models; retain historical license evidence.
+- During an in-place upgrade, the installer removes only the obsolete `libz.dll`, `libzip.dll`, and exact old b28 model filename. It uses no wildcards and does not delete Human SL or user data.
+- This is a local development candidate. Automated checks do not replace manual functionality, installation, or playing-strength acceptance. Earlier two-GPU results belong to the old engine.
+
 ## v1.0.2 — 2026-10-03
 
 In testing v1.0.1, we found that restarting the application did not retain the real-time analysis and ownership selections, and displayed win-rate points could disappear. Quick consecutive moves interrupted analysis and left gaps in the win-rate curve, while settings entries occupied toolbar space and made common actions harder to find.

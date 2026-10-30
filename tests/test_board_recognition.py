@@ -148,8 +148,9 @@ def test_axis_aligned_fallback_accepts_opencv_hough_layouts(
     )
 
 
-def test_recognition_corrects_perspective_from_manual_grid_corners() -> None:
-    image, corners, expected = _synthetic_board(size=9)
+@pytest.mark.parametrize("size", [9, 13, 19])
+def test_recognition_corrects_perspective_from_manual_grid_corners(size: int) -> None:
+    image, corners, expected = _synthetic_board(size=size)
     source = np.asarray(corners, dtype=np.float32)
     destination = np.asarray(
         [(145, 85), (770, 135), (825, 780), (85, 830)],
@@ -167,9 +168,139 @@ def test_recognition_corrects_perspective_from_manual_grid_corners() -> None:
 
     result = recognize_board(
         perspective,
-        board_size=9,
+        board_size=size,
         corners=manual,  # type: ignore[arg-type]
     )
 
-    assert result.board_size == 9
+    assert result.board_size == size
+    assert result.stones == expected
+
+
+def _board_with_touching_coordinates(
+    size: int,
+) -> tuple[np.ndarray, np.ndarray, dict[Point, Color]]:
+    """Synthetic edge stones and nearby labels reproduce the reported contour merge."""
+    image, corners, expected = _synthetic_board(size=size, include_stones=False)
+    image[np.all(image == (28, 31, 34), axis=2)] = (72, 164, 218)
+    cell = 720 / (size - 1)
+    radius = round(cell * 0.44)
+    expected = {
+        Point(x, 0): Color.BLACK if x % 2 else Color.WHITE
+        for x in range(size - 7, size - 1)
+    }
+    expected.update(
+        {Point(size - 1, y): Color.WHITE if y % 2 else Color.BLACK for y in range(1, 6)}
+    )
+    expected[Point(3, 3)] = Color.BLACK
+    expected[Point(size // 2, size // 2)] = Color.WHITE
+    for point, color in expected.items():
+        center = (round(100 + point.x * cell), round(100 + point.y * cell))
+        fill = (12, 14, 16) if color is Color.BLACK else (245, 245, 241)
+        cv2.circle(image, center, radius, fill, -1, cv2.LINE_AA)
+    for index in range(size):
+        coordinate = round(100 + index * cell)
+        cv2.putText(
+            image, chr(65 + index), (coordinate - 7, 100 - radius - 5),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (25, 31, 38), 2, cv2.LINE_AA,
+        )
+        cv2.putText(
+            image, str(size - index), (820 + radius + 5, coordinate + 6),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (25, 31, 38), 2, cv2.LINE_AA,
+        )
+    return image, np.asarray(corners), expected
+
+
+@pytest.mark.parametrize("size", [9, 13, 19])
+def test_auto_corners_resist_labels_touching_edge_stones(size: int) -> None:
+    image, corners, expected = _board_with_touching_coordinates(size)
+
+    result = recognize_board(image)
+
+    assert result.board_size == size
+    assert np.asarray(result.corners) == pytest.approx(corners, abs=5.0)
+    assert result.stones == expected
+
+
+@pytest.mark.parametrize("size", [9, 13, 19])
+def test_auto_corners_choose_grid_inside_a_larger_panel_frame(size: int) -> None:
+    board, corners, expected = _synthetic_board(size=size)
+    image = np.full((1200, 1200, 3), (28, 31, 34), dtype=np.uint8)
+    image[140:1060, 140:1060] = board
+    cv2.rectangle(image, (25, 25), (1175, 1175), (150, 150, 150), 3)
+
+    result = recognize_board(image)
+
+    assert result.board_size == size
+    assert np.asarray(result.corners) == pytest.approx(np.asarray(corners) + 140, abs=5.0)
+    assert result.stones == expected
+
+
+@pytest.mark.parametrize("size", [9, 13, 19])
+def test_auto_corners_recognize_perspective_grids(size: int) -> None:
+    image, corners, expected = _synthetic_board(size=size)
+    destination = np.asarray([(110, 100), (810, 110), (830, 820), (90, 830)], np.float32)
+    transform = cv2.getPerspectiveTransform(np.asarray(corners, np.float32), destination)
+    perspective = cv2.warpPerspective(
+        image, transform, (920, 920), borderValue=(28, 31, 34)
+    )
+
+    result = recognize_board(perspective)
+
+    assert result.board_size == size
+    assert np.asarray(result.corners) == pytest.approx(destination, abs=5.0)
+    assert result.stones == expected
+
+
+def test_auto_corners_do_not_treat_a_plain_frame_as_a_grid() -> None:
+    image = np.full((920, 920, 3), (180, 180, 180), dtype=np.uint8)
+    cv2.rectangle(image, (80, 80), (840, 840), (20, 20, 20), 3)
+
+    with pytest.raises(recognition_module.RecognitionError):
+        recognize_board(image, board_size=19)
+
+
+def test_repeated_recognition_and_explicit_size_keep_the_same_grid() -> None:
+    image, corners, expected = _board_with_touching_coordinates(19)
+    original = image.copy()
+    for size in (None, 19, None):
+        result = recognize_board(image, board_size=size)
+        assert result.board_size == 19
+        assert np.asarray(result.corners) == pytest.approx(corners, abs=5.0)
+        assert result.stones == expected
+    assert np.array_equal(image, original)
+
+
+def test_automatic_corners_still_bridge_small_breaks_in_the_border() -> None:
+    image, corners, _expected = _synthetic_board(include_stones=False)
+    image[np.all(image == (28, 31, 34), axis=2)] = (72, 164, 218)
+    for coordinate in range(180, 800, 80):
+        for border in (100, 820):
+            cv2.rectangle(
+                image, (coordinate - 2, border - 4), (coordinate + 2, border + 4),
+                (72, 164, 218), -1,
+            )
+            cv2.rectangle(
+                image, (border - 4, coordinate - 2), (border + 4, coordinate + 2),
+                (72, 164, 218), -1,
+            )
+
+    result = recognize_board(image)
+
+    assert result.board_size == 19
+    assert np.asarray(result.corners) == pytest.approx(np.asarray(corners), abs=5.0)
+    assert result.stones == {}
+
+
+@pytest.mark.parametrize("factor", [0.75, 1.25, 1.75])
+def test_labelled_board_corners_stay_aligned_across_image_sizes(factor: float) -> None:
+    image, corners, expected = _board_with_touching_coordinates(19)
+    resized = cv2.resize(
+        image, None, fx=factor, fy=factor,
+        interpolation=cv2.INTER_AREA if factor < 1 else cv2.INTER_CUBIC,
+    )
+
+    result = recognize_board(resized)
+
+    assert result.board_size == 19
+    assert np.asarray(result.corners) / factor == pytest.approx(corners, abs=5.0)
     assert result.stones == expected

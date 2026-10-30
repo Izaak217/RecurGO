@@ -1,4 +1,4 @@
-# 从源码启动（v1.0.1）
+# 从源码启动（v1.1.0）
 
 [English](SOURCE_SETUP.en.md) | 简体中文
 
@@ -21,9 +21,10 @@ py -3.13 -m venv .venv
 
 ## 准备 KataGo
 
-从 [KataGo v1.16.5 官方发行页](https://github.com/lightvector/KataGo/releases/tag/v1.16.5)
-取得匹配的 Windows CUDA 12.8 引擎，保留该包要求的运行库与许可。
-当前配置另需 CUDA 12.8 运行库和 cuDNN 9.x（本项目已验证 9.8；其他 9.x 以真实分析检测为准）。NVIDIA 显卡驱动需在 Windows 安装；
+从 [KataGo v1.18.2 官方发行页](https://github.com/lightvector/KataGo/releases/tag/v1.18.2)
+取得 `katago-v1.18.2-cuda12.8-cudnn9.8.0-windows-x64.zip`，保留该包要求的运行库与许可。
+使用标准棋盘构建，不使用 `+bs50`。当前配置另需 CUDA 12.8 运行库、NVRTC 和 cuDNN 9.x；
+旧引擎的 cuDNN 测试记录不等于 TF3 已验收，以本机实际加载模型与分析结果为准。NVIDIA 显卡驱动需在 Windows 安装；
 项目级运行库可按下方固定目录准备，不从其它电脑复制系统目录。
 主程序不做独立环境预检。需要配置 CUDA/cuDNN 路径并实际验证 KataGo 时，
 单独运行项目根目录的 `check_analysis_environment.cmd`。
@@ -31,11 +32,12 @@ py -3.13 -m venv .venv
 从 [KataGo 官方网络目录](https://katagotraining.org/networks/) 取得主模型，
 从 [额外网络目录](https://katagotraining.org/extra_networks/) 取得 Human SL：
 
-- `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`
+- `kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz`
 - `b18c384nbt-humanv0.bin.gz`
 
 上述文件及核对过的 SHA256 见 [模型资料](../licenses/models/README.md)。
 当前运行时加载器仍要求这两个文件，即使只使用“最强”难度也不能省略 Human SL。
+TF3 是主模型系列名称，不是单独的引擎版本；模型和 v1.18.2 引擎必须一并准备。
 
 建议目录：
 
@@ -58,7 +60,9 @@ data/logs/katago/
 CUDA 固定目录需要放入匹配 12.8 的 `cublas64_12.dll`、`cudart64_12.dll` 等运行库；
 可从 NVIDIA 官方 [CUDA Runtime ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/)
 与 [cuBLAS ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/)
-取得对应版本，解压后把 ZIP 内 `bin` 的 DLL 放入上面的 CUDA `bin` 目录。
+取得对应版本，并补齐 [NVRTC ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/)
+中的 CUDA 12.8 组件；NVRTC 主 DLL 与 `nvrtc-builtins` DLL 必须来自同一包。
+解压后把 ZIP 内 `bin` 的 DLL 放入上面的 CUDA `bin` 目录。
 cuDNN 可从 [NVIDIA 官方页面](https://developer.nvidia.com/cudnn-archive)取得适用于 CUDA 12 的
 Windows 9.8 ZIP，解压后把 `bin` 内的 DLL 放入上面的 cuDNN `bin` 目录。
 这里放的是**解压后的运行库**，不是下载好的安装器 EXE 或未解压的 ZIP。也可照官方说明

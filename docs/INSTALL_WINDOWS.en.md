@@ -1,4 +1,4 @@
-# RecurGO Windows Installation Guide (v1.0.1)
+# RecurGO Windows Installation Guide (v1.1.0)
 
 English | [简体中文](INSTALL_WINDOWS.md)
 
@@ -13,11 +13,9 @@ This guide explains installation, dependencies, and first launch. For games, ana
 
 ## Before downloading
 
-RecurGO v1.0.1 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
+RecurGO v1.1.0 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
 
-Real KataGo analysis has passed on an NVIDIA GeForce RTX 5070 Ti Laptop GPU and an NVIDIA
-GeForce RTX 2080 Ti. On the latter GPU, the main application also displayed candidate moves
-and win rates. These results do not establish support for every NVIDIA GPU.
+This release integrates KataGo v1.18.2 and the TF3 main model while retaining Human SL. Model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU. Earlier RTX 2080 Ti checks used the previous engine; require a fresh check on the current machine.
 
 The bundled KataGo loads `cudnn64_9.dll`, so this build requires **cuDNN 9.x**; another major version cannot replace it. Auto-detection checks NVIDIA's standard `v9.*` installation folders and their subfolders, as well as `CUDNN_PATH` and `PATH`. For an installation elsewhere without those paths, select the actual DLL in the checker; reinstalling is unnecessary. If several 9.x versions coexist, use the selected folder shown by the tool and require a real KataGo check.
 
@@ -26,7 +24,7 @@ The installer contains RecurGO, the KataGo engine, analysis models, and applicat
 | Component | Location | Required? |
 | --- | --- | --- |
 | NVIDIA GPU driver | Installed in Windows; many NVIDIA systems already have one | Yes |
-| CUDA 12.8 runtime and compatible cuDNN 9.x | Install with NVIDIA's official Windows installers, or extract the official ZIP files into the user data directory shown by the check tool | A working version is required; cuDNN 9.8 was verified, and 9.25.1 passed real analysis on an RTX 2080 Ti after manual selection. Check other combinations on the current machine. |
+| CUDA 12.8 runtime and compatible cuDNN 9.x | Install with NVIDIA's official Windows installers, or extract the official ZIP files into the user data directory shown by the check tool | Include CUDA 12.8 NVRTC. This engine was built for cuDNN 9.8; require a successful TF3 analysis check on the current machine. |
 | Microsoft Visual C++ Redistributable x64 | Installed in Windows; an existing compatible version is sufficient | Required to start KataGo |
 | Ollama and a language model | Optional, preferably under the user data directory described below | Only for supplemental local AI explanations |
 
@@ -73,11 +71,12 @@ cuda_deps\nvidia\cudnn\bin\   cuDNN 9.8 DLLs
 For the ZIP method:
 
 1. Download the **Windows x86_64, 12.8** archive from NVIDIA's [CUDA Runtime ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/) and the matching archive from the [cuBLAS ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/). Extract both, then place the DLLs from their `bin` directories in the CUDA `bin` directory shown above.
+Also obtain CUDA 12.8 for Windows x86_64 from the [NVRTC ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/). Place its main NVRTC DLL and `nvrtc-builtins` DLL together in CUDA `bin`, keeping both from the same archive. Finding cuDNN, cuBLAS, and cudart alone does not prove the new engine has every dependency.
 2. Download the **cuDNN 9.8 for CUDA 12, Windows x86_64** ZIP from the [official NVIDIA archive](https://developer.nvidia.com/cudnn-9-8-0-download-archive). Extract it, then place the DLLs from its `bin` directory in the cuDNN `bin` directory above.
 
 For the ZIP method, place extracted DLLs there, not unextracted ZIP files. With official installers, there is no need to copy DLLs into the fixed directories. Do not copy DLLs from another computer's system directories. Finding paths and DLL files does not establish compatibility: select **Save and check** and require a real KataGo analysis result.
 
-The project has verified cuDNN 9.8. On the test machine with an NVIDIA GeForce RTX 2080 Ti, real KataGo analysis also passed after cuDNN 9.25.1 was selected manually. NVIDIA's [cuDNN 9.25.1 support matrix](https://docs.nvidia.com/deeplearning/cudnn/backend/v9.25.1/reference/support-matrix.html) lists CUDA 12.8 for its **CUDA 12.x** build. The 9.25.1 installer may place `cudnn64_9.dll` in a deeper folder such as `C:\Program Files\NVIDIA\CUDNN\v9.25\bin\12.9\x64`. The `12.9` part denotes the installed component's CUDA-version folder; finding a DLL alone does not establish compatibility with a local CUDA 12.8 installation. Let the checker find that exact folder, or choose it manually, then require a successful KataGo analysis on the current machine. That 9.25.1 test does not accept every installation method or machine.
+The earlier engine was tested with cuDNN 9.8 and with manually selected cuDNN 9.25.1 on an RTX 2080 Ti. Those historical results do not establish TF3 acceptance with the same combinations. NVIDIA's [cuDNN 9.25.1 support matrix](https://docs.nvidia.com/deeplearning/cudnn/backend/v9.25.1/reference/support-matrix.html) lists CUDA 12.8 for its **CUDA 12.x** build. The 9.25.1 installer may place `cudnn64_9.dll` in a deeper folder such as `C:\Program Files\NVIDIA\CUDNN\v9.25\bin\12.9\x64`. The `12.9` part denotes the installed component's CUDA-version folder; finding a DLL alone does not establish compatibility with a local CUDA 12.8 installation. Let the checker find that exact folder, or choose it manually, then require a successful KataGo analysis on the current machine. That 9.25.1 test does not accept every installation method or machine.
 
 ## Step 4: Run a real check
 

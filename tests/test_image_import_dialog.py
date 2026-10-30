@@ -126,3 +126,57 @@ def test_source_preview_preserves_thin_grid_lines_when_scaled_down(qtbot: QtBot)
         high = min(preview_size, int(np.ceil(preview_y)) + 3)
         darkest_row = float(rgb[low:high, 60:480].mean(axis=(1, 2)).min())
         assert darkest_row < 245.0
+
+
+def test_automatic_corners_survive_dialog_reloads_and_manual_correction(qtbot: QtBot) -> None:
+    board, _corners = _board_image()
+    image = np.full((1100, 1100, 3), 35, dtype=np.uint8)
+    image[140:960, 140:960] = board
+    cv2.rectangle(image, (20, 20), (1080, 1080), (150, 150, 150), 3)
+    expected_corners = ((190.0, 190.0), (910.0, 190.0), (910.0, 910.0), (190.0, 910.0))
+    expected = {Point(3, 3): Color.BLACK, Point(15, 15): Color.WHITE}
+    dialog = ImageImportDialog()
+    qtbot.addWidget(dialog)
+    for size in (19, None, 19):
+        dialog._set_source(_bgr_to_qimage(image), image, "Synthetic framed board")
+        dialog.size_combo.setCurrentIndex(dialog.size_combo.findData(size))
+        dialog._recognize()
+        assert dialog._recognition is not None
+        assert np.asarray(dialog.canvas.corners) == pytest.approx(
+            np.asarray(expected_corners), abs=5.0
+        )
+        assert dialog._stones == expected
+        dialog.black_to_play.setChecked(True)
+        assert dialog.options().stones == expected
+    dialog._begin_manual_corners()
+    dialog.canvas.set_corners(expected_corners)
+    dialog._recognize()
+    assert dialog.options().stones == expected
+    dialog._cycle_point(3, 3)
+    assert dialog.options().stones[Point(3, 3)] is Color.WHITE
+    dialog.reject()
+
+
+@pytest.mark.parametrize(
+    ("operation", "black", "white"),
+    [
+        ("left", Point(3, 15), Point(15, 3)),
+        ("right", Point(15, 3), Point(3, 15)),
+        ("mirror", Point(15, 3), Point(3, 15)),
+    ],
+)
+def test_image_transforms_reset_corners_before_automatic_recognition(
+    qtbot: QtBot, operation: str, black: Point, white: Point
+) -> None:
+    image, corners = _board_image()
+    dialog = ImageImportDialog()
+    qtbot.addWidget(dialog)
+    dialog._set_source(_bgr_to_qimage(image), image, "Synthetic board")
+    dialog._begin_manual_corners()
+    dialog.canvas.set_corners(corners)  # type: ignore[arg-type]
+    dialog._transform_image(operation)
+    assert not dialog._manual_selection
+    assert dialog.canvas.corners is None
+    dialog._recognize()
+    assert dialog._recognition is not None
+    assert dialog._stones == {black: Color.BLACK, white: Color.WHITE}

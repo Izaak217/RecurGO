@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 
-from PySide6.QtCore import QPoint, QPointF
+from PySide6.QtCore import QObject, QPoint, QPointF, Signal
 from PySide6.QtTest import QTest
 from pytestqt.qtbot import QtBot
 
@@ -33,8 +33,14 @@ class FakeAudio:
         self.moves.append(captured)
 
 
-class FakeBatchEngine:
+class FakeBatchEngine(QObject):
+    status_changed = Signal(str)
+    failure_reported = Signal(object)
+    analysis_updated = Signal(object)
+    analysis_finished = Signal(object)
+
     def __init__(self) -> None:
+        super().__init__()
         self.queries: list[dict[str, object]] = []
         self.stop_count = 0
         self.runtime = SimpleNamespace(
@@ -241,10 +247,9 @@ def test_full_game_analysis_queues_every_position_and_persists_results(
     record = repository.create_game(tree)
     move, _created = tree.play(Point(3, 3))
     repository.save_node(record.id, move)
-    window = MainWindow(repository, record, tree, audio_feedback=FakeAudio())
-    qtbot.addWidget(window)
     engine = FakeBatchEngine()
-    window.engine = engine  # type: ignore[assignment]
+    window = MainWindow(repository, record, tree, engine, audio_feedback=FakeAudio())
+    qtbot.addWidget(window)
 
     window._start_full_game_analysis()
 
@@ -280,6 +285,7 @@ def test_full_game_analysis_queues_every_position_and_persists_results(
     saved = repository.analysis_snapshots_for_game(
         record.id,
         cache_prefix="full-game-800",
+        analysis_identity=window.analysis_identity.key,
     )
     assert saved == {
         tree.root_id: root_payload,
@@ -478,10 +484,9 @@ def test_human_can_play_white_and_ai_opens_as_black(
     repository = _chinese_repository(tmp_path / "white-player.db")
     tree = GameTree()
     record = repository.create_game(tree, mode="assisted", human_color="white")
-    window = MainWindow(repository, record, tree, audio_feedback=FakeAudio())
-    qtbot.addWidget(window)
     engine = FakeBatchEngine()
-    window.engine = engine  # type: ignore[assignment]
+    window = MainWindow(repository, record, tree, engine, audio_feedback=FakeAudio())
+    qtbot.addWidget(window)
     window._review_mode_active = False  # explicit "继续对弈" choice
 
     window._request_analysis()

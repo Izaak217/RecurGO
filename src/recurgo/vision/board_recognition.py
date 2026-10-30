@@ -73,12 +73,12 @@ def recognize_board(
         raise RecognitionError("仅支持 9 路、13 路和 19 路棋盘")
     bgr = image[:, :, :3].copy()
 
-    manual_corners = corners is not None
-    ordered = _order_corners(corners) if corners is not None else _detect_board_corners(bgr)
-    rough = _warp_to_square(bgr, ordered, extent=760, padding=0)
-    size, x_range, y_range = _detect_grid(rough, board_size)
-    if not manual_corners:
-        ordered = _refine_original_corners(ordered, x_range, y_range, rough.shape[1])
+    if corners is not None:
+        ordered = _order_corners(corners)
+        rough = _warp_to_square(bgr, ordered, extent=760, padding=0)
+        size, _x_range, _y_range = _detect_grid(rough, board_size)
+    else:
+        ordered, size = _detect_board_grid(bgr, board_size)
     warped = _warp_to_square(bgr, ordered, extent=760, padding=38)
     stones, confidences = _classify_intersections(warped, size, padding=38)
     return BoardRecognition(size, stones, confidences, ordered, warped)
@@ -125,7 +125,33 @@ def _array_to_corners(
     )
 
 
-def _detect_board_corners(image: ImageArray) -> tuple[Corner, Corner, Corner, Corner]:
+def _detect_board_grid(
+    image: ImageArray,
+    requested_size: int | None,
+) -> tuple[tuple[Corner, Corner, Corner, Corner], int]:
+    """v1.1.0.dev3: compare grid evidence before committing to a contour."""
+    candidates = _board_corner_candidates(image)
+    best: tuple[tuple[float, float], tuple[Corner, Corner, Corner, Corner], int] | None = None
+    for geometry_score, corners in candidates:
+        rough = _warp_to_square(image, corners, extent=760, padding=0)
+        score, size, x_range, y_range = _fit_grid(rough, requested_size)
+        if score < 8.0:
+            continue
+        # Geometry only breaks ties: a frame or a contour joined to coordinate
+        # text must not beat stronger evidence from the actual grid.
+        ranking = (score, geometry_score)
+        if best is None or ranking > best[0]:
+            best = (ranking, corners, size)
+    if best is None:
+        raise RecognitionError("网格线不够清晰，请手动选择棋盘四角并指定路数")
+    rough = _warp_to_square(image, best[1], extent=760, padding=0)
+    _score, size, x_range, y_range = _fit_grid(rough, best[2], refine=True)
+    return _refine_original_corners(best[1], x_range, y_range, rough.shape[1]), size
+
+
+def _board_corner_candidates(
+    image: ImageArray,
+) -> list[tuple[float, tuple[Corner, Corner, Corner, Corner]]]:
     height, width = image.shape[:2]
     scale = min(1.0, 1400.0 / max(height, width))
     working = (
@@ -136,19 +162,19 @@ def _detect_board_corners(image: ImageArray) -> tuple[Corner, Corner, Corner, Co
     gray = cv2.cvtColor(working, cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(blurred, 45, 135)
-    edges = cv2.morphologyEx(
+    closed = cv2.morphologyEx(
         edges,
         cv2.MORPH_CLOSE,
         np.ones((5, 5), dtype=np.uint8),
         iterations=2,
     )
-    contours, _hierarchy = cv2.findContours(
-        edges,
-        cv2.RETR_LIST,
-        cv2.CHAIN_APPROX_SIMPLE,
-    )
     image_area = float(working.shape[0] * working.shape[1])
     candidates: list[tuple[float, NDArray[np.float32]]] = []
+    contours = [
+        contour
+        for mask in (edges, closed)
+        for contour in cv2.findContours(mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[0]
+    ]
     for contour in contours:
         area = float(cv2.contourArea(contour))
         if area < image_area * 0.12:
@@ -171,15 +197,41 @@ def _detect_board_corners(image: ImageArray) -> tuple[Corner, Corner, Corner, Co
         coverage = area / image_area
         border_penalty = 0.35 if coverage > 0.94 else 0.0
         candidates.append((coverage * aspect_score - border_penalty, ordered))
-    if not candidates:
-        return _detect_axis_aligned_grid(edges, scale)
-    points = max(candidates, key=lambda item: item[0])[1] / scale
-    return _order_corners(_array_to_corners(points))
+    unique: list[tuple[float, tuple[Corner, Corner, Corner, Corner]]] = []
+    for geometry_score, points in sorted(candidates, key=lambda item: item[0], reverse=True):
+        original = _order_corners(_array_to_corners(points / scale))
+        if any(
+            float(np.max(np.linalg.norm(np.asarray(original) - np.asarray(other), axis=1)))
+            < 6.0 / scale
+            for _score, other in unique
+        ):
+            continue
+        unique.append((geometry_score, original))
+        if len(unique) == 6:
+            break
+    # Dense edge stones can leave no usable quadrilateral at some image sizes.
+    # Keep line-based candidates even when a text-contaminated contour exists.
+    for mask in (edges, closed):
+        try:
+            line_corners = _detect_axis_aligned_grid(mask, scale, trim_outliers=False)
+        except RecognitionError:
+            continue
+        if not any(
+            float(np.max(np.linalg.norm(np.asarray(line_corners) - np.asarray(other), axis=1)))
+            < 6.0 / scale
+            for _score, other in unique
+        ):
+            unique.append((0.0, line_corners))
+    if not unique:
+        raise RecognitionError("未能自动定位棋盘，请手动点击棋盘的四个角")
+    return unique
 
 
 def _detect_axis_aligned_grid(
     edges: ImageArray,
     scale: float,
+    *,
+    trim_outliers: bool = True,
 ) -> tuple[Corner, Corner, Corner, Corner]:
     height, width = edges.shape
     lines = cv2.HoughLinesP(
@@ -209,8 +261,11 @@ def _detect_axis_aligned_grid(
             vertical.append((x1 + x2) / 2.0)
     if len(vertical) < 5 or len(horizontal) < 5:
         raise RecognitionError("未能自动定位完整网格，请手动点击棋盘的四个角")
-    x0, x1 = np.percentile(vertical, (4, 96))
-    y0, y1 = np.percentile(horizontal, (4, 96))
+    # Candidate comparison already fits and trims the grid. Preserve all lines
+    # there so dense edge stones cannot crop away a row or disguise 19 as 9.
+    percentiles = (4, 96) if trim_outliers else (0, 100)
+    x0, x1 = np.percentile(vertical, percentiles)
+    y0, y1 = np.percentile(horizontal, percentiles)
     if (x1 - x0) * (y1 - y0) < width * height * 0.10:
         raise RecognitionError("检测到的棋盘区域过小，请手动选择四个角")
     return _order_corners(
@@ -258,6 +313,23 @@ def _detect_grid(
     square: ImageArray,
     requested_size: int | None,
 ) -> tuple[int, tuple[float, float], tuple[float, float]]:
+    score, size, x_range, y_range = _fit_grid(square, requested_size)
+    if score < 8.0:
+        if requested_size is None:
+            raise RecognitionError("网格线不够清晰，请手动选择棋盘四角并指定路数")
+        return size, (0.0, float(square.shape[1] - 1)), (
+            0.0,
+            float(square.shape[0] - 1),
+        )
+    return size, x_range, y_range
+
+
+def _fit_grid(
+    square: ImageArray,
+    requested_size: int | None,
+    *,
+    refine: bool = False,
+) -> tuple[float, int, tuple[float, float], tuple[float, float]]:
     gray = cv2.cvtColor(square, cv2.COLOR_BGR2GRAY)
     stone_centers = _detect_stone_centers(square)
     block_size = max(15, (min(gray.shape) // 28) | 1)
@@ -289,22 +361,16 @@ def _detect_grid(
             vertical_projection,
             size,
             stone_centers[:, 0],
+            refine=refine,
         )
         y_score, y_range = _fit_regular_lines(
             horizontal_projection,
             size,
             stone_centers[:, 1],
+            refine=refine,
         )
         results.append(((x_score + y_score) / 2.0, size, x_range, y_range))
-    score, size, x_range, y_range = max(results, key=lambda item: item[0])
-    if score < 8.0:
-        if requested_size is None:
-            raise RecognitionError("网格线不够清晰，请手动选择棋盘四角并指定路数")
-        return size, (0.0, float(square.shape[1] - 1)), (
-            0.0,
-            float(square.shape[0] - 1),
-        )
-    return size, x_range, y_range
+    return max(results, key=lambda item: item[0])
 
 
 def _detect_stone_centers(square: ImageArray) -> NDArray[np.float64]:
@@ -358,13 +424,22 @@ def _fit_regular_lines(
     projection: NDArray[np.float64],
     count: int,
     feature_positions: NDArray[np.float64] | None = None,
+    *,
+    refine: bool = False,
+    search_range: tuple[float, float] | None = None,
 ) -> tuple[float, tuple[float, float]]:
     length = len(projection)
     smoothed = np.convolve(projection, np.ones(3) / 3.0, mode="same")
     best_score = -math.inf
     best_range = (0.0, float(length - 1))
-    for start in np.linspace(0.0, length * 0.16, 17):
-        for end in np.linspace(length * 0.84, length - 1.0, 17):
+    starts = np.linspace(0.0, length * 0.16, 17)
+    ends = np.linspace(length * 0.84, length - 1.0, 17)
+    if search_range is not None:
+        step = length * 0.01
+        starts = np.linspace(max(0.0, search_range[0] - step), search_range[0] + step, 9)
+        ends = np.linspace(search_range[1] - step, min(length - 1.0, search_range[1] + step), 9)
+    for start in starts:
+        for end in ends:
             spacing = (end - start) / (count - 1)
             if spacing < 8.0:
                 continue
@@ -378,6 +453,20 @@ def _fit_regular_lines(
                 return float(smoothed[low:high].max(initial=0.0))
 
             line_responses = [response_at(float(position)) for position in positions]
+            supported_lines = int(
+                np.count_nonzero(np.asarray(line_responses) >= max(4.0, smoothed.max() * 0.2))
+            )
+            feature_lines = 0
+            if feature_positions is not None and len(feature_positions) >= 4:
+                normalized = (feature_positions - start) / spacing
+                nearest = np.rint(normalized)
+                residual = np.abs(normalized - nearest)
+                inside = (nearest >= 0.0) & (nearest < count)
+                feature_lines = len(np.unique(nearest[inside & (residual < 0.20)]))
+            # A rectangle supplies only two lines per axis. Dense boards may
+            # instead provide the missing line evidence through stone centers.
+            if supported_lines < 4 and feature_lines < 4:
+                continue
             line_score = float(np.percentile(line_responses, 35)) * 0.55 + float(
                 np.mean(line_responses)
             ) * 0.45
@@ -408,6 +497,8 @@ def _fit_regular_lines(
             if score > best_score:
                 best_score = score
                 best_range = (float(start), float(end))
+    if refine and math.isfinite(best_score):
+        return _fit_regular_lines(projection, count, feature_positions, search_range=best_range)
     return float(best_score), best_range
 
 

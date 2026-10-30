@@ -37,6 +37,12 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "{#BuildSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
+[InstallDelete]
+; v1.1.0.dev1: remove only obsolete engine assets during an in-place upgrade.
+Type: files; Name: "{app}\runtime\engine\libz.dll"
+Type: files; Name: "{app}\runtime\engine\libzip.dll"
+Type: files; Name: "{app}\runtime\models\kata1-b28c512nbt-s13255194368-d5935380940.bin.gz"
+
 [Icons]
 Name: "{group}\RecurGO"; Filename: "{app}\RecurGO.exe"
 Name: "{group}\Analysis Environment Check"; Filename: "{app}\check_analysis_environment.cmd"; WorkingDir: "{app}"

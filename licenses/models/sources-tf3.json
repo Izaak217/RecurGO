@@ -1,0 +1,23 @@
+{
+  "document_version": "1.1.0.dev1",
+  "checked_on": "2026-10-29",
+  "license_url": "https://katagotraining.org/network_license/",
+  "snapshot": "network_license-2026-10-29.html",
+  "snapshot_sha256": "590837548c66daca592955910aeeea36634daa49c722b1a80f6e24c0b714657e",
+  "license_text": "KataGo-Neural-Network-License.txt",
+  "license_text_verification": "Normalized whitespace matches the 2026-10-29 official snapshot; original local license retained unchanged",
+  "models": [
+    {
+      "name": "kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz",
+      "source_url": "https://media.katagotraining.org/uploaded/networks/models/kata1/kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz",
+      "sha256": "93bdb63a3bfae4a70db0cb5265287495ecfc10b1ba1cc6814feeba1cdf055871",
+      "hash_evidence": "Locally computed after official HTTPS download; not an upstream signature"
+    },
+    {
+      "name": "b18c384nbt-humanv0.bin.gz",
+      "source_url": "https://katagotraining.org/extra_networks/",
+      "sha256": "637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5",
+      "hash_evidence": "Retained existing Human SL file"
+    }
+  ]
+}

@@ -25,7 +25,12 @@ from PySide6.QtWidgets import (
 )
 
 from recurgo.engine import EngineRuntime
-from recurgo.engine.driver import check_nvidia_driver, check_visual_cpp_runtime
+from recurgo.engine.driver import (
+    check_nvidia_driver,
+    check_visual_cpp_runtime,
+    windows_file_version,
+)
+from recurgo.engine.runtime import CUDA_REQUIRED_LIBRARIES
 from recurgo.i18n import Language, tr
 
 from .i18n import localize_dialog_buttons
@@ -34,17 +39,17 @@ NVIDIA_DRIVER_URL = "https://www.nvidia.com/en-us/drivers/"
 MSVC_URL = "https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist"
 CUDA_TOOLKIT_URL = "https://developer.nvidia.com/cuda-12-8-0-download-archive"
 CUDA_RUNTIME_ZIP_URL = (
-    "https://developer.download.nvidia.com/compute/cuda/redist/"
-    "cuda_cudart/windows-x86_64/"
+    "https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/"
 )
 CUBLAS_ZIP_URL = (
-    "https://developer.download.nvidia.com/compute/cuda/redist/"
-    "libcublas/windows-x86_64/"
+    "https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/"
+)
+NVRTC_ZIP_URL = (
+    "https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/"
 )
 CUDNN_URL = "https://developer.nvidia.com/cudnn-9-8-0-download-archive"
 CUDNN_ZIP_URL = (
-    "https://developer.download.nvidia.com/compute/cudnn/redist/"
-    "cudnn/windows-x86_64/"
+    "https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/"
 )
 
 
@@ -65,6 +70,8 @@ class RuntimeSetupDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self.language = language
+        self._check_system_msvc = check_system_msvc
+        self._required_cuda_libraries: tuple[str, ...] = CUDA_REQUIRED_LIBRARIES
         self._project_root = project_root
         self._dependencies_root = (
             dependencies_root
@@ -79,45 +86,26 @@ class RuntimeSetupDialog(QDialog):
                 "程序已提供 KataGo 引擎和模型。下面先查找 CUDA/cuDNN 文件；"
                 "本版 KataGo 需要 cudnn64_9.dll（cuDNN 9.x）。"
                 "自动搜索 NVIDIA 的 9.x 安装目录及配置路径；自定义位置可选择已有 DLL。"
-                "未找到不代表尚未安装。点击“保存并检测”才会实际运行 KataGo。",
+                "未找到不代表尚未安装。点击“保存并检测”会核对引擎及模型身份，"
+                "再分别测试主分析与 Human SL 陪练。",
                 "KataGo and its models are included. The search below checks for CUDA/cuDNN "
                 "files. This KataGo build needs cudnn64_9.dll (cuDNN 9.x). Auto-search "
                 "covers NVIDIA's 9.x installation folders and configured paths; choose an "
                 "existing DLL for a custom location. A search miss does not prove the "
-                "software is uninstalled. Save and check runs a real KataGo analysis.",
+                "software is uninstalled. Save and check verifies engine/model identity "
+                "and runs separate main-analysis and Human SL practice probes.",
             )
         )
         introduction.setWordWrap(True)
         layout.addWidget(introduction)
-        driver_ready, driver_message = check_nvidia_driver(language=language)
-        driver_detail = escape(driver_message)
-        if not driver_ready:
-            driver_detail += "<br>" + _link(
-                NVIDIA_DRIVER_URL,
-                self._tr("NVIDIA 官方驱动下载", "Official NVIDIA driver download"),
-            )
-        driver_label = QLabel(driver_detail)
-        driver_label.setTextFormat(Qt.TextFormat.RichText)
-        driver_label.setOpenExternalLinks(True)
-        driver_label.setWordWrap(True)
-        layout.addWidget(driver_label)
-
-        if check_system_msvc:
-            msvc_ready, msvc_message = check_visual_cpp_runtime(language=language)
-            msvc_detail = escape(msvc_message)
-            if not msvc_ready:
-                msvc_detail += "<br>" + _link(
-                    MSVC_URL,
-                    self._tr(
-                        "Microsoft Visual C++ x64 官方下载",
-                        "Official Microsoft Visual C++ x64 download",
-                    ),
-                )
-            msvc_label = QLabel(msvc_detail)
-            msvc_label.setTextFormat(Qt.TextFormat.RichText)
-            msvc_label.setOpenExternalLinks(True)
-            msvc_label.setWordWrap(True)
-            layout.addWidget(msvc_label)
+        self.driver_label = QLabel()
+        self.msvc_label = QLabel()
+        for system_label in (self.driver_label, self.msvc_label):
+            system_label.setTextFormat(Qt.TextFormat.RichText)
+            system_label.setOpenExternalLinks(True)
+            system_label.setWordWrap(True)
+            layout.addWidget(system_label)
+        self.msvc_label.setVisible(check_system_msvc)
 
         choices = QHBoxLayout()
         self.auto_radio = QRadioButton(
@@ -254,8 +242,7 @@ class RuntimeSetupDialog(QDialog):
         else:
             self.status_label.setText(
                 self._tr(
-                    "当前所选路径已找到所需 DLL。"
-                    "点击“保存并检测”确认能否实际分析。",
+                    "当前所选路径已找到所需 DLL。点击“保存并检测”确认能否实际分析。",
                     "The current paths contain the required DLLs. "
                     "Select Save and check "
                     "to verify an actual analysis.",
@@ -263,6 +250,7 @@ class RuntimeSetupDialog(QDialog):
             )
 
     def _show_detection(self) -> None:
+        self._refresh_system_checks()
         manual_paths = self._field_paths() if self.manual_radio.isChecked() else {}
         try:
             runtime = EngineRuntime.load(
@@ -271,6 +259,7 @@ class RuntimeSetupDialog(QDialog):
                 local_dependencies_root=self._dependencies_root,
                 validate=False,
             )
+            self._required_cuda_libraries = runtime.required_cuda_libraries
         except (OSError, KeyError, ValueError) as exc:
             self.choose_cuda_button.setVisible(True)
             self.choose_cudnn_button.setVisible(True)
@@ -286,7 +275,7 @@ class RuntimeSetupDialog(QDialog):
                 str(runtime.cuda_bin)
                 if all(
                     (runtime.cuda_bin / name).is_file()
-                    for name in ("cublas64_12.dll", "cudart64_12.dll")
+                    for name in runtime.required_cuda_libraries
                 )
                 else ""
             )
@@ -295,10 +284,23 @@ class RuntimeSetupDialog(QDialog):
                 if (runtime.cudnn_bin / "cudnn64_9.dll").is_file()
                 else ""
             )
-        reports: list[str] = []
+        reports: list[str] = [
+            "<p>"
+            + escape(
+                self._tr(
+                    f"目标清单：KataGo {runtime.engine_version} / {runtime.backend}；"
+                    f"主模型 {runtime.model.name}；Human SL {runtime.human_model.name}。"
+                    "文件身份及运行结果尚待检测。",
+                    f"Target manifest: KataGo {runtime.engine_version} / {runtime.backend}; "
+                    f"main model {runtime.model.name}; Human SL {runtime.human_model.name}. "
+                    "File identity and operation have not yet been verified.",
+                )
+            )
+            + "</p>"
+        ]
         missing_components: set[str] = set()
         for label, key, directory, libraries in (
-            ("CUDA", "cudaBin", runtime.cuda_bin, ("cublas64_12.dll", "cudart64_12.dll")),
+            ("CUDA", "cudaBin", runtime.cuda_bin, runtime.required_cuda_libraries),
             ("cuDNN", "cudnnBin", runtime.cudnn_bin, ("cudnn64_9.dll",)),
         ):
             missing = [name for name in libraries if not (directory / name).is_file()]
@@ -358,11 +360,21 @@ class RuntimeSetupDialog(QDialog):
                                 ),
                             )
                         )
+                    if any(name.startswith("nvrtc") for name in missing):
+                        zip_downloads.append(
+                            _link(
+                                NVRTC_ZIP_URL,
+                                self._tr(
+                                    "NVRTC ZIP 列表（选 12.8，保留配套 builtins）",
+                                    "NVRTC ZIP list (choose 12.8 with matching builtins)",
+                                ),
+                            )
+                        )
                     destination = self._dependencies_root / "nvidia" / "cuda" / "bin"
                     installer_note = self._tr(
-                        "运行下载的 EXE；安装时包含 CUDA Runtime 和 cuBLAS。"
+                        "运行下载的 EXE；安装时包含 CUDA Runtime、cuBLAS 和 NVRTC。"
                         "EXE 不放到下方目录。",
-                        "Run the downloaded EXE with CUDA Runtime and cuBLAS selected. "
+                        "Run the downloaded EXE with CUDA Runtime, cuBLAS and NVRTC selected. "
                         "Do not place the EXE in the directory below.",
                     )
                 else:
@@ -445,6 +457,11 @@ class RuntimeSetupDialog(QDialog):
                     + "</p>"
                 )
             else:
+                unknown_version = self._tr("版本未知", "version unknown")
+                versions = "; ".join(
+                    f"{name}: {windows_file_version(directory / name) or unknown_version}"
+                    for name in libraries
+                )
                 reports.append(
                     "<p><b>"
                     + escape(label)
@@ -457,6 +474,8 @@ class RuntimeSetupDialog(QDialog):
                     )
                     + escape(str(directory))
                     + "<br>"
+                    + escape(versions)
+                    + "<br>"
                     + self._tr(
                         "已找到文件，但尚未验证能否分析；请点击“保存并检测”。",
                         "Files found; analysis compatibility is not yet verified. "
@@ -468,6 +487,25 @@ class RuntimeSetupDialog(QDialog):
         self.choose_cuda_button.setVisible("CUDA" in missing_components)
         self.choose_cudnn_button.setVisible("cuDNN" in missing_components)
         self.locate_actions.setVisible(bool(missing_components))
+
+    def _refresh_system_checks(self) -> None:
+        ready, message = check_nvidia_driver(language=self.language)
+        detail = escape(message)
+        if not ready:
+            detail += "<br>" + _link(
+                NVIDIA_DRIVER_URL,
+                self._tr("NVIDIA 官方驱动下载", "Official NVIDIA driver download"),
+            )
+        self.driver_label.setText(detail)
+        if self._check_system_msvc:
+            ready, message = check_visual_cpp_runtime(language=self.language)
+            detail = escape(message)
+            if not ready:
+                detail += "<br>" + _link(
+                    MSVC_URL,
+                    self._tr("Microsoft Visual C++ x64 官方下载", "Official MSVC x64 download"),
+                )
+            self.msvc_label.setText(detail)
 
     def _choose_existing_dll(self, edit: QLineEdit, filename: str) -> None:
         initial = edit.text().strip() or str(
@@ -538,7 +576,7 @@ class RuntimeSetupDialog(QDialog):
             super().accept()
             return
         for label, value, libraries in (
-            ("CUDA", self.cuda_edit.text().strip(), ("cublas64_12.dll", "cudart64_12.dll")),
+            ("CUDA", self.cuda_edit.text().strip(), self._required_cuda_libraries),
             ("cuDNN", self.cudnn_edit.text().strip(), ("cudnn64_9.dll",)),
         ):
             resolved = Path(value)

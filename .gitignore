@@ -54,3 +54,6 @@ Thumbs.db
 .DS_Store
 
 # Do not ignore all archives: licenses/sources contains attribution evidence.
+
+# Project-local verification tool cache.
+/v/

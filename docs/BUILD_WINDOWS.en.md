@@ -1,4 +1,4 @@
-# Windows installer build guide (v1.0.1)
+# Windows installer build guide (v1.1.0)
 
 English | [简体中文](BUILD_WINDOWS.md)
 
@@ -8,8 +8,8 @@ This is for maintainers building a local installer candidate. One formal version
 
 - Windows 10/11 x64, Python 3.13, and the project's `.venv` with pinned dependencies including the `dev` group, as described in the [source setup guide](SOURCE_SETUP.en.md).
 - `ISCC.exe` from the [official Inno Setup page](https://jrsoftware.org/isdl.php). The script invokes the compiler; Inno Setup itself is not committed or bundled for users.
-- KataGo 1.16.5 CUDA engine, main model, Human SL model, and `runtime/runtime.local.json` as described in the [source setup guide](SOURCE_SETUP.en.md). Binaries and models remain outside Git.
-- `packaging/asset_lock.json` lists the nine approved assets and their SHA-256 values. A mismatch stops the build. Review license, source, hashes, and behavior before explicitly updating the lock for a new upstream version.
+- KataGo 1.18.2 CUDA engine, main model, Human SL model, and `runtime/runtime.local.json` as described in the [source setup guide](SOURCE_SETUP.en.md). Binaries and models remain outside Git.
+- `packaging/asset_lock.json` uses schemaVersion 2 to record runtime paths and the SHA-256 allowlist for eight engine files and two models. Paths, the complete file set, and hashes must agree. A mismatch stops the build. Review license, source, hashes, and behavior before explicitly updating the lock for a new upstream version.
 - Local Git must be available. The builder copies only tracked `licenses/` files and stops if that directory contains extras.
 - The selected desktop-shortcut artwork is kept at `assets/recurgo-icon-artwork.png`. A version with only the four corners geometrically clipped to transparency is at `assets/recurgo-icon-artwork-rounded.png`; the multi-size Windows icon is at `src/recurgo/assets/recurgo.ico`. The build copies only the ICO into the installation directory for the optional desktop shortcut. Neither PNG is installed, and the program and installer retain their existing icons.
 - The local Inno Setup 7 compiler displays “Non-commercial use only.” Its [official commercial-license Q&A](https://jrsoftware.org/isorder.php) considers commercial use and revenue, and says purchase is not strictly required. The message alone does not establish a block on this personal open-source release.
@@ -28,8 +28,13 @@ The candidate includes RecurGO and Python/Qt runtime components, KataGo, both mo
 
 User data and user-supplied libraries live under `%LOCALAPPDATA%\RecurGO`; the default application location is `%LOCALAPPDATA%\Programs\RecurGO`. Setup always shows the destination page. The installer's KataGo engine directory does not copy developer-machine Microsoft Visual C++ DLLs. The independent checker examines the system runtime and links to Microsoft. Binary components brought in by upstream Python, Qt, and NumPy packages still require redistribution review against the actual manifest.
 
+An in-place upgrade removes only `runtime/engine/libz.dll`, `runtime/engine/libzip.dll`, and
+`runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` from the installation directory.
+No wildcard is used; Human SL, games, preferences, and analysis databases are not deleted.
+Building the installer does not run it or modify directories outside the project.
+
 ## Versioning and publication
 
-The current formal version is **v1.0.1**. Keep `pyproject.toml`, `src/recurgo/__init__.py`, the installer filename, Git tag, and GitHub Release title consistent. Rebuild from final source; renaming a development installer does not make a formal release. The complete release text requires explicit user approval before publication or edits to public content. See the [v1.0.1 verification record](RELEASE_1.0.1.md) for behavior, validation limits, and publication steps.
+The current formal version is **v1.1.0**. Keep `pyproject.toml`, `src/recurgo/__init__.py`, the installer filename, Git tag, and GitHub Release title consistent. Rebuild from final source; renaming a development installer does not make a formal release. The complete release text requires explicit user approval before publication or edits to public content. See the [v1.0.1 verification record](RELEASE_1.0.1.md) for behavior, validation limits, and publication steps.
 
 Compiling an installer only establishes that an installation file was produced. For each later version, check installation, independent checks, real KataGo analysis, play, games, review, both languages, and optional Ollama, and review source and installer privacy, third-party licenses, LGPL corresponding source, and shared-library replacement. The [first-release design record](RELEASE_TARGET.en.md) describes the acceptance scope. Do not upload all of `build/`; attach the installer and checksum file to the GitHub Release for the same version.

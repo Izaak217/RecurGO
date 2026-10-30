@@ -19,6 +19,12 @@ from uuid import uuid4
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_RUNTIME = ROOT / "runtime"
 APP_ICON = ROOT / "src" / "recurgo" / "assets" / "recurgo.ico"
+RELEASE_CUDA_LIBRARIES = (
+    "cublas64_12.dll",
+    "cudart64_12.dll",
+    "nvrtc64_120_0.dll",
+    "nvrtc-builtins64_128.dll",
+)
 BLOCKED_OPTIONAL_RUNTIME_NAMES = frozenset(
     {
         "qt6virtualkeyboard.dll",
@@ -203,6 +209,29 @@ def freeze_entry(
     return output
 
 
+def reviewed_runtime_paths(asset_lock: dict[str, object]) -> dict[str, str]:
+    """v1.1.0.dev1: resolve the explicit release lock without accepting arbitrary paths."""
+    if asset_lock.get("schemaVersion") != 2:
+        raise ValueError("Unsupported tracked asset lock schema")
+    paths = asset_lock.get("runtimePaths")
+    if not isinstance(paths, dict) or set(paths) != {
+        "engine", "model", "humanModel", "analysisConfig"
+    }:
+        raise ValueError("The tracked asset lock must define all runtime paths")
+    for key, value in paths.items():
+        pattern = {
+            "engine": r"runtime/engine/katago\.exe",
+            "analysisConfig": r"runtime/configs/analysis\.cfg",
+            "model": r"runtime/models/[A-Za-z0-9][A-Za-z0-9_.-]*\.bin\.gz",
+            "humanModel": r"runtime/models/[A-Za-z0-9][A-Za-z0-9_.-]*\.bin\.gz",
+        }[key]
+        if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
+            raise ValueError(f"Unsafe tracked runtime path for {key}: {value!r}")
+    if paths["model"].lower() == paths["humanModel"].lower():
+        raise ValueError("Main and Human SL model paths must be distinct")
+    return dict(paths)
+
+
 def prepare_runtime(stage: Path) -> None:
     local_manifest = json.loads(
         required_file(SOURCE_RUNTIME / "runtime.local.json").read_text(encoding="utf-8")
@@ -211,44 +240,71 @@ def prepare_runtime(stage: Path) -> None:
         required_file(ROOT / "packaging" / "asset_lock.json").read_text(encoding="utf-8")
     )
     manifest_keys = ("engine", "model", "humanModel", "analysisConfig")
-    expected_paths = {
-        "engine": "runtime/engine/katago.exe",
-        "model": "runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz",
-        "humanModel": "runtime/models/b18c384nbt-humanv0.bin.gz",
-        "analysisConfig": "runtime/configs/analysis.cfg",
-    }
+    expected_paths = reviewed_runtime_paths(asset_lock)
     for key in manifest_keys:
         if local_manifest.get(key) != expected_paths[key]:
             raise ValueError(f"Unexpected runtime manifest {key}: {local_manifest.get(key)!r}")
     if local_manifest.get("engineVersion") != asset_lock.get("engineVersion"):
         raise ValueError("KataGo engine version differs from the tracked asset lock")
-    expected_asset_names = {
+    if local_manifest.get("backend") != "cuda":
+        raise ValueError("The reviewed Windows runtime requires the CUDA backend")
+    cuda_libraries = local_manifest.get("requiredCudaLibraries")
+    if (
+        not isinstance(cuda_libraries, list)
+        or not all(isinstance(name, str) for name in cuda_libraries)
+        or len(cuda_libraries) != len(RELEASE_CUDA_LIBRARIES)
+        or set(cuda_libraries) != set(RELEASE_CUDA_LIBRARIES)
+    ):
+        raise ValueError("The reviewed CUDA runtime requires the complete CUDA 12.8 DLL list")
+    for key in ("engineGitRevision", "engineArchiveSha256"):
+        value = asset_lock.get(key)
+        if value is not None and local_manifest.get(key) != value:
+            raise ValueError(f"Runtime {key} differs from the tracked asset lock")
+    approved_engine_names = {
         "runtime/engine/katago.exe",
         "runtime/engine/libcrypto-3-x64.dll",
         "runtime/engine/libssl-3-x64.dll",
-        "runtime/engine/libz.dll",
-        "runtime/engine/libzip.dll",
+        "runtime/engine/z.dll",
+        "runtime/engine/zip.dll",
+        "runtime/engine/bz2.dll",
         "runtime/engine/cacert.pem",
         "runtime/engine/README.txt",
-        expected_paths["model"],
-        expected_paths["humanModel"],
+    }
+    engine_files = asset_lock.get("engineFiles")
+    if (
+        not isinstance(engine_files, list)
+        or not all(isinstance(path, str) for path in engine_files)
+        or len(engine_files) != len(approved_engine_names)
+        or set(engine_files) != approved_engine_names
+    ):
+        raise ValueError("The tracked engine list must contain exactly the approved files")
+    expected_asset_names = approved_engine_names | {
+        expected_paths["model"], expected_paths["humanModel"]
     }
     locked_files = asset_lock.get("files")
     if not isinstance(locked_files, dict) or set(locked_files) != expected_asset_names:
         raise ValueError("The tracked asset lock must contain exactly the approved files")
     for relative, expected_hash in locked_files.items():
+        if (
+            not isinstance(expected_hash, str)
+            or re.fullmatch(r"[a-fA-F0-9]{64}", expected_hash) is None
+        ):
+            raise ValueError(f"Invalid tracked asset SHA-256: {relative}")
         source = required_file(ROOT / relative)
+        if source.is_symlink() or not source.resolve().is_relative_to(ROOT):
+            raise ValueError(f"Linked release input is not allowed: {source}")
         actual_hash = file_hash(source)
         if actual_hash.lower() != str(expected_hash).lower():
             raise ValueError(f"Tracked asset SHA-256 mismatch: {relative}")
         print(f"Verified {relative}: {actual_hash}", flush=True)
     for key, checksum_key in (
+        ("engine", "engineSha256"),
         ("model", "modelSha256"),
         ("humanModel", "humanModelSha256"),
     ):
         source = required_file(ROOT / expected_paths[key])
-        actual = file_hash(source)
-        if actual.lower() != str(local_manifest[checksum_key]).lower():
+        actual = locked_files[expected_paths[key]]  # Actual content was verified above.
+        if actual.lower() != str(local_manifest.get(checksum_key, "")).lower():
             raise ValueError(f"SHA-256 mismatch for {source.name}")
         print(f"Verified {source.name}: {actual}", flush=True)
 
@@ -263,12 +319,19 @@ def prepare_runtime(stage: Path) -> None:
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(config, encoding="utf-8")
 
-    bundle = {key: expected_paths[key] for key in manifest_keys}
+    bundle: dict[str, object] = {key: expected_paths[key] for key in manifest_keys}
     bundle.update(
         engineVersion=str(local_manifest["engineVersion"]),
+        engineSha256=locked_files[expected_paths["engine"]],
         modelSha256=str(local_manifest["modelSha256"]),
         humanModelSha256=str(local_manifest["humanModelSha256"]),
+        backend="cuda",
+        requiredCudaLibraries=list(RELEASE_CUDA_LIBRARIES),
     )
+    for key in ("engineGitRevision", "engineArchiveSha256"):
+        value = asset_lock.get(key)
+        if value is not None:
+            bundle[key] = value
     (stage / "runtime" / "bundle.json").write_text(
         json.dumps(bundle, indent=2) + "\n", encoding="utf-8"
     )
