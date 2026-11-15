@@ -1,10 +1,12 @@
-# RecurGO User Manual (v1.1.0)
+# RecurGO User Manual (v1.2.0)
 
 English | [简体中文](USER_GUIDE.md)
 
 This manual explains everyday use of RecurGO. For installation, downloads, CUDA/cuDNN, and environment checks, see the [Windows Installation Guide](INSTALL_WINDOWS.en.md). Developers running from source should use [Run from source](SOURCE_SETUP.en.md).
 
-This release uses the TF3 main model. Games, variations, comments, and preferences are retained. Games analyzed with the previous model need fresh analysis to show the new results. Each engine startup loads the model and warms up the GPU, so the first candidate may take longer to appear. The wait varies with hardware, power mode, and system load; changing positions in the same running engine does not repeat the full warmup.
+This release offers TF3 and B28 installers with the same application features; choose one. TF3 uses KataGo 1.18.2; B28 uses the previously released combination of KataGo 1.16.5 and the B28 main model. Human SL is the same. See the [installation guide](INSTALL_WINDOWS.en.md) for filenames and switching instructions. Close RecurGO and install the other package over the existing application directory without uninstalling. Games, variations, comments, preferences, and saved analysis are retained. Run fresh analysis for results from the selected combination; sources are not mixed, and the two variants need not produce identical results.
+
+Each engine startup loads the model and warms up the GPU, so the first candidate may take longer to appear. TF3's precomputation may prevent model startup on some computers; you can choose B28 and rerun the environment check. The wait varies with hardware, power mode, and system load; changing positions in the same running engine does not repeat the full warmup. Neither variant is guaranteed to work on every device.
 
 ## Three common tasks
 
@@ -115,6 +117,33 @@ are saved, and another run can continue unfinished positions. The review area ha
 trend, Move quality, Problem moves, Match rate, and Overview views. **Scope / 范围** selects the
 whole game, opening, middle game, or endgame. Click problem-move or match-rate marks to jump
 to their positions. Review grades are analysis-based estimates, not infallible judgments.
+
+## Independent analysis reports
+
+Choose **Export analysis report** on the toolbar or under **Menu → Game**. Select one
+saved analysis source and visit budget, then save the `.html` file. It contains the board,
+existing branches, candidate variations, win-rate trend, move quality, problem moves,
+match rate, and overview, without generated prose explanations. Complete **Analyze full game**
+first if you need all data for the current line; other branches may remain unanalyzed.
+Different models, configurations, and visit budgets are never combined.
+
+Open the file in a browser, such as Edge or Chrome, to read the report offline.
+The layout supports mobile screens and touch, but attachment previews may not run HTML
+scripts. Please open the report in a browser, such as Edge or Chrome. If it still does not
+respond, check whether JavaScript is enabled.
+No upload or hosted website is required.
+Opening instructions remain visible until the report initializes successfully. A file that
+the system does not preview cannot show instructions or control the system's app chooser.
+
+Navigate using move buttons, the move field, slider, or chart points; select an existing
+branch to change the line. Candidates are for the next move from the displayed position.
+Replay a saved candidate variation, then return to the game. The last move's review uses
+its before/after analyses. The report cannot analyze arbitrary new positions.
+
+Missing, incomplete, and win-rate-only data are labeled separately. Quality, problem-move,
+and match statistics use only fully reviewable moves. Trends show Black's win rate;
+candidate values use the side to play. Fair play blocks report export. Reports include
+game/player names and the result, which can be edited in the game library before sharing.
 
 ## Import, recognize, and export
 

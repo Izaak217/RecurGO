@@ -1,4 +1,4 @@
-# RecurGO Windows 安装指南（v1.1.0）
+# RecurGO Windows 安装指南（v1.2.0）
 
 [English](INSTALL_WINDOWS.en.md) | 简体中文
 
@@ -6,16 +6,23 @@
 
 ## 安装流程速览
 
-1. 安装 RecurGO，按需选择安装位置和桌面快捷方式。
+1. 在 TF3、B28 两包中选择一个安装，按需选择安装位置和桌面快捷方式。
 2. 从开始菜单打开 **Analysis Environment Check / 检测分析环境**。
 3. 按检测结果补齐 NVIDIA 驱动、CUDA、cuDNN 或 Visual C++ 运行库；已有组件先让工具识别，无需直接重装。
 4. 点击 **保存并检测**，确认 KataGo 完成真实局面分析，再启动 RecurGO。程序操作见[用户说明书](USER_GUIDE.md)。
 
 ## 下载前先看
 
-RecurGO v1.1.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
+RecurGO v1.2.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡的电脑暂不支持；其他 NVIDIA 显卡也须通过下文的独立工具确认能否实际分析。
 
-本版接入 KataGo v1.18.2 和 TF3 主模型，Human SL 保持不变。已在 RTX 5070 Ti Laptop GPU 上完成真实模型加载与分析检查；此前 RTX 2080 Ti 的旧引擎检查不能代替本版检测，当前机器仍须通过独立工具确认。
+本版提供功能相同的两个安装包，区别在分析引擎和主模型：
+
+| 安装包 | 随包组合 |
+| --- | --- |
+| `RecurGO-1.2.0-TF3-Windows-x64-Setup.exe` | KataGo 1.18.2 + `kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz` |
+| `RecurGO-1.2.0-B28-Windows-x64-Setup.exe` | 旧正式组合 KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` |
+
+两包都包含相同的 `b18c384nbt-humanv0.bin.gz` Human SL 模型。下载其中一个即可；TF3 的预运算在部分电脑上可能导致模型启动失败，可改选 B28 后重新进行环境检测。两版结果不保证相同，也不保证所有设备均可用。TF3 曾在 RTX 5070 Ti Laptop GPU 上完成真实模型加载与分析检查；此前 RTX 2080 Ti 的旧引擎检查不能代替所选版本在当前机器上的检测。
 
 随包的 KataGo 要加载 `cudnn64_9.dll`，因此本版要求 **cuDNN 9.x**；其他主版本不能代替。自动识别会检查 NVIDIA 标准位置下的 `v9.*` 安装目录及其子文件夹，也检查 `CUDNN_PATH` 和 `PATH`。若安装在别处且没有设置这些路径，可在检测工具中选择实际 DLL 文件，不必重装。多个 9.x 共存时，以工具显示的选中路径和真实 KataGo 检测结果为准。
 
@@ -24,7 +31,7 @@ RecurGO v1.1.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡
 | 组件 | 放在哪里 | 是否必须 |
 | --- | --- | --- |
 | NVIDIA 显卡驱动 | 安装在 Windows 中；多数 NVIDIA 电脑已有 | 必须 |
-| CUDA 12.8 运行库、兼容的 cuDNN 9.x | 使用 NVIDIA 官方 Windows 安装程序安装到系统，或从官方 ZIP 解压到检测工具显示的用户数据目录 | 须包含 CUDA 12.8 的 NVRTC 组件；采用 cuDNN 9.8 构建，实际兼容性以 TF3 分析检测结果为准 |
+| CUDA 12.8 运行库、兼容的 cuDNN 9.x | 使用 NVIDIA 官方 Windows 安装程序安装到系统，或从官方 ZIP 解压到检测工具显示的用户数据目录 | TF3 另需 CUDA 12.8 的 NVRTC 组件；两包的 CUDA 引擎均采用 cuDNN 9.8 构建，以所选版本的实际分析检测结果为准 |
 | Microsoft Visual C++ Redistributable x64 | 安装在 Windows 中；已有兼容版本则无须重复安装 | KataGo 启动需要 |
 | Ollama 和语言模型 | 可选，建议放在下文的用户数据目录 | 仅使用本机 AI 补充讲解时需要 |
 
@@ -32,7 +39,9 @@ RecurGO v1.1.0 面向 Windows 10/11 x64 和 NVIDIA 显卡。没有 NVIDIA 显卡
 
 ## 第一步：安装 RecurGO
 
-在项目的 GitHub **Releases** 页面下载标有 **Windows x64** 的安装程序。安装时会显示程序安装目录选择页，可选择有写入权限的其他位置；默认目录为当前用户的 `%LOCALAPPDATA%\Programs\RecurGO`，不需要 Python。个人棋谱、配置和下载的运行资源仍保存在 `%LOCALAPPDATA%\RecurGO`，不会随程序安装目录移动。
+在项目的 GitHub **Releases** 页面下载上表中一个 **Windows x64** 安装程序。安装时会显示程序安装目录选择页，可选择有写入权限的其他位置；默认目录为当前用户的 `%LOCALAPPDATA%\Programs\RecurGO`，不需要 Python。个人棋谱、配置和下载的运行资源仍保存在 `%LOCALAPPDATA%\RecurGO`，不会随程序安装目录移动。
+
+两包是同一个 RecurGO 应用，共用安装标识、默认程序目录和用户数据。切换时先关闭程序，再把另一包覆盖安装到原目录，不需要卸载，也不应把它们当作两个独立应用安装。棋谱、设置和已有分析保留；安装器不主动清除旧模型、DLL 或用户文件。切换后的新分析使用所选组合，旧分析不会被冒充为新组合的结果；需要所选组合的数据时重新分析即可。切换后运行一次独立环境检测。
 
 从同一 Release 下载 `SHA256SUMS.txt` 后，可在安装程序所在目录打开 PowerShell，运行
 `Get-FileHash -Algorithm SHA256 -LiteralPath "实际安装程序文件名.exe"`。将输出的哈希与
@@ -70,7 +79,7 @@ NVIDIA 显卡驱动安装在 Windows 系统中，无须放入 RecurGO 的安装�
 ZIP 方式需要：
 
 1. 从 NVIDIA 官方 [CUDA Runtime ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/)下载 **Windows x86_64、12.8** 的压缩包；再从 [cuBLAS ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/)下载对应的 **Windows x86_64、12.8** 压缩包。分别解压，把这两个压缩包中 bin 文件夹里的 DLL 放进上面的 cuda\bin。
-同时从 [NVRTC ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/)取得 CUDA 12.8、Windows x86_64 组件；将同一包中的 NVRTC 主 DLL 与 `nvrtc-builtins` DLL 一起放到 CUDA `bin`。仅有 cuDNN、cuBLAS 和 cudart 不足以证明新引擎依赖齐全。
+TF3 还需从 [NVRTC ZIP 目录](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/)取得 CUDA 12.8、Windows x86_64 组件；将同一包中的 NVRTC 主 DLL 与 `nvrtc-builtins` DLL 一起放到 CUDA `bin`。仅有 cuDNN、cuBLAS 和 cudart 不足以证明 TF3 引擎依赖齐全；B28 的清单不要求这两个 NVRTC DLL。
 2. 从 [NVIDIA cuDNN 9.8 官方页面](https://developer.nvidia.com/cudnn-9-8-0-download-archive)下载 **cuDNN 9.8、CUDA 12、Windows x86_64** 的 ZIP。解压，把其中 bin 文件夹里的 DLL 放进上面的 cudnn\bin。
 
 使用 ZIP 方式时，要放的是解压后的 DLL，不是还没解压的 ZIP；使用官方安装程序时，不必再把 DLL 复制到固定目录。不用从其他电脑的系统目录复制 DLL。路径识别和 DLL 文件检查仍不是最终兼容性证明，请点击 **“保存并检测”**，以实际启动 KataGo 并取得分析结果为准。

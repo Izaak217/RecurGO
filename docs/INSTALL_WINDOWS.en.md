@@ -1,4 +1,4 @@
-# RecurGO Windows Installation Guide (v1.1.0)
+# RecurGO Windows Installation Guide (v1.2.0)
 
 English | [简体中文](INSTALL_WINDOWS.md)
 
@@ -6,16 +6,23 @@ This guide explains installation, dependencies, and first launch. For games, ana
 
 ## Setup at a glance
 
-1. Install RecurGO and choose an installation directory and optional desktop shortcut.
+1. Choose either the TF3 or B28 installer, then select an installation directory and optional desktop shortcut.
 2. Open **Analysis Environment Check** from the Start Menu.
 3. Follow its results to supply any missing NVIDIA driver, CUDA, cuDNN, or Visual C++ runtime. If a component is already installed, try detection before reinstalling it.
 4. Select **Save and check** and require a real KataGo analysis result. Then start RecurGO and use the [User Manual](USER_GUIDE.en.md) for daily operation.
 
 ## Before downloading
 
-RecurGO v1.1.0 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
+RecurGO v1.2.0 targets Windows 10/11 x64 with an NVIDIA GPU. Computers without an NVIDIA GPU are not yet supported. Other NVIDIA GPUs still need a successful real analysis check using the separate tool below.
 
-This release integrates KataGo v1.18.2 and the TF3 main model while retaining Human SL. Model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU. Earlier RTX 2080 Ti checks used the previous engine; require a fresh check on the current machine.
+This release provides two installers with the same application features and different analysis engines and main models:
+
+| Installer | Bundled combination |
+| --- | --- |
+| `RecurGO-1.2.0-TF3-Windows-x64-Setup.exe` | KataGo 1.18.2 + `kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz` |
+| `RecurGO-1.2.0-B28-Windows-x64-Setup.exe` | Previously released combination: KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` |
+
+Both include the same `b18c384nbt-humanv0.bin.gz` Human SL model. Download one package. TF3's precomputation may prevent model startup on some computers; you can choose B28 and rerun the environment check. Results need not match between variants, and neither is guaranteed to work on every device. TF3 model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU. Earlier RTX 2080 Ti checks used the previous engine; require a fresh check of the selected variant on the current machine.
 
 The bundled KataGo loads `cudnn64_9.dll`, so this build requires **cuDNN 9.x**; another major version cannot replace it. Auto-detection checks NVIDIA's standard `v9.*` installation folders and their subfolders, as well as `CUDNN_PATH` and `PATH`. For an installation elsewhere without those paths, select the actual DLL in the checker; reinstalling is unnecessary. If several 9.x versions coexist, use the selected folder shown by the tool and require a real KataGo check.
 
@@ -24,7 +31,7 @@ The installer contains RecurGO, the KataGo engine, analysis models, and applicat
 | Component | Location | Required? |
 | --- | --- | --- |
 | NVIDIA GPU driver | Installed in Windows; many NVIDIA systems already have one | Yes |
-| CUDA 12.8 runtime and compatible cuDNN 9.x | Install with NVIDIA's official Windows installers, or extract the official ZIP files into the user data directory shown by the check tool | Include CUDA 12.8 NVRTC. This engine was built for cuDNN 9.8; require a successful TF3 analysis check on the current machine. |
+| CUDA 12.8 runtime and compatible cuDNN 9.x | Install with NVIDIA's official Windows installers, or extract the official ZIP files into the user data directory shown by the check tool | TF3 additionally requires CUDA 12.8 NVRTC. Both CUDA engine builds use cuDNN 9.8; require a successful analysis check of the selected variant on the current machine. |
 | Microsoft Visual C++ Redistributable x64 | Installed in Windows; an existing compatible version is sufficient | Required to start KataGo |
 | Ollama and a language model | Optional, preferably under the user data directory described below | Only for supplemental local AI explanations |
 
@@ -32,7 +39,9 @@ Without Ollama, the board, KataGo analysis, win rates, candidates, review, and b
 
 ## Step 1: Install RecurGO
 
-Download the separate **Windows x64** installer from the project's GitHub **Releases** page. Setup shows a destination page so you can choose another writable application directory. The default is `%LOCALAPPDATA%\Programs\RecurGO` for the current user; Python is not required. Games, settings, and downloaded runtimes remain under `%LOCALAPPDATA%\RecurGO` even if you select another application directory.
+Download one **Windows x64** installer from the table above on the project's GitHub **Releases** page. Setup shows a destination page so you can choose another writable application directory. The default is `%LOCALAPPDATA%\Programs\RecurGO` for the current user; Python is not required. Games, settings, and downloaded runtimes remain under `%LOCALAPPDATA%\RecurGO` even if you select another application directory.
+
+Both packages are the same RecurGO application and share an installation identity, default application directory, and user data. To switch, close RecurGO and install the other package over the existing directory without uninstalling. They are not two independent side-by-side applications. Games, settings, and saved analysis remain; the installer does not proactively remove old models, DLLs, or user files. New analysis uses the selected combination. Old analysis is not presented as if it came from the newly selected combination; run analysis again when you need that source's results. Run the separate environment check after switching.
 
 Download `SHA256SUMS.txt` from the same Release. In PowerShell, from the installer's folder,
 run `Get-FileHash -Algorithm SHA256 -LiteralPath "actual-installer-filename.exe"` and compare
@@ -71,7 +80,7 @@ cuda_deps\nvidia\cudnn\bin\   cuDNN 9.8 DLLs
 For the ZIP method:
 
 1. Download the **Windows x86_64, 12.8** archive from NVIDIA's [CUDA Runtime ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_cudart/windows-x86_64/) and the matching archive from the [cuBLAS ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/libcublas/windows-x86_64/). Extract both, then place the DLLs from their `bin` directories in the CUDA `bin` directory shown above.
-Also obtain CUDA 12.8 for Windows x86_64 from the [NVRTC ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/). Place its main NVRTC DLL and `nvrtc-builtins` DLL together in CUDA `bin`, keeping both from the same archive. Finding cuDNN, cuBLAS, and cudart alone does not prove the new engine has every dependency.
+TF3 also needs CUDA 12.8 for Windows x86_64 from the [NVRTC ZIP directory](https://developer.download.nvidia.com/compute/cuda/redist/cuda_nvrtc/windows-x86_64/). Place its main NVRTC DLL and `nvrtc-builtins` DLL together in CUDA `bin`, keeping both from the same archive. Finding cuDNN, cuBLAS, and cudart alone does not prove TF3 has every dependency; the B28 manifest does not require these two NVRTC DLLs.
 2. Download the **cuDNN 9.8 for CUDA 12, Windows x86_64** ZIP from the [official NVIDIA archive](https://developer.nvidia.com/cudnn-9-8-0-download-archive). Extract it, then place the DLLs from its `bin` directory in the cuDNN `bin` directory above.
 
 For the ZIP method, place extracted DLLs there, not unextracted ZIP files. With official installers, there is no need to copy DLLs into the fixed directories. Do not copy DLLs from another computer's system directories. Finding paths and DLL files does not establish compatibility: select **Save and check** and require a real KataGo analysis result.

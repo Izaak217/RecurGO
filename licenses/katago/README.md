@@ -1,21 +1,24 @@
 # KataGo 与 Windows 引擎附属组件许可资料
 
-资料版本：v1.1.0.dev1；更新日期：2026-10-29。
+资料版本：v1.2.0；更新日期：2026-11-16。
 
-## 当前 TF3 开发候选
+## 当前 TF3 与 B28 安装包
 
-当前目标为 KataGo **v1.18.2** CUDA 12.8/cuDNN 9.8 标准 Windows 构建，
+TF3 版使用 KataGo **v1.18.2** CUDA 12.8/cuDNN 9.8 标准 Windows 构建，
 许可、附属 DLL 版本和来源见 [v1.18.2 资料](v1.18.2/README.md)及
 [新来源清单](v1.18.2/sources.json)。当前资源严格按 `packaging/asset_lock.json` 收录。
-下文及本目录原有文件均是 **v1.16.5 历史核查记录**，保留以便追溯；不表示当前项目或新安装包仍使用旧引擎。
+B28 版使用之前正式发布的 **v1.16.5** 运行组合，资源按 `packaging/asset_lock.b28.json` 固定；
+下文及本目录原有的 v1.16.5 核查记录适用于该组合。两个安装包分别包含对应引擎文件，
+本目录同时保留两套组件的来源与许可资料。
 
 ## v1.0.0 Windows 安装包
 
 下文的“本次源码发布”记录的是此前源码仓库审计范围。当前源码仓库仍不提交
-`runtime/` 二进制；Windows 安装包另按 `packaging/asset_lock.json` 中固定的 SHA-256
+`runtime/` 二进制；此前 v1.0.0 安装包按当时的 `packaging/asset_lock.json` 中固定的 SHA-256
 打包 KataGo 1.16.5 引擎、OpenSSL、zlib、libzip 和 CA 证书，随包复制本目录的原许可。
 安装包不从本机引擎目录复制 `msvcp*` 或 `vcruntime*` DLL，独立检测工具要求系统
 Visual C++ 运行库。Python/Qt/NumPy 上游依赖自带的同名文件见各自许可清单。
+v1.2.0 的 B28 安装包使用 `packaging/asset_lock.b28.json`，保持该引擎组合的文件哈希。
 
 对应本机 KataGo **v1.16.5**，Git revision
 `ba938676d7f42d70950b3a535af2466fb642008c`。
@@ -27,7 +30,7 @@ Visual C++ 运行库。Python/Qt/NumPy 上游依赖自带的同名文件见各�
 
 源码仓库包含本目录的通知、原文、`json.hpp` 和 `sha2.cpp`，不包含
 `runtime/engine/` 中的 EXE、DLL 或 CA 证书包。Windows 安装包另按
-`packaging/asset_lock.json` 收录前述固定引擎文件；以下 DLL 版本来自本机 PE
+对应版本的资产锁收录前述固定引擎文件（当前 B28 为 `packaging/asset_lock.b28.json`）；以下 DLL 版本来自本机 PE
 版本资源，用于核对该版本。
 
 更换安装包中的引擎或附属组件时，应按实际文件更新资料和清单。

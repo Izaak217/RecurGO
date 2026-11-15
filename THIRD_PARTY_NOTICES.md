@@ -3,13 +3,13 @@
 [English](THIRD_PARTY_NOTICES.en.md) | 简体中文
 
 本项目自有代码采用根目录 [MIT License](LICENSE)。第三方组件保持各自原始许可，
-不能将整个运行目录视为 MIT。以下是源码仓库及 v1.1.0.dev1 Windows 安装包候选的许可索引；
-实际随包文件由构建时的 `file-manifest.json` 记录。更换依赖或重新打包时须重新核对。
+不能将整个运行目录视为 MIT。以下是源码仓库及 v1.2.0 TF3、B28 两种 Windows 安装包的许可索引；
+实际随包文件由构建时各版本的文件清单记录。更换依赖或重新打包时须重新核对。
 
 | 组件 | 当前范围 | 资料 |
 | --- | --- | --- |
-| KataGo 1.18.2 | 安装包含 CUDA 引擎；MIT 及上游另列第三方条款 | [引擎与附属组件](licenses/katago/README.md)、[来源与校验](licenses/katago/v1.18.2/sources.json) |
-| KataGo 官方 TF3 主模型、Human SL | 安装包含两个模型；官方网络许可，保留版权与许可 | [当前模型与适用范围](licenses/models/README.md)、[网络许可原文](licenses/models/KataGo-Neural-Network-License.txt) |
+| KataGo 1.18.2 / 1.16.5 | TF3 版包含 1.18.2，B28 版包含 1.16.5 CUDA 引擎；MIT 及上游另列第三方条款 | [引擎与附属组件](licenses/katago/README.md)、[1.18.2 来源](licenses/katago/v1.18.2/sources.json)、[1.16.5 来源](licenses/katago/sources.json) |
+| KataGo 官方 TF3 / B28 主模型、Human SL | 每版包含对应主模型与相同的 Human SL 模型；官方网络许可，保留版权与许可 | [当前模型与适用范围](licenses/models/README.md)、[网络许可原文](licenses/models/KataGo-Neural-Network-License.txt) |
 | Python 依赖、解释器和打包运行组件 | 各自原始条款；含 wheel 内部第三方材料 | [Python 许可清单](licenses/python/README.md) |
 | PySide6、Shiboken6、Qt 6.11.1 | 对适用模块采用 LGPLv3 路径；随包第三方材料集中收录 | [Qt 许可及对应源码说明](licenses/qt/README.md)、[已识别插件声明](licenses/qt/third_party/README.md)、[上游原始归属资料](licenses/qt/upstream/README.md) |
 | NVIDIA cuDNN / CUDA | 专有协议，根目录 MIT 不替代它们 | [版本、原始协议与差异说明](licenses/nvidia/README.md) |

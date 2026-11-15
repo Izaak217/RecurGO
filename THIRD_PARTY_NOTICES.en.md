@@ -2,12 +2,12 @@
 
 English | [简体中文](THIRD_PARTY_NOTICES.md)
 
-RecurGO-owned code uses the root [MIT License](LICENSE). Third-party components keep their original licenses; the entire runtime directory is not covered by RecurGO's MIT license. This indexes source-repository materials and the v1.1.0.dev1 Windows installer candidate. The build writes a separate `file-manifest.json` of actual contents; review it again when dependencies or packaging change.
+RecurGO-owned code uses the root [MIT License](LICENSE). Third-party components keep their original licenses; the entire runtime directory is not covered by RecurGO's MIT license. This indexes source-repository materials and the v1.2.0 TF3 and B28 Windows installers. The build writes a separate file manifest for each edition; review it again when dependencies or packaging change.
 
 | Component | Current scope | Records |
 | --- | --- | --- |
-| KataGo 1.18.2 | CUDA engine in the installer; MIT plus upstream third-party terms | [Engine and bundled components](licenses/katago/README.md), [sources and checksums](licenses/katago/v1.18.2/sources.json) |
-| Official KataGo TF3 main model and Human SL | Both models in the installer; official network license, copyright and license retained | [Models and scope](licenses/models/README.md), [original network license](licenses/models/KataGo-Neural-Network-License.txt) |
+| KataGo 1.18.2 / 1.16.5 | TF3 includes the 1.18.2 CUDA engine; B28 includes 1.16.5; MIT plus upstream third-party terms | [Engine and bundled components](licenses/katago/README.md), [1.18.2 sources](licenses/katago/v1.18.2/sources.json), [1.16.5 sources](licenses/katago/sources.json) |
+| Official KataGo TF3 / B28 main model and Human SL | Each installer includes its main model and the same Human SL model; official network license, copyright and license retained | [Models and scope](licenses/models/README.md), [original network license](licenses/models/KataGo-Neural-Network-License.txt) |
 | Python dependencies, interpreter, packaged runtime | Their own terms, including third-party material within wheels | [Python license inventory](licenses/python/README.md) |
 | PySide6, Shiboken6, Qt 6.11.1 | LGPLv3 route for applicable modules; bundled third-party material is indexed together | [Qt licenses and corresponding source notes](licenses/qt/README.md), [identified plugin notices](licenses/qt/third_party/README.md), [original upstream attributions](licenses/qt/upstream/README.md) |
 | NVIDIA cuDNN / CUDA | Proprietary agreements, not replaced by RecurGO's MIT license | [Versions, original agreements, and distinctions](licenses/nvidia/README.md) |

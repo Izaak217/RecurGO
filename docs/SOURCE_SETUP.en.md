@@ -1,4 +1,4 @@
-# Run from source (v1.1.0)
+# Run from source (v1.2.0)
 
 English | [简体中文](SOURCE_SETUP.md)
 
@@ -17,7 +17,9 @@ py -3.13 -m venv .venv
 
 This editable installation lets the application find `runtime/` and `data/` relative to the source directory. Dependencies are pinned in `pyproject.toml`. Create `.venv/` locally; it is not part of the Git source.
 
-## Prepare KataGo
+## Prepare KataGo (TF3 by default)
+
+The v1.2.0 TF3 and B28 installers offer the same application features; installation users can choose one using the [installation guide](INSTALL_WINDOWS.en.md). Source configuration still defaults to TF3. Building B28 does not replace the project's existing `runtime/`. To run B28 from source, use the separate configuration described below.
 
 Get `katago-v1.18.2-cuda12.8-cudnn9.8.0-windows-x64.zip` from the [official KataGo v1.18.2 release](https://github.com/lightvector/KataGo/releases/tag/v1.18.2). Use the standard board build, not `+bs50`, and retain its required runtime libraries and license materials. The setup also needs CUDA 12.8, NVRTC, and cuDNN 9.x. Tests with the earlier engine do not establish TF3 acceptance; require real model loading and analysis on the current machine. Install the NVIDIA driver in Windows. Project-level runtime libraries can be placed in the fixed directories below; do not copy system directories from another computer.
 
@@ -66,6 +68,22 @@ Create `data/logs/katago/` before starting, then run from the project root:
 You may run `check_analysis_environment.cmd` once to configure paths and perform an independent analysis test. It is not needed every time the main program starts. Run it again if you change the GPU driver, CUDA/cuDNN, or models.
 
 If the engine is not configured, the main program displays a startup error; the board and game records still open, which does not mean AI analysis is available. The separate diagnostic tool reports missing items, performs a real analysis, and writes local logs.
+
+## Choose B28 when running from source
+
+B28 uses the previously released combination of **KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`**. Human SL remains `b18c384nbt-humanv0.bin.gz`. Application features are the same, but analysis results need not match; the current machine must still pass the separate environment check.
+
+Use a separate source working directory to preserve the existing TF3 development setup. Copy the [B28 configuration example](setup/runtime.b28.example.json) to that directory's `runtime/runtime.local.json`, and verify these explicit paths and SHA-256 values. Engine-dependent DLLs alongside the executable must also match the [B28 asset lock](../packaging/asset_lock.b28.json). Replacing only the model or retaining TF3's engine hash is insufficient:
+
+| Path inside the B28 working directory | SHA-256 |
+| --- | --- |
+| `runtime/engine/katago.exe` | `60275844632567e8ccb2d1fc5080c3205cf0f78fe2b57d12bce07f3a5f167f8e` |
+| `runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` | `c5bca453d7b08ea8df6546439325d4dd681e77d975e1da3f7593d771147b73bc` |
+| `runtime/models/b18c384nbt-humanv0.bin.gz` | `637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5` |
+
+Set `analysisConfig` explicitly to `runtime/configs/analysis.cfg`, using the current project's analysis configuration with `requireMaxBoardSize=false` and 9/13/19-board support. Do not replace the current search configuration with one from an old installer. B28's CUDA list requires `cublas64_12.dll` and `cudart64_12.dll`, plus matching cuDNN 9.x; it does not require the two NVRTC DLLs in TF3's manifest. Then run the environment check and launch commands above. The loader uses explicit manifest paths and hashes; it does not scan for another model or fall back automatically.
+
+If you only need to build a B28 installer, leave the default source runtime manifest unchanged and pass a project-local `--b28-source-root` to the builder; see the [build guide](BUILD_WINDOWS.en.md). Both installers use the current project's `runtime/configs/analysis.cfg`; the older source root supplies only the matching engine, models, and path manifest.
 
 ## Optional local language model
 

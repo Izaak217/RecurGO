@@ -6,13 +6,22 @@ User documentation: [Windows Installation Guide](docs/INSTALL_WINDOWS.en.md) · 
 
 RecurGO is a local desktop application for Go practice, play, and review powered by KataGo.
 
-The current version is **v1.1.0**, integrating KataGo v1.18.2 and a fixed TF3 main model while retaining Human SL. This release targets Windows 10/11 x64 with an NVIDIA GPU. TF3 model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU; other machines must pass the separate environment check. Selection among GPU backends remains in development. The source repository excludes models, runtimes, personal game records, and caches.
+The current source version is **v1.2.0**, adding independent interactive HTML reports. Two Windows x64 installers provide the same application features; download and install one:
+
+| Installer | Analysis engine and main model |
+| --- | --- |
+| `RecurGO-1.2.0-TF3-Windows-x64-Setup.exe` | KataGo 1.18.2 + `kata1-tf3-b11c768-s11003M-d5973M-7gres.bin.gz` |
+| `RecurGO-1.2.0-B28-Windows-x64-Setup.exe` | Previously released combination: KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` |
+
+Both contain the same Human SL model. Close RecurGO and install the other package over the same application directory to switch; no uninstall is needed. Games, settings, and saved analysis are retained. New analysis uses the selected combination; results are not guaranteed to match between variants. Source mode still defaults to TF3; see [Run from source](docs/SOURCE_SETUP.en.md) for explicit B28 paths and hashes.
+
+This release targets Windows 10/11 x64 with an NVIDIA GPU. TF3 model loading and real analysis have been checked on an RTX 5070 Ti Laptop GPU; other machines must pass the separate environment check. Selection among GPU backends remains in development. The source repository excludes models, runtimes, personal game records, and caches.
 
 The [Windows installation guide](docs/INSTALL_WINDOWS.en.md) explains installation; the matching GitHub Release provides the installer and checksum file. The application has an analysis visits setting and Ollama setup guidance. CUDA/cuDNN path selection and a real KataGo check live in the separate `check_analysis_environment.cmd` tool. Source mode first looks under `runtime/cuda_deps/nvidia/`; installed mode first looks under `cuda_deps/nvidia/` in the current user's data directory. Both accept manually selected paths. The NVIDIA driver is installed in Windows and checked by that tool. The main application has no environment setup or test entry point.
 
 ## Current capabilities
 
-- The KataGo v1.18.2 CUDA 12.8/cuDNN 9.8 build and TF3 main model are pinned by explicit paths and SHA-256. Human SL retains its existing practice roles; TF3 supplies objective analysis and Strongest searches.
+- Each TF3 or B28 installer pins its engine and main model by explicit paths and SHA-256. Human SL retains its existing practice roles; the selected variant's main model supplies objective analysis and Strongest searches.
 - Real-time analysis and full-game review have a configurable visits setting, initially 800. Cached results from another budget remain available but are not presented as results from the new budget.
 - A persistent KataGo JSON analysis process streams updates, supports cancellation, and integrates with the Qt interface.
 - Manual study, fair play, and assisted play are available. The human can play either color; when the human chooses white, the AI plays first.
@@ -59,7 +68,7 @@ To run the existing checks:
 
 ## License and third-party components
 
-RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.1.0**.
+RecurGO-owned code and documentation use the [MIT License](LICENSE), with the copyright holder identified as [izaak (izaak217)](https://github.com/izaak217). The current source version is **v1.2.0**.
 
 KataGo, its models, Qt/PySide6, and other dependencies remain under their respective terms. RecurGO's MIT license does not replace them. See [Third-party notices](THIRD_PARTY_NOTICES.en.md) and the [license sources](licenses/README.md). Distribution must retain the applicable materials; source and packaging obligations are summarized in the [distribution guide](docs/DISTRIBUTION.en.md).
 

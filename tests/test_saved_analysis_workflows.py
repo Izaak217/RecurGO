@@ -506,7 +506,8 @@ def test_toolbar_keeps_original_order_and_settings_in_menu(
     })
     assert [action.text() for action in actions if action.text()] == [
         "New game", "Game library", "Undo", "Pass", "Finish / Score", "Resign", "Mute",
-        "Import SGF", "Recognize image", "Export SGF", "Analyze full game",
+        "Import SGF", "Recognize image", "Export SGF", "Export analysis report",
+        "Analyze full game",
     ]
     widget_actions = {window.game_toolbar.widgetForAction(action): action for action in actions}
     full_analysis_index = actions.index(window.full_analysis_action)

@@ -17,7 +17,6 @@ from pathlib import Path
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_RUNTIME = ROOT / "runtime"
 APP_ICON = ROOT / "src" / "recurgo" / "assets" / "recurgo.ico"
 RELEASE_CUDA_LIBRARIES = (
     "cublas64_12.dll",
@@ -25,6 +24,17 @@ RELEASE_CUDA_LIBRARIES = (
     "nvrtc64_120_0.dll",
     "nvrtc-builtins64_128.dll",
 )
+B28_CUDA_LIBRARIES = ("cublas64_12.dll", "cudart64_12.dll")
+ENGINE_FILES = {
+    "tf3": (
+        "katago.exe", "libcrypto-3-x64.dll", "libssl-3-x64.dll", "z.dll",
+        "zip.dll", "bz2.dll", "cacert.pem", "README.txt",
+    ),
+    "b28": (
+        "katago.exe", "libcrypto-3-x64.dll", "libssl-3-x64.dll", "libz.dll",
+        "libzip.dll", "cacert.pem", "README.txt",
+    ),
+}
 BLOCKED_OPTIONAL_RUNTIME_NAMES = frozenset(
     {
         "qt6virtualkeyboard.dll",
@@ -232,12 +242,43 @@ def reviewed_runtime_paths(asset_lock: dict[str, object]) -> dict[str, str]:
     return dict(paths)
 
 
-def prepare_runtime(stage: Path) -> None:
+def reviewed_project_input(path: Path) -> Path:
+    """v1.2.0: reject outside inputs and links in every source-path component."""
+    path = path if path.is_absolute() else ROOT / path
+    if ".." in path.parts or not path.is_relative_to(ROOT):
+        raise ValueError(f"Release input must stay inside the project: {path}")
+    for part in (path, *path.parents):
+        if part.is_symlink() or os.path.isjunction(part):
+            raise ValueError(f"Linked release input is not allowed: {path}")
+        if part == ROOT:
+            break
+    if not path.resolve().is_relative_to(ROOT.resolve()):
+        raise ValueError(f"Release input resolves outside the project: {path}")
+    return path
+
+
+def prepare_runtime(
+    stage: Path, *, variant: str = "tf3", source_root: Path | None = None,
+) -> None:
+    """Build one reviewed runtime without changing the active source runtime."""
+    if variant not in ENGINE_FILES:
+        raise ValueError(f"Unknown release variant: {variant}")
+    if variant == "b28" and source_root is None:
+        raise ValueError("B28 requires an explicit --b28-source-root")
+    source_root = reviewed_project_input(source_root or ROOT)
+    if not source_root.is_dir():
+        raise FileNotFoundError(source_root)
+    manifest_path = source_root / "runtime" / "runtime.local.json"
+    if variant == "b28" and not manifest_path.is_file():
+        manifest_path = source_root / "runtime" / "bundle.json"
     local_manifest = json.loads(
-        required_file(SOURCE_RUNTIME / "runtime.local.json").read_text(encoding="utf-8")
+        required_file(reviewed_project_input(manifest_path)).read_text(encoding="utf-8")
     )
+    lock_name = "asset_lock.json" if variant == "tf3" else "asset_lock.b28.json"
     asset_lock = json.loads(
-        required_file(ROOT / "packaging" / "asset_lock.json").read_text(encoding="utf-8")
+        required_file(reviewed_project_input(ROOT / "packaging" / lock_name)).read_text(
+            encoding="utf-8"
+        )
     )
     manifest_keys = ("engine", "model", "humanModel", "analysisConfig")
     expected_paths = reviewed_runtime_paths(asset_lock)
@@ -246,29 +287,31 @@ def prepare_runtime(stage: Path) -> None:
             raise ValueError(f"Unexpected runtime manifest {key}: {local_manifest.get(key)!r}")
     if local_manifest.get("engineVersion") != asset_lock.get("engineVersion"):
         raise ValueError("KataGo engine version differs from the tracked asset lock")
-    if local_manifest.get("backend") != "cuda":
+    # Historical B28 bundles predate explicit engine/Human SL hashes and backend.
+    # Missing metadata may be reconstructed only from the reviewed lock, after
+    # verifying every actual asset. Present metadata must never disagree.
+    legacy_bundle = variant == "b28" and manifest_path.name == "bundle.json"
+    if local_manifest.get("backend", "cuda" if legacy_bundle else None) != "cuda":
         raise ValueError("The reviewed Windows runtime requires the CUDA backend")
-    cuda_libraries = local_manifest.get("requiredCudaLibraries")
+    required_libraries = RELEASE_CUDA_LIBRARIES if variant == "tf3" else B28_CUDA_LIBRARIES
+    cuda_libraries = local_manifest.get(
+        "requiredCudaLibraries", list(required_libraries) if legacy_bundle else None
+    )
     if (
         not isinstance(cuda_libraries, list)
         or not all(isinstance(name, str) for name in cuda_libraries)
-        or len(cuda_libraries) != len(RELEASE_CUDA_LIBRARIES)
-        or set(cuda_libraries) != set(RELEASE_CUDA_LIBRARIES)
+        or len(cuda_libraries) != len(required_libraries)
+        or set(cuda_libraries) != set(required_libraries)
     ):
-        raise ValueError("The reviewed CUDA runtime requires the complete CUDA 12.8 DLL list")
+        raise ValueError(f"The {variant.upper()} runtime requires its reviewed CUDA DLL list")
     for key in ("engineGitRevision", "engineArchiveSha256"):
         value = asset_lock.get(key)
-        if value is not None and local_manifest.get(key) != value:
+        if value is not None and local_manifest.get(
+            key, value if legacy_bundle else None
+        ) != value:
             raise ValueError(f"Runtime {key} differs from the tracked asset lock")
     approved_engine_names = {
-        "runtime/engine/katago.exe",
-        "runtime/engine/libcrypto-3-x64.dll",
-        "runtime/engine/libssl-3-x64.dll",
-        "runtime/engine/z.dll",
-        "runtime/engine/zip.dll",
-        "runtime/engine/bz2.dll",
-        "runtime/engine/cacert.pem",
-        "runtime/engine/README.txt",
+        "runtime/engine/" + name for name in ENGINE_FILES[variant]
     }
     engine_files = asset_lock.get("engineFiles")
     if (
@@ -290,9 +333,7 @@ def prepare_runtime(stage: Path) -> None:
             or re.fullmatch(r"[a-fA-F0-9]{64}", expected_hash) is None
         ):
             raise ValueError(f"Invalid tracked asset SHA-256: {relative}")
-        source = required_file(ROOT / relative)
-        if source.is_symlink() or not source.resolve().is_relative_to(ROOT):
-            raise ValueError(f"Linked release input is not allowed: {source}")
+        source = required_file(reviewed_project_input(source_root / relative))
         actual_hash = file_hash(source)
         if actual_hash.lower() != str(expected_hash).lower():
             raise ValueError(f"Tracked asset SHA-256 mismatch: {relative}")
@@ -302,19 +343,22 @@ def prepare_runtime(stage: Path) -> None:
         ("model", "modelSha256"),
         ("humanModel", "humanModelSha256"),
     ):
-        source = required_file(ROOT / expected_paths[key])
+        source = source_root / expected_paths[key]
         actual = locked_files[expected_paths[key]]  # Actual content was verified above.
-        if actual.lower() != str(local_manifest.get(checksum_key, "")).lower():
+        expected = local_manifest.get(checksum_key, actual if legacy_bundle else "")
+        if actual.lower() != str(expected).lower():
             raise ValueError(f"SHA-256 mismatch for {source.name}")
         print(f"Verified {source.name}: {actual}", flush=True)
 
-    for relative in sorted(expected_asset_names):
-        copy_file(ROOT / relative, stage / relative)
-
-    config = required_file(ROOT / expected_paths["analysisConfig"]).read_text(encoding="utf-8")
+    # Both variants retain the current search configuration and 9/13/19 support.
+    config = required_file(reviewed_project_input(
+        ROOT / expected_paths["analysisConfig"]
+    )).read_text(encoding="utf-8")
     config, count = re.subn(r"(?m)^logDir\s*=.*$", "logDir = logs/katago", config, count=1)
     if count != 1:
         raise ValueError("Expected exactly one KataGo logDir entry")
+    for relative in sorted(expected_asset_names):
+        copy_file(source_root / relative, stage / relative)
     config_path = stage / expected_paths["analysisConfig"]
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(config, encoding="utf-8")
@@ -323,10 +367,11 @@ def prepare_runtime(stage: Path) -> None:
     bundle.update(
         engineVersion=str(local_manifest["engineVersion"]),
         engineSha256=locked_files[expected_paths["engine"]],
-        modelSha256=str(local_manifest["modelSha256"]),
-        humanModelSha256=str(local_manifest["humanModelSha256"]),
+        modelSha256=locked_files[expected_paths["model"]],
+        humanModelSha256=locked_files[expected_paths["humanModel"]],
         backend="cuda",
-        requiredCudaLibraries=list(RELEASE_CUDA_LIBRARIES),
+        requiredCudaLibraries=list(required_libraries),
+        releaseVariant=variant,
     )
     for key in ("engineGitRevision", "engineArchiveSha256"):
         value = asset_lock.get(key)
@@ -334,6 +379,12 @@ def prepare_runtime(stage: Path) -> None:
             bundle[key] = value
     (stage / "runtime" / "bundle.json").write_text(
         json.dumps(bundle, indent=2) + "\n", encoding="utf-8"
+    )
+    (stage / "runtime" / "release-info.txt").write_text(
+        f"RecurGO runtime: {variant.upper()}\n"
+        f"KataGo: {bundle['engineVersion']}\n"
+        f"Main model: {Path(expected_paths['model']).name}\n",
+        encoding="utf-8",
     )
 
 
@@ -467,7 +518,7 @@ def verify_stage(stage: Path) -> None:
                 raise ValueError(f"Secret marker entered stage text: {relative}")
 
 
-def write_manifest(stage: Path, release_root: Path) -> None:
+def write_manifest(stage: Path, release_root: Path, *, variant: str) -> None:
     records = []
     for path in sorted(stage.rglob("*")):
         if path.is_file():
@@ -478,16 +529,95 @@ def write_manifest(stage: Path, release_root: Path) -> None:
                     "sha256": file_hash(path),
                 }
             )
-    (release_root / "file-manifest.json").write_text(
+    (release_root / f"file-manifest-{variant.upper()}.json").write_text(
         json.dumps(records, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print(f"Recorded {len(records)} staged files", flush=True)
 
 
+def prepare_stages(
+    main_folder: Path,
+    checker: Path,
+    *,
+    sources: dict[str, Path],
+    release_root: Path,
+) -> dict[str, Path]:
+    """v1.2.0: copy one frozen application into isolated, audited runtime stages."""
+    stages = {}
+    for variant, source_root in sources.items():
+        stage = release_root / "stage" / variant.upper() / "RecurGO"
+        shutil.copytree(main_folder, stage)
+        copy_file(checker, stage / checker.name)
+        prepare_runtime(stage, variant=variant, source_root=source_root)
+        prepare_documents(stage)
+        copy_file(APP_ICON, stage / "assets" / "recurgo.ico")
+        verify_stage(stage)
+        write_manifest(stage, release_root, variant=variant)
+        stages[variant] = stage
+    return stages
+
+
+def compile_installers(
+    stages: dict[str, Path],
+    *,
+    version: str,
+    release_root: Path,
+    iscc: Path,
+    env: dict[str, str],
+) -> list[Path]:
+    output_dir = release_root / "output"
+    output_dir.mkdir(parents=True, exist_ok=False)
+    expected = []
+    for variant, stage in stages.items():
+        installer = output_dir / f"RecurGO-{version}-{variant.upper()}-Windows-x64-Setup.exe"
+        run(
+            [
+                str(iscc),
+                f"/DBuildSourceDir={stage}",
+                f"/DAppVersion={version}",
+                f"/DReleaseVariant={variant.upper()}",
+                f"/O{output_dir}",
+                str(ROOT / "packaging" / "RecurGO.iss"),
+            ],
+            env=env,
+        )
+        required_file(installer)
+        expected.append(installer)
+    installers = set(output_dir.glob("*.exe"))
+    if installers != set(expected):
+        raise ValueError("Installer output differs from the selected release variants")
+    checksums = []
+    for installer in expected:
+        checksum = file_hash(installer)
+        checksums.append(f"{checksum}  {installer.name}\n")
+        print(f"Installer: {installer}", flush=True)
+        print(f"Size: {installer.stat().st_size / (1024 * 1024):.2f} MB", flush=True)
+        print(f"SHA-256: {checksum}", flush=True)
+    (output_dir / "SHA256SUMS.txt").write_text("".join(checksums), encoding="utf-8")
+    return expected
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--iscc", required=True, type=Path, help="Local Inno Setup ISCC.exe")
+    parser.add_argument("--variant", choices=("tf3", "b28", "all"), default="tf3")
+    parser.add_argument(
+        "--b28-source-root", type=Path,
+        help="Project-local root containing the reviewed B28 runtime/ assets and manifest",
+    )
     args = parser.parse_args()
+    variants = ("tf3", "b28") if args.variant == "all" else (args.variant,)
+    if "b28" in variants and args.b28_source_root is None:
+        parser.error("--b28-source-root is required for --variant b28 or all")
+    if "b28" not in variants and args.b28_source_root is not None:
+        parser.error("--b28-source-root requires --variant b28 or all")
+    sources = {
+        variant: reviewed_project_input(args.b28_source_root if variant == "b28" else ROOT)
+        for variant in variants
+    }
+    for source_root in sources.values():
+        if not source_root.is_dir():
+            raise FileNotFoundError(source_root)
     if sys.platform != "win32":
         raise SystemExit("Windows is required to build this installer")
     if not args.iscc.is_file():
@@ -511,51 +641,18 @@ def main() -> int:
         release_root=release_root,
         env=env,
     )
-    stage = release_root / "stage" / "RecurGO"
-    shutil.copytree(main_folder, stage)
-    for entry, name in (
-        (ROOT / "scripts" / "check_analysis_environment.py", "RecurGO-Environment-Check"),
-    ):
-        frozen = freeze_entry(
-            entry,
-            name,
-            one_file=True,
-            console=True,
-            release_root=release_root,
-            env=env,
-        )
-        copy_file(frozen, stage / frozen.name)
-
-    prepare_runtime(stage)
-    prepare_documents(stage)
-    copy_file(APP_ICON, stage / "assets" / "recurgo.ico")
-    verify_stage(stage)
-    write_manifest(stage, release_root)
-
-    setup_script = ROOT / "packaging" / "RecurGO.iss"
-    output_dir = release_root / "output"
-    output_dir.mkdir(parents=True, exist_ok=False)
-    run(
-        [
-            str(args.iscc),
-            f"/DBuildSourceDir={stage}",
-            f"/DAppVersion={version}",
-            f"/O{output_dir}",
-            str(setup_script),
-        ],
+    checker = freeze_entry(
+        ROOT / "scripts" / "check_analysis_environment.py",
+        "RecurGO-Environment-Check",
+        one_file=True,
+        console=True,
+        release_root=release_root,
         env=env,
     )
-    installers = list(output_dir.glob("RecurGO-*-Windows-x64-Setup.exe"))
-    if len(installers) != 1:
-        raise ValueError(f"Expected one installer, found {len(installers)}")
-    installer = installers[0]
-    checksum = file_hash(installer)
-    (output_dir / "SHA256SUMS.txt").write_text(
-        f"{checksum}  {installer.name}\n", encoding="utf-8"
+    stages = prepare_stages(main_folder, checker, sources=sources, release_root=release_root)
+    compile_installers(
+        stages, version=version, release_root=release_root, iscc=args.iscc, env=env
     )
-    print(f"Installer: {installer}", flush=True)
-    print(f"Size: {installer.stat().st_size / (1024 * 1024):.2f} MB", flush=True)
-    print(f"SHA-256: {checksum}", flush=True)
     return 0
 
 

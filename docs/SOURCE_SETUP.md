@@ -1,4 +1,4 @@
-# 从源码启动（v1.1.0）
+# 从源码启动（v1.2.0）
 
 [English](SOURCE_SETUP.en.md) | 简体中文
 
@@ -19,7 +19,9 @@ py -3.13 -m venv .venv
 此处使用 editable 安装，让程序按源码目录查找 `runtime/` 和 `data/`。
 依赖版本记录在 `pyproject.toml`。`.venv/` 在本机重新生成，不随 Git 上传。
 
-## 准备 KataGo
+## 准备 KataGo（默认 TF3）
+
+v1.2.0 安装包有 TF3、B28 两种同功能选择，安装用户按[安装指南](INSTALL_WINDOWS.md)择一下载即可。源码默认配置继续使用 TF3；构建 B28 包不会自动替换项目现有的 `runtime/`。需要从源码运行 B28 时，见下文的独立配置说明。
 
 从 [KataGo v1.18.2 官方发行页](https://github.com/lightvector/KataGo/releases/tag/v1.18.2)
 取得 `katago-v1.18.2-cuda12.8-cudnn9.8.0-windows-x64.zip`，保留该包要求的运行库与许可。
@@ -93,6 +95,22 @@ Windows 中的 NVIDIA 驱动，再找固定目录、已有清单、系统安装�
 
 引擎未配置成功时，主程序会显示启动错误；棋盘和棋谱功能仍可打开，不能因此视为
 AI 分析已经可用。独立诊断工具会列出缺失项，进行真实分析并产生本地日志。
+
+## 从源码选择 B28
+
+B28 使用旧正式组合 **KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`**，Human SL 仍为 `b18c384nbt-humanv0.bin.gz`。两版应用功能相同，分析结果不保证相同；当前机器仍须通过独立环境检测。
+
+为保留现有 TF3 开发环境，建议在另一个源码工作目录中准备 B28 文件。将 [B28 配置示例](setup/runtime.b28.example.json) 复制为该工作目录的 `runtime/runtime.local.json`，按以下路径和 SHA-256 核对文件；引擎同目录的依赖 DLL 也须符合 [B28 资产锁](../packaging/asset_lock.b28.json)，不能只替换模型文件或用 TF3 的引擎哈希：
+
+| B28 工作目录内路径 | SHA-256 |
+| --- | --- |
+| `runtime/engine/katago.exe` | `60275844632567e8ccb2d1fc5080c3205cf0f78fe2b57d12bce07f3a5f167f8e` |
+| `runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz` | `c5bca453d7b08ea8df6546439325d4dd681e77d975e1da3f7593d771147b73bc` |
+| `runtime/models/b18c384nbt-humanv0.bin.gz` | `637746e44f0efe00ad1245a50aa9bbf0716efe364c43965ead97bd6835d84ab5` |
+
+`analysisConfig` 明确指向 `runtime/configs/analysis.cfg`，使用当前项目的分析配置，保留 `requireMaxBoardSize=false` 和 9/13/19 路支持。不要拿旧安装包的分析配置覆盖当前搜索配置。B28 的 CUDA 清单要求 `cublas64_12.dll`、`cudart64_12.dll`，并仍需匹配的 cuDNN 9.x；它不要求 TF3 清单中的两个 NVRTC DLL。配置后按上文运行环境检测和启动命令。加载器按清单中的明确文件路径和哈希选择模型，不会扫描目录自动回退。
+
+只需构建 B28 安装包时，无须改动源码默认运行清单：向构建脚本传入项目内的 `--b28-source-root` 即可，详见[构建指南](BUILD_WINDOWS.md)。两个安装包共用当前项目的 `runtime/configs/analysis.cfg`，旧来源根仅提供对应引擎、模型及路径清单。
 
 ## 可选本机语言模型
 

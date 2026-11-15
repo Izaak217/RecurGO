@@ -2,6 +2,29 @@
 
 English | [简体中文](CHANGELOG.md)
 
+## v1.2.0 — 2026-11-16 (independent interactive reports)
+
+- Offer TF3 and B28 Windows installers for the same application version and features, using KataGo 1.18.2 + TF3 and KataGo 1.16.5 + B28 respectively. Both use the same application and data locations and support in-place edition changes; the installer no longer deletes existing model or engine files.
+- Add single-file HTML reports with the board, saved branches, candidates and variations, win-rate trends, move quality, problem moves, match rates, and overview; support Chinese/English and mobile layouts.
+- Simplify overview metadata and show readable rules and komi. Label missing or incomplete analysis without counting it as normal play.
+- Open reports in a browser, such as Edge or Chrome, for offline viewing; static instructions remain visible when interactive code cannot run.
+- Fix missing overwrite confirmation when export normalizes an HTML filename. Preserve fair-play restrictions, analysis source isolation, models, and search parameters.
+- See the full [v1.2.0 release notes](docs/RELEASE_1.2.0.en.md).
+
+## v1.2.0.dev2 — 2026-11-16 (clearer report overview)
+
+- Remove model/configuration hashes, analysis source, latest analysis time, and export time from the overview. Preserve internal source validation.
+- Show rules and komi separately using readable names and explicit compensation direction, including zero and negative komi.
+
+## v1.2.0.dev1 — 2026-11-16 (independent interactive reports)
+
+- Add Export analysis report: save the board, existing branches, candidates and reference variations, win-rate trend, move quality, problem moves, match rate, and overview in a single HTML file.
+- Embed the viewer with Chinese/English controls, desktop/mobile layouts, move navigation, chart links, and review scopes. Reading an exported report needs no RecurGO, KataGo, Ollama, or online assets. Generated prose explanations are excluded.
+- Read saved analysis without starting an engine. Select one analysis source and visit budget; do not mix models, configurations, or budgets. Mark missing/incomplete results explicitly rather than grading them as normal. Disable report export in fair play.
+- Candidate variations replay saved search results; arbitrary new positions cannot be analyzed in the report. Mobile attachment previews may not execute HTML, so a browser supporting local interactive HTML is required. Online hosting/sharing is not included.
+- Include static opening instructions that remain visible if interactive code cannot run and disappear after successful initialization. No website or control over the system app chooser is required.
+- Preserve models, search parameters, existing games, and SGF behavior. No database migration.
+
 ## v1.1.0 — 2026-10-30
 
 - Upgrade to KataGo v1.18.2 and replace the b28 main model with TF3. As of 2026-10-30, the selected TF3 and previous b28 models are rated at about 14605 and 14105 Elo in the [official training run](https://katagotraining.org/networks/), a difference of about 500 Elo at [equal search visits](https://github.com/lightvector/KataGo/blob/master/docs/NetworkArchitectures.md). Retain Human SL practice levels.

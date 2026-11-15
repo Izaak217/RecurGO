@@ -19,7 +19,7 @@ from pyqtgraph import (
     TextItem,
     mkPen,
 )
-from PySide6.QtCore import QEvent, QPointF, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QIODevice, QPointF, QSaveFile, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QShowEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -76,6 +76,8 @@ from recurgo.engine.analysis_identity import AnalysisIdentity
 from recurgo.i18n import localize_error
 from recurgo.llm.ollama import OllamaClient
 from recurgo.llm.settings import OllamaSettings
+from recurgo.reporting.data import build_report_data, list_report_sources
+from recurgo.reporting.viewer import render_report_html
 from recurgo.storage import (
     GameRecord,
     GameRepository,
@@ -94,6 +96,7 @@ from .new_game_dialog import NewGameDialog
 from .ollama_dialog import OllamaSettingsDialog
 from .preferences import AnalysisControls, AppPreferences
 from .preferences_dialog import PreferencesDialog
+from .report_export_dialog import ReportExportDialog
 from .scoring_dialog import CompletedGameDialog, ScoringDialog
 
 
@@ -341,6 +344,12 @@ class MainWindow(QMainWindow):
         export_action.triggered.connect(self._export_sgf)
         toolbar.addAction(export_action)
 
+        self.report_export_action = QAction(
+            self._tr("导出分析报告", "Export analysis report"), self,
+        )
+        self.report_export_action.triggered.connect(self._export_analysis_report)
+        toolbar.addAction(self.report_export_action)
+
         self.full_analysis_action = QAction(self._tr("全盘AI分析", "Analyze full game"), self)
         self.full_analysis_action.triggered.connect(self._toggle_full_game_analysis)
         toolbar.addAction(self.full_analysis_action)
@@ -418,6 +427,7 @@ class MainWindow(QMainWindow):
             (import_action, "导入 SGF", "Import SGF"),
             (image_import_action, "图片识谱", "Recognize image"),
             (export_action, "导出 SGF", "Export SGF"),
+            (self.report_export_action, "导出分析报告", "Export analysis report"),
             (mode_label, " 模式 ", " Mode "),
             (difficulty_label, "  难度 ", "  Difficulty "),
             (color_label, "  执色 ", "  Play as "),
@@ -473,6 +483,7 @@ class MainWindow(QMainWindow):
         game_menu.addSeparator()
         for action in (import_action, image_import_action, export_action):
             game_menu.addAction(action)
+        game_menu.addAction(self.report_export_action)
 
         self._toolbar_combo_menus: list[tuple[QMenu, QComboBox, list[QAction]]] = []
         self._toolbar_menu_groups: list[QActionGroup] = []
@@ -1863,6 +1874,105 @@ class MainWindow(QMainWindow):
             6000,
         )
         self._request_analysis()
+
+    def _export_analysis_report(self) -> None:
+        """v1.2.0.dev1: export a saved snapshot without querying the engine."""
+        if not self._can_show_analysis():
+            self.statusBar().showMessage(
+                self._tr("公平对战中隐藏分析。", "Analysis is hidden during fair play."),
+                5000,
+            )
+            return
+        game_id = self.record.id
+        try:
+            sources = list_report_sources(self.repository, game_id)
+            if not sources:
+                QMessageBox.information(
+                    self,
+                    self._tr("导出分析报告", "Export analysis report"),
+                    self._tr(
+                        "这盘棋尚无已保存的分析。请先运行“全盘 AI 分析”，再导出报告。",
+                        "This game has no saved analysis. "
+                        "Run Analyze full game before exporting.",
+                    ),
+                )
+                return
+            dialog = ReportExportDialog(
+                sources,
+                preferred_identity=self.analysis_identity.key,
+                preferred_visits=self.analysis_settings.visits,
+                language=self.language,
+                parent=self,
+            )
+            if dialog.exec() != ReportExportDialog.DialogCode.Accepted:
+                return
+            if not self._can_show_analysis() or self.record.id != game_id:
+                return
+            source = dialog.selected_source()
+            if source is None:
+                return
+            selected, _filter = QFileDialog.getSaveFileName(
+                self,
+                self._tr("保存分析报告", "Save analysis report"),
+                f"{self.record.name or self._tr('棋谱', 'Game')}-report.html",
+                "HTML (*.html)",
+            )
+            if not selected:
+                return
+            if not self._can_show_analysis() or self.record.id != game_id:
+                return
+            selected_path = Path(selected)
+            destination = selected_path
+            if destination.suffix.lower() != ".html":
+                destination = destination.with_suffix(".html")
+            # The native dialog confirmed only selected_path, not a different
+            # destination produced by normalizing its suffix.
+            if destination != selected_path and destination.exists():
+                answer = QMessageBox.question(
+                    self,
+                    self._tr("确认覆盖文件", "Confirm file replacement"),
+                    self._tr(
+                        f"补全 HTML 后缀后的文件已存在：\n{destination}\n是否覆盖？",
+                        f"The file with the HTML extension already exists:\n"
+                        f"{destination}\nReplace it?",
+                    ),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                )
+                if answer != QMessageBox.StandardButton.Yes:
+                    return
+            # Every modal dialog can run analysis/AI callbacks. Recheck the mode
+            # and read the game only after all file choices have been confirmed.
+            if not self._can_show_analysis() or self.record.id != game_id:
+                return
+            record, tree = self.repository.load_game(game_id)
+            data = build_report_data(
+                self.repository, record, tree, source, language=self.language,
+            )
+            html = render_report_html(data).encode("utf-8")
+            output = QSaveFile(str(destination))
+            if not output.open(QIODevice.OpenModeFlag.WriteOnly):
+                raise OSError(output.errorString())
+            if output.write(html) != len(html):
+                error = output.errorString()
+                output.cancelWriting()
+                raise OSError(error)
+            if not output.commit():
+                raise OSError(output.errorString())
+        except (OSError, ValueError, KeyError, sqlite3.Error) as exc:
+            QMessageBox.warning(
+                self,
+                self._tr("报告导出失败", "Report export failed"),
+                str(exc),
+            )
+            return
+        self.statusBar().showMessage(
+            self._tr(
+                f"报告已导出，用浏览器打开即可查看：{destination}",
+                f"Report exported. Open it in a browser: {destination}",
+            ),
+            10000,
+        )
 
     def _export_sgf(self) -> None:
         suggested = f"{self.record.name or self._tr('棋谱', 'Game')}.sgf"
@@ -3666,6 +3776,7 @@ class MainWindow(QMainWindow):
             self._invalidate_ollama_explanation()
             self.full_analysis_progress.hide()
         self.full_analysis_action.setEnabled(not fair)
+        self.report_export_action.setEnabled(not fair)
         for checkbox, wanted in (
             (self.analysis_checkbox, self.analysis_controls.realtime_enabled),
             (self.ownership_checkbox, self.analysis_controls.ownership_enabled),

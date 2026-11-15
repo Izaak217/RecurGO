@@ -1,15 +1,16 @@
-# Windows 安装包构建说明（v1.1.0）
+# Windows 安装包构建说明（v1.2.0）
 
 [English](BUILD_WINDOWS.en.md) | 简体中文
 
-此文档供维护者构建本地安装包候选。一个正式版本对应同一份公开源码和一个 Windows x64 安装程序；GitHub 的源码 ZIP/TAR 是版本标签的自动快照，不是另一套需要维护的程序。构建、生成校验值均在本机进行，不会上传 GitHub。
+此文档供维护者构建本地安装包候选。v1.2.0 的同一份公开源码生成 TF3、B28 两个 Windows x64 安装包，应用功能相同，用户择一安装；GitHub 的源码 ZIP/TAR 是版本标签的自动快照，不是另一套需要维护的程序。构建、生成校验值均在本机进行，不会上传 GitHub。
 
 ## 构建输入
 
 - Windows 10/11 x64、Python 3.13、项目 `.venv`，按[源码启动说明](SOURCE_SETUP.md)安装包含 `dev` 组的固定依赖。
 - 从 [Inno Setup 官方页面](https://jrsoftware.org/isdl.php)获取 `ISCC.exe`；构建脚本只调用编译器，不把 Inno Setup 安装程序放进源码仓库或用户安装包。
-- 按[源码启动说明](SOURCE_SETUP.md)准备 KataGo 1.18.2 CUDA 引擎、主模型、Human SL 模型与 `runtime/runtime.local.json`。模型和二进制不提交 Git。
-- `packaging/asset_lock.json` 以 schemaVersion 2 记录运行时路径、八个引擎文件及两个模型的 SHA-256 白名单。路径、文件集合和哈希必须同时一致。任何来源文件不符时构建立即停止。变更上游版本须重新核对许可、来源、哈希及功能，然后明确更新锁定文件。
+- 默认 TF3 构建使用项目现有的 KataGo 1.18.2 CUDA 引擎、TF3 主模型、Human SL 模型与 `runtime/runtime.local.json`，见[源码启动说明](SOURCE_SETUP.md)。模型和二进制不提交 Git。
+- B28 构建另外准备项目内的来源根目录，内含 `runtime/bundle.json` 或 `runtime/runtime.local.json`，以及 `runtime/engine/`、`runtime/models/`。采用旧正式组合 KataGo 1.16.5 + `kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`，Human SL 与 TF3 包相同。来源须为项目内真实目录，不接受指向外部的链接；此目录与项目默认 TF3 `runtime/` 分开。
+- 运行时锁定文件记录各版本的路径、完整引擎文件集合和模型 SHA-256 白名单：TF3 使用 `packaging/asset_lock.json`，B28 使用 `packaging/asset_lock.b28.json`。路径、文件集合和哈希必须同时一致。任何来源文件不符时构建立即停止。变更上游版本须重新核对许可、来源、哈希及功能，然后明确更新对应锁定文件。
 - 本地 Git 必须可用；`licenses/` 仅从已跟踪文件清单复制，出现额外文件时构建停止。
 - 桌面快捷方式图标使用 `assets/recurgo-icon-artwork.png` 原图制作；仅将四角规则裁为透明的版本保存在 `assets/recurgo-icon-artwork-rounded.png`，再生成 `src/recurgo/assets/recurgo.ico`。构建脚本只把 ICO 复制到安装目录，供可选桌面快捷方式引用；PNG 不进入安装目录，程序和安装器自身的图标不变。
 - 本机 Inno Setup 7 编译器会显示“Non-commercial use only”；[官方商业许可问答](https://jrsoftware.org/isorder.php)按商业用途及收入判断是否请求购买，并说明购买并非严格要求。此提示本身不证明当前个人开源发布受阻。
@@ -22,18 +23,31 @@
 .\.venv\Scripts\python.exe scripts\build_windows_release.py --iscc "C:\path\to\ISCC.exe"
 ```
 
-脚本每次创建新的 `build/release-.../` 目录，不覆盖已有产物。`stage/RecurGO/` 是待安装的文件树；`file-manifest.json` 记录每个文件的大小和 SHA-256；`output/` 包含安装程序及 `SHA256SUMS.txt`。`build/` 被 Git 忽略。
+不指定 `--variant` 时默认构建 `tf3`。同时生成两包时，指定项目内 B28 来源根目录（路径指向包含 `runtime/` 的上一级，不是 `runtime/` 本身）：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_windows_release.py --variant all --b28-source-root "build\b28-source" --iscc "C:\path\to\ISCC.exe"
+```
+
+`--variant b28` 只生成 B28 包，也须提供 `--b28-source-root`；`--variant tf3` 只生成 TF3 包。`all` 共用一次应用冻结，再分别复制对应运行时，不修改项目现有 TF3 `runtime/` 或 B28 来源文件。
+
+两个包都使用当前项目的 `runtime/configs/analysis.cfg`，仅在 stage 中把日志位置改为相对路径；不打包 B28 来源根中的旧配置。保留当前搜索参数、`requireMaxBoardSize=false` 和 9/13/19 路支持。
+
+脚本每次创建新的 `build/release-.../` 目录，不覆盖已有产物。`stage/TF3/RecurGO/`、`stage/B28/RecurGO/` 是各版本待安装的文件树；对应的 `file-manifest-TF3.json`、`file-manifest-B28.json` 记录每个文件的大小和 SHA-256。只生成所选版本的 stage 和清单，`output/` 包含所选安装包及汇总 `SHA256SUMS.txt`：
+
+- `RecurGO-1.2.0-TF3-Windows-x64-Setup.exe`
+- `RecurGO-1.2.0-B28-Windows-x64-Setup.exe`
+
+`build/` 被 Git 忽略。
 
 安装包候选包含 RecurGO 程序和 Python/Qt 运行组件、KataGo 引擎、两个模型、分析配置、独立环境检测工具、可选 Ollama 的启动和模型下载入口、双语说明及许可材料。它不包含开发机的棋谱、数据库、CUDA/cuDNN、Ollama 程序或语言模型。用户自行从 NVIDIA 官方准备驱动与 CUDA/cuDNN；可选 Ollama 自行从官方取得。
 
 用户运行库和个人数据位于当前用户的 `%LOCALAPPDATA%\RecurGO`；默认程序目录是 `%LOCALAPPDATA%\Programs\RecurGO`，安装器每次都显示程序目录选择页。安装包中的 KataGo 引擎目录不复制开发机的 Microsoft Visual C++ DLL；独立工具检查系统运行库并给出微软官方链接。Python/Qt/NumPy 上游包自带的二进制组件仍需按实际文件清单复核再分发条件。
 
-原位升级只清除安装目录中的旧 `runtime/engine/libz.dll`、`runtime/engine/libzip.dll` 和
-`runtime/models/kata1-b28c512nbt-s13255194368-d5935380940.bin.gz`。安装规则没有通配符，
-不删除 Human SL、棋谱、设置或分析数据库。生成安装器不会执行安装或修改项目外目录。
+两包共用同一 AppId、默认安装目录及用户数据目录。关闭程序后，覆盖安装另一包即可切换，不需要先卸载。安装器没有 `InstallDelete` 清理规则，不主动清除已有模型、DLL 或用户文件；所选包会更新自身携带的程序、引擎和运行清单。棋谱、设置和已有分析保留，不同组合的分析来源不混用，结果不保证相同。生成安装器不会执行安装或修改项目外目录。
 
 ## 版本与发布
 
-当前正式版本为 **v1.1.0**。`pyproject.toml`、`src/recurgo/__init__.py`、安装程序文件名、Git 标签和 GitHub Release 标题应一致。每次发布均从最终源码重新构建，不能把开发版安装包改名充当正式版。发布说明全文须经用户确认后才能上传或修改公开内容。v1.0.1 的功能、验证边界和发布步骤见[发布核验记录](RELEASE_1.0.1.md)。
+当前正式版本为 **v1.2.0**。`pyproject.toml`、`src/recurgo/__init__.py`、安装程序文件名、Git 标签和 GitHub Release 标题应一致。每次发布均从最终源码重新构建，不能把开发版安装包改名充当正式版。发布说明全文须经用户确认后才能上传或修改公开内容。v1.0.1 的功能、验证边界和发布步骤见[发布核验记录](RELEASE_1.0.1.md)。
 
-本地编译成功只证明生成了安装文件。每个后续版本仍应检查安装、独立检测、真实 KataGo 分析、对战、棋谱、复盘、中英文切换与可选 Ollama，并重新核对源码及安装包隐私、第三方许可和 LGPL 对应源码/共享库替换方式。[首版设计记录](RELEASE_TARGET.md)说明验收范围。不要把 `build/` 整目录上传；只在同一版本的 GitHub Release 中附上安装程序和校验文件。
+本地编译成功只证明生成了安装文件。每个版本的两个包均应分别检查安装、双向覆盖切换、独立检测、真实 KataGo 分析、对战、棋谱、复盘、中英文切换与可选 Ollama，并重新核对源码及安装包隐私、第三方许可和 LGPL 对应源码/共享库替换方式；不据此声称所有设备可用。[首版设计记录](RELEASE_TARGET.md)说明验收范围。不要把 `build/` 整目录上传；只在同一版本的 GitHub Release 中附上两个安装程序和汇总校验文件。

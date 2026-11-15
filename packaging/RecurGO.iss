@@ -4,11 +4,19 @@
 #ifndef AppVersion
   #error AppVersion must be supplied by the release builder.
 #endif
+#ifndef ReleaseVariant
+  #error ReleaseVariant must be TF3 or B28.
+#endif
+#if (ReleaseVariant != "TF3") && (ReleaseVariant != "B28")
+  #error Unsupported ReleaseVariant.
+#endif
 
 [Setup]
 AppId={{D68E0D17-61C0-4F1D-9AD0-73377206F1EA}
 AppName=RecurGO
 AppVersion={#AppVersion}
+AppVerName=RecurGO {#AppVersion} ({#ReleaseVariant})
+UninstallDisplayName=RecurGO {#AppVersion} ({#ReleaseVariant})
 AppPublisher=izaak
 DefaultDirName={localappdata}\Programs\RecurGO
 DisableDirPage=no
@@ -20,7 +28,7 @@ DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\RecurGO.exe
 LicenseFile={#BuildSourceDir}\INSTALLER_LICENSE.txt
 InfoBeforeFile={#BuildSourceDir}\INSTALLER_NOTICE.txt
-OutputBaseFilename=RecurGO-{#AppVersion}-Windows-x64-Setup
+OutputBaseFilename=RecurGO-{#AppVersion}-{#ReleaseVariant}-Windows-x64-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -37,11 +45,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "{#BuildSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-[InstallDelete]
-; v1.1.0.dev1: remove only obsolete engine assets during an in-place upgrade.
-Type: files; Name: "{app}\runtime\engine\libz.dll"
-Type: files; Name: "{app}\runtime\engine\libzip.dll"
-Type: files; Name: "{app}\runtime\models\kata1-b28c512nbt-s13255194368-d5935380940.bin.gz"
+; v1.2.0: variants share one installation. Keep existing assets and user files.
+; The selected package replaces its own reviewed files and runtime/bundle.json.
 
 [Icons]
 Name: "{group}\RecurGO"; Filename: "{app}\RecurGO.exe"
